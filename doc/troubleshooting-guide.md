@@ -371,6 +371,54 @@ class MockPlacemark: CLPlacemark {
 }
 ```
 
+## SwiftUI Form関連
+
+### 1. Form内のButtonが反応しない
+
+**症状：**
+設定画面のズームレベル調整ボタン（＋/−）が押せない
+
+**原因：**
+SwiftUIのForm内でButtonに`.buttonStyle(.plain)`を適用すると、タップイベントが無効になる
+
+**解決方法：**
+```swift
+// NG: Form内では動作しない
+Button { /* action */ } label: { /* label */ }
+    .buttonStyle(.plain)
+
+// OK: Form内でも動作する
+Button { /* action */ } label: { /* label */ }
+    .buttonStyle(.borderless)
+```
+
+### 2. 現在位置ボタンで追従モードが解除される
+
+**症状：**
+現在位置ボタンを押すと、一瞬十字線が表示されて追従モードが解除される
+
+**原因：**
+ズームレベル変更時に一時的に地図中心がずれ、onMapCameraChangeでの距離チェックで追従解除される
+
+**解決方法：**
+```swift
+// isZoomingByButtonフラグを使用
+Button(action: {
+    isZoomingByButton = true
+    viewModel.centerOnUserLocation()
+    // カメラ更新処理
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        isZoomingByButton = false
+    }
+}) { /* ボタンUI */ }
+
+// onMapCameraChangeでフラグをチェック
+.onMapCameraChange { context in
+    guard !isZoomingByButton else { return }
+    // 通常の処理
+}
+```
+
 ## まとめ
 
 多くの問題は以下が原因です：
@@ -380,5 +428,6 @@ class MockPlacemark: CLPlacemark {
 3. **シミュレータ特有の挙動**
 4. **非同期処理の扱い**
 5. **ネットワーク関連のエラー**
+6. **SwiftUI特有の挙動**（Form、Button、State管理など）
 
 これらを理解することで、トラブルシューティングが効率的に行えます。
