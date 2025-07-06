@@ -118,8 +118,8 @@ xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=
 
 ## ライセンス
 
-[ライセンス情報を追加]
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
 
 ## 貢献
 
-[貢献方法を追加]
+プルリクエストを歓迎します。大きな変更を行う場合は、まずissueを開いて変更内容について議論してください。
