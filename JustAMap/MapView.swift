@@ -203,20 +203,8 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
             viewModel.saveSettings()
-            
-            // カメラ位置を保存
-            let savedCamera = currentMapCamera
-            
             // State変数を更新してSwiftUIの再描画を促す
             mapStyleForDisplay = newStyle
-            
-            // カメラ位置を復元
-            if let camera = savedCamera {
-                // 少し遅延を入れて、新しいMapスタイルが適用された後に位置を設定
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    mapPosition = .camera(camera)
-                }
-            }
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
             viewModel.saveSettings()
