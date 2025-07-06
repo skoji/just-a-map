@@ -16,7 +16,9 @@ enum MapStyle: String, CaseIterable {
 /// ズームレベルの定数
 enum ZoomConstants {
     static let minIndex = 0
-    static let maxIndex = 11
+    // 将来的にpredefinedAltitudesの数が変わっても対応できるように
+    // 本来は配列のサイズから動的に計算したいが、staticプロパティの制約により固定値
+    static let maxIndex = 11  // predefinedAltitudes.count - 1
 }
 
 /// 地図コントロールのビジネスロジックを管理

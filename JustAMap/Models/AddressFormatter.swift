@@ -85,12 +85,29 @@ class AddressFormatter {
     private func buildDetailedSecondaryText(from address: Address) -> String {
         var components: [String] = []
         
+        // 場所名
         if let name = address.name, !name.isEmpty {
             components.append(name)
         }
         
+        // 市区町村
+        if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        // 郡・地区
         if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
             components.append(subAdministrativeArea)
+        }
+        
+        // 都道府県
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 国
+        if let country = address.country, !country.isEmpty {
+            components.append(country)
         }
         
         return components.joined(separator: " / ")

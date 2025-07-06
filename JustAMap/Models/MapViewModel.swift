@@ -32,16 +32,17 @@ class MapViewModel: ObservableObject {
     
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
-         addressFormatter: AddressFormatter = AddressFormatter(),
+         addressFormatter: AddressFormatter? = nil,
          idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager(),
          mapControlsViewModel: MapControlsViewModel? = nil,
          settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
         self.locationManager = locationManager
         self.geocodeService = geocodeService
-        self.addressFormatter = addressFormatter
+        self.settingsStorage = settingsStorage
+        // AddressFormatterはsettingsStorageを使用するため、ここで作成
+        self.addressFormatter = addressFormatter ?? AddressFormatter(settingsStorage: settingsStorage)
         self.idleTimerManager = idleTimerManager
         self.mapControlsViewModel = mapControlsViewModel ?? MapControlsViewModel()
-        self.settingsStorage = settingsStorage
         self.locationManager.delegate = self
         
         // スリープ防止を有効化
@@ -72,6 +73,16 @@ class MapViewModel: ObservableObject {
         settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
         settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
         settingsStorage.saveZoomIndex(mapControlsViewModel.currentZoomIndex)
+    }
+    
+    /// 設定変更時に呼び出される（住所の再フォーマットが必要な場合）
+    func refreshAddressFormat() {
+        // 現在の位置情報で住所を再取得
+        if let location = userLocation {
+            // 最後のジオコーディング位置をリセットして強制的に再取得
+            lastGeocodedLocation = nil
+            fetchAddress(for: location)
+        }
     }
     
     func requestLocationPermission() {

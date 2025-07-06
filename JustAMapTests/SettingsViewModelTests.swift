@@ -63,6 +63,15 @@ final class SettingsViewModelTests: XCTestCase {
         sut.defaultZoomIndex = 11
         XCTAssertEqual(sut.zoomLevelDisplayText, "1,000km")
     }
+    
+    func testZoomLevelDisplayTextWithOutOfRangeIndex() {
+        // 範囲外の値でもデフォルト値が返される
+        sut.defaultZoomIndex = -1
+        XCTAssertEqual(sut.zoomLevelDisplayText, "10km") // デフォルト
+        
+        sut.defaultZoomIndex = 12
+        XCTAssertEqual(sut.zoomLevelDisplayText, "10km") // デフォルト
+    }
 }
 
 class MockMapSettingsStorage: MapSettingsStorageProtocol {

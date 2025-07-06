@@ -201,6 +201,10 @@ struct MapView: View {
         }
         .sheet(isPresented: $isShowingSettings) {
             SettingsView()
+                .onDisappear {
+                    // 設定画面が閉じられたときに住所フォーマットを更新
+                    viewModel.refreshAddressFormat()
+                }
         }
     }
 }
