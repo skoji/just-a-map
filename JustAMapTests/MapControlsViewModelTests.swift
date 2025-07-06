@@ -209,6 +209,50 @@ final class MapControlsViewModelTests: XCTestCase {
         }
     }
     
+    func testZoomShouldHandleMapKitConvertedValues() {
+        // Given - MapKitが変換した値（実際のログから）
+        let mapKitValues: [(actual: Double, shouldBeFrom: Double)] = [
+            (0.01723765370820729, 0.01),     // 0.01に設定したがMapKitが報告する値
+            (0.03447514724412315, 0.02),     // 0.02に設定したがMapKitが報告する値
+            (0.08618684050986758, 0.05),     // 0.05に設定したがMapKitが報告する値
+            (0.17237128803817825, 0.1),      // 0.1に設定したがMapKitが報告する値
+            (0.34472916623524696, 0.2),      // 0.2に設定したがMapKitが報告する値
+            (0.8618068330600863, 0.5),       // 0.5に設定したがMapKitが報告する値
+            (1.722302264434937, 1.0),        // 1.0に設定したがMapKitが報告する値
+        ]
+        
+        // When/Then - ズームインは前のレベルに戻るべき
+        for (i, value) in mapKitValues.enumerated() where i > 0 {
+            let span = MKCoordinateSpan(latitudeDelta: value.actual, longitudeDelta: value.actual)
+            let result = sut.calculateZoomIn(from: span)
+            let expectedLevel = mapKitValues[i-1].shouldBeFrom
+            
+            XCTAssertEqual(result.latitudeDelta, expectedLevel, accuracy: 0.0001,
+                          "MapKit値\(value.actual)（本来\(value.shouldBeFrom)）からのズームインは\(expectedLevel)になるべき")
+        }
+    }
+    
+    func testZoomShouldMaintainTargetLevel() {
+        // Given - 目標レベルに設定後、MapKitが異なる値を報告
+        let targetLevel = 0.02
+        let mapKitReportedValue = 0.03447514724412315
+        
+        // When - MapKitの値からズームインを試みる
+        let span = MKCoordinateSpan(latitudeDelta: mapKitReportedValue, longitudeDelta: mapKitReportedValue)
+        let zoomInResult = sut.calculateZoomIn(from: span)
+        
+        // Then - 元の目標レベル（0.02）より小さい値（0.01）になるべき
+        XCTAssertEqual(zoomInResult.latitudeDelta, 0.01, accuracy: 0.0001,
+                      "0.02に設定後のMapKit値からズームインすると0.01になるべき")
+        
+        // When - ズームアウトを試みる
+        let zoomOutResult = sut.calculateZoomOut(from: span)
+        
+        // Then - 次のレベル（0.05）になるべき
+        XCTAssertEqual(zoomOutResult.latitudeDelta, 0.05, accuracy: 0.0001,
+                      "0.02に設定後のMapKit値からズームアウトすると0.05になるべき")
+    }
+    
     // MARK: - Map Style Tests
     
     func testDefaultMapStyle() {
