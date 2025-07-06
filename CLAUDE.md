@@ -144,15 +144,18 @@ JustAMap/
 │   ├── LocationManager.swift
 │   ├── LocationManagerProtocol.swift
 │   ├── AddressFormatter.swift
+│   ├── AddressFormat.swift
 │   ├── MapViewModel.swift
-│   └── MapControlsViewModel.swift
+│   ├── MapControlsViewModel.swift
+│   └── SettingsViewModel.swift
 ├── Services/
 │   ├── GeocodeService.swift
 │   ├── IdleTimerManager.swift
 │   └── MapSettingsStorage.swift
 ├── Views/
 │   ├── AddressView.swift
-│   └── MapControlsView.swift
+│   ├── MapControlsView.swift
+│   └── SettingsView.swift
 ├── Extensions/
 │   └── (現在は空)
 └── Assets.xcassets/
@@ -166,6 +169,7 @@ JustAMapTests/
 ├── IdleTimerManagerTests.swift
 ├── MapControlsViewModelTests.swift
 ├── MapSettingsStorageTests.swift
+├── SettingsViewModelTests.swift
 └── TestDoubles/
     └── MockLocationManager.swift
 
@@ -285,6 +289,8 @@ let testScenarios = [
 ### データ永続化
 - **保存対象**: 
   - UI設定（ズームインデックス、地図スタイル、地図の向き）
+  - デフォルト設定（デフォルトズームレベル、デフォルト地図スタイル、デフォルト地図の向き）
+  - 住所表示フォーマット設定
 - **保存しない**: 
   - 位置情報（緯度経度）
   - 移動履歴
@@ -306,12 +312,6 @@ let testScenarios = [
 ### 多言語化
 - 日本語に加えて、英語 ([Issue #2](https://github.com/skoji/just-a-map/issues/2))
 
-### 設定画面
-- デフォルトズームレベル
-- 地図の種類の初期設定
-- 住所表示のフォーマット選択
-- ([Issue #3](https://github.com/skoji/just-a-map/issues/3))
-
 ### 音声操作
 - 「ズームイン/アウト」
 - 「ノースアップ/ヘディングアップ」
@@ -325,6 +325,12 @@ let testScenarios = [
 ## 実装済み機能
 
 > **記録形式**: 機能名 (実装日: YYYY-MM-DD, PR: #番号)
+
+### 設定画面
+- デフォルトズームレベル、地図の種類、地図の向きの設定
+- 住所表示フォーマット選択（標準、詳細、シンプル）
+- 設定の永続化とアプリ起動時の適用
+- (実装日: 2025-01-06, PR: #7, [Issue #3](https://github.com/skoji/just-a-map/issues/3))
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
