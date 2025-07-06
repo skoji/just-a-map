@@ -1,19 +1,43 @@
 import SwiftUI
 import MapKit
+import Combine
 
 /// 地図を表示するView
 struct MapView: View {
     @StateObject private var viewModel = MapViewModel()
+    @State private var mapPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+    )
     
     var body: some View {
         ZStack {
             // 地図
-            Map(
-                coordinateRegion: $viewModel.region,
-                showsUserLocation: true,
-                userTrackingMode: .constant(viewModel.isFollowingUser ? .follow : .none)
-            )
+            Map(position: $mapPosition) {
+                UserAnnotation()
+            }
+            .mapControls {
+                MapCompass()
+                MapScaleView()
+            }
             .ignoresSafeArea()
+            .onMapCameraChange { context in
+                // ユーザーが地図を手動で動かした場合、追従モードを解除
+                if viewModel.isFollowingUser {
+                    if let userLocation = viewModel.userLocation {
+                        let mapCenter = CLLocation(
+                            latitude: context.region.center.latitude,
+                            longitude: context.region.center.longitude
+                        )
+                        let distance = userLocation.distance(from: mapCenter)
+                        if distance > 100 { // 100m以上離れたら追従解除
+                            viewModel.isFollowingUser = false
+                        }
+                    }
+                }
+            }
             
             // エラー表示
             if let error = viewModel.locationError {
@@ -33,7 +57,14 @@ struct MapView: View {
                     // 現在地に戻るボタン
                     Button(action: {
                         viewModel.isFollowingUser = true
-                        viewModel.centerOnUserLocation()
+                        if let location = viewModel.userLocation {
+                            withAnimation {
+                                mapPosition = .region(MKCoordinateRegion(
+                                    center: location.coordinate,
+                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                ))
+                            }
+                        }
                     }) {
                         Image(systemName: viewModel.isFollowingUser ? "location.fill" : "location")
                             .font(.title2)
@@ -50,24 +81,18 @@ struct MapView: View {
         }
         .onAppear {
             viewModel.requestLocationPermission()
-            viewModel.startLocationTracking()
         }
         .onDisappear {
             viewModel.stopLocationTracking()
         }
-        .onChange(of: viewModel.region) { _ in
-            // ユーザーが地図を手動で動かした場合、追従モードを解除
-            if viewModel.isFollowingUser {
-                // 現在地から離れた場合のみ追従を解除
-                if let userLocation = viewModel.userLocation {
-                    let mapCenter = CLLocation(
-                        latitude: viewModel.region.center.latitude,
-                        longitude: viewModel.region.center.longitude
-                    )
-                    let distance = userLocation.distance(from: mapCenter)
-                    if distance > 100 { // 100m以上離れたら追従解除
-                        viewModel.isFollowingUser = false
-                    }
+        .onReceive(viewModel.$userLocation) { newLocation in
+            // 追従モードの場合は地図を更新
+            if viewModel.isFollowingUser, let location = newLocation {
+                withAnimation {
+                    mapPosition = .region(MKCoordinateRegion(
+                        center: location.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))
                 }
             }
         }

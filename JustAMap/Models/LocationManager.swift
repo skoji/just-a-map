@@ -78,22 +78,22 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        let locationError: LocationError
-        
         if let clError = error as? CLError {
+            print("Location error: \(clError.code.rawValue) - \(clError.localizedDescription)")
+            
             switch clError.code {
             case .denied:
-                locationError = .authorizationDenied
+                delegate?.locationManager(self, didFailWithError: LocationError.authorizationDenied)
             case .locationUnknown:
-                locationError = .locationUpdateFailed("位置情報を取得できません")
+                // Code 0: 一時的なエラーなので無視（シミュレータでよく発生）
+                print("Temporary location error - ignoring")
+                return
             default:
-                locationError = .locationUpdateFailed(clError.localizedDescription)
+                delegate?.locationManager(self, didFailWithError: LocationError.locationUpdateFailed(clError.localizedDescription))
             }
         } else {
-            locationError = .locationUpdateFailed(error.localizedDescription)
+            delegate?.locationManager(self, didFailWithError: LocationError.locationUpdateFailed(error.localizedDescription))
         }
-        
-        delegate?.locationManager(self, didFailWithError: locationError)
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

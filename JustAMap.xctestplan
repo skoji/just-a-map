@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "9C99A3A5-D701-42B3-AF34-4F05513B853C",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:JustAMap.xcodeproj",
+      "identifier" : "6F18D5092E1A39800059559C",
+      "name" : "JustAMap"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:JustAMap.xcodeproj",
+        "identifier" : "6F18D5162E1A39810059559C",
+        "name" : "JustAMapTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:JustAMap.xcodeproj",
+        "identifier" : "6F18D5202E1A39820059559C",
+        "name" : "JustAMapUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

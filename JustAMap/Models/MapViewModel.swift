@@ -65,6 +65,10 @@ extension MapViewModel: LocationManagerDelegate {
         Task { @MainActor in
             self.userLocation = location
             self.updateRegionIfFollowing(location: location)
+            // 位置情報が正常に取得できたらエラーをクリア
+            if self.locationError != nil && self.locationError != .authorizationDenied {
+                self.locationError = nil
+            }
         }
     }
     
