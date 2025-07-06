@@ -11,10 +11,7 @@ struct MapView: View {
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
     )
-    @State private var currentMapRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
-        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-    )
+    @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
     
     var body: some View {
@@ -56,9 +53,11 @@ struct MapView: View {
                 // ボタンによるズーム中は無視
                 guard !isZoomingByButton else { return }
                 
-                // 現在のズームレベルと地域を追跡
-                currentMapRegion = context.region
-                viewModel.currentSpan = context.region.span
+                // カメラ情報を更新
+                let camera = context.camera
+                currentMapCamera = camera
+                // 高度から最も近いズームインデックスを設定
+                viewModel.mapControlsViewModel.setNearestZoomIndex(for: camera.distance)
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 if viewModel.isFollowingUser {
@@ -103,7 +102,7 @@ struct MapView: View {
                         controlsViewModel: viewModel.mapControlsViewModel,
                         mapPosition: $mapPosition,
                         isZoomingByButton: $isZoomingByButton,
-                        currentRegion: currentMapRegion
+                        currentMapCamera: currentMapCamera
                     )
                     .padding(.leading, 20)
                     
@@ -114,10 +113,13 @@ struct MapView: View {
                         viewModel.isFollowingUser = true
                         if let location = viewModel.userLocation {
                             withAnimation {
-                                mapPosition = .region(MKCoordinateRegion(
-                                    center: location.coordinate,
-                                    span: viewModel.currentSpan
-                                ))
+                                let camera = MapCamera(
+                                    centerCoordinate: location.coordinate,
+                                    distance: viewModel.mapControlsViewModel.currentAltitude,
+                                    heading: viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course,
+                                    pitch: 0
+                                )
+                                mapPosition = .camera(camera)
                             }
                         }
                     }) {
@@ -136,6 +138,12 @@ struct MapView: View {
         }
         .onAppear {
             viewModel.requestLocationPermission()
+            // 初期カメラ位置を設定
+            let initialCamera = MapCamera(
+                centerCoordinate: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+                distance: viewModel.mapControlsViewModel.currentAltitude
+            )
+            mapPosition = .camera(initialCamera)
         }
         .onDisappear {
             viewModel.stopLocationTracking()
@@ -145,10 +153,13 @@ struct MapView: View {
             // 追従モードの場合は地図を更新
             if viewModel.isFollowingUser, let location = newLocation {
                 withAnimation {
-                    mapPosition = .region(MKCoordinateRegion(
-                        center: location.coordinate,
-                        span: viewModel.currentSpan
-                    ))
+                    let camera = MapCamera(
+                        centerCoordinate: location.coordinate,
+                        distance: viewModel.mapControlsViewModel.currentAltitude,
+                        heading: viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course,
+                        pitch: 0
+                    )
+                    mapPosition = .camera(camera)
                 }
             }
         }
@@ -162,6 +173,9 @@ struct MapView: View {
             viewModel.saveSettings()
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
+            viewModel.saveSettings()
+        }
+        .onReceive(viewModel.mapControlsViewModel.$currentZoomIndex) { _ in
             viewModel.saveSettings()
         }
     }
@@ -198,8 +212,7 @@ struct ErrorBanner: View {
         .padding()
         .background(Color.red)
         .cornerRadius(12)
-        .padding(.horizontal)
-        .transition(.move(edge: .top).combined(with: .opacity))
+        .shadow(radius: 3)
     }
 }
 

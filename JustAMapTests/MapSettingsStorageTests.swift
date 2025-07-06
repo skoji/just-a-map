@@ -116,6 +116,38 @@ final class MapSettingsStorageTests: XCTestCase {
         // Then
         XCTAssertNil(span)
     }
+    
+    func testSaveZoomIndex() {
+        // Given
+        let index = 7
+        
+        // When
+        sut.saveZoomIndex(index)
+        
+        // Then
+        XCTAssertEqual(mockUserDefaults.storage["zoomIndex"] as? Int, 7)
+    }
+    
+    func testLoadZoomIndex() {
+        // Given
+        mockUserDefaults.storage["zoomIndex"] = 3
+        
+        // When
+        let index = sut.loadZoomIndex()
+        
+        // Then
+        XCTAssertEqual(index, 3)
+    }
+    
+    func testLoadZoomIndexDefault() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let index = sut.loadZoomIndex()
+        
+        // Then
+        XCTAssertNil(index)
+    }
 }
 
 // MARK: - Mock UserDefaults
@@ -144,5 +176,9 @@ class MockUserDefaults: UserDefaultsProtocol {
     
     func string(forKey defaultName: String) -> String? {
         return storage[defaultName] as? String
+    }
+    
+    func integer(forKey defaultName: String) -> Int {
+        return storage[defaultName] as? Int ?? 0
     }
 }

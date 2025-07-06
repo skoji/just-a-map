@@ -8,6 +8,7 @@ protocol UserDefaultsProtocol {
     func bool(forKey defaultName: String) -> Bool
     func double(forKey defaultName: String) -> Double
     func string(forKey defaultName: String) -> String?
+    func integer(forKey defaultName: String) -> Int
 }
 
 /// UserDefaultsをプロトコルに準拠
@@ -21,6 +22,8 @@ protocol MapSettingsStorageProtocol {
     func loadMapOrientation() -> Bool
     func saveZoomLevel(span: MKCoordinateSpan)
     func loadZoomLevel() -> MKCoordinateSpan?
+    func saveZoomIndex(_ index: Int)
+    func loadZoomIndex() -> Int?
 }
 
 /// 地図設定の永続化サービス
@@ -33,6 +36,7 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         static let isNorthUp = "isNorthUp"
         static let zoomLatDelta = "zoomLatDelta"
         static let zoomLonDelta = "zoomLonDelta"
+        static let zoomIndex = "zoomIndex"
     }
     
     init(userDefaults: UserDefaultsProtocol = UserDefaults.standard) {
@@ -87,5 +91,19 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
             latitudeDelta: latDelta,
             longitudeDelta: lonDelta
         )
+    }
+    
+    // MARK: - Zoom Index
+    
+    func saveZoomIndex(_ index: Int) {
+        userDefaults.set(index, forKey: Keys.zoomIndex)
+    }
+    
+    func loadZoomIndex() -> Int? {
+        // キーが存在するか確認
+        if userDefaults.object(forKey: Keys.zoomIndex) != nil {
+            return userDefaults.integer(forKey: Keys.zoomIndex)
+        }
+        return nil
     }
 }

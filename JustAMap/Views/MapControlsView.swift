@@ -7,7 +7,7 @@ struct MapControlsView: View {
     @ObservedObject var controlsViewModel: MapControlsViewModel
     @Binding var mapPosition: MapCameraPosition
     @Binding var isZoomingByButton: Bool
-    let currentRegion: MKCoordinateRegion
+    let currentMapCamera: MapCamera?
     
     var body: some View {
         VStack(spacing: 16) {
@@ -18,7 +18,8 @@ struct MapControlsView: View {
                     icon: "plus.magnifyingglass",
                     action: {
                         zoomIn()
-                    }
+                    },
+                    isEnabled: controlsViewModel.canZoomIn
                 )
                 
                 // ズームアウト
@@ -26,7 +27,8 @@ struct MapControlsView: View {
                     icon: "minus.magnifyingglass",
                     action: {
                         zoomOut()
-                    }
+                    },
+                    isEnabled: controlsViewModel.canZoomOut
                 )
             }
             
@@ -74,35 +76,46 @@ struct MapControlsView: View {
     // MARK: - Methods
     
     private func zoomIn() {
-        let newSpan = controlsViewModel.calculateZoomIn(from: currentRegion.span)
-        print("ズームイン: \(currentRegion.span.latitudeDelta) -> \(newSpan.latitudeDelta)")
+        print("ズームイン: レベル\(controlsViewModel.currentZoomIndex) -> \(controlsViewModel.currentZoomIndex - 1)")
         
-        isZoomingByButton = true
-        withAnimation {
-            mapPosition = .region(MKCoordinateRegion(
-                center: currentRegion.center,
-                span: newSpan
-            ))
-            mapViewModel.currentSpan = newSpan
-        }
-        
-        // アニメーション完了後にフラグをリセット
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isZoomingByButton = false
-        }
+        controlsViewModel.zoomIn()
+        updateMapCamera()
     }
     
     private func zoomOut() {
-        let newSpan = controlsViewModel.calculateZoomOut(from: currentRegion.span)
-        print("ズームアウト: \(currentRegion.span.latitudeDelta) -> \(newSpan.latitudeDelta)")
+        print("ズームアウト: レベル\(controlsViewModel.currentZoomIndex) -> \(controlsViewModel.currentZoomIndex + 1)")
         
+        controlsViewModel.zoomOut()
+        updateMapCamera()
+    }
+    
+    private func updateMapCamera() {
         isZoomingByButton = true
-        withAnimation {
-            mapPosition = .region(MKCoordinateRegion(
-                center: currentRegion.center,
-                span: newSpan
-            ))
-            mapViewModel.currentSpan = newSpan
+        
+        // 現在のカメラ位置、または最新の位置情報を使用
+        let centerCoordinate: CLLocationCoordinate2D
+        let heading: Double
+        
+        if let camera = currentMapCamera {
+            centerCoordinate = camera.centerCoordinate
+            heading = camera.heading
+        } else if let userLocation = mapViewModel.userLocation {
+            centerCoordinate = userLocation.coordinate
+            heading = controlsViewModel.isNorthUp ? 0 : userLocation.course
+        } else {
+            // デフォルト位置（東京駅）
+            centerCoordinate = CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503)
+            heading = 0
+        }
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            let newCamera = MapCamera(
+                centerCoordinate: centerCoordinate,
+                distance: controlsViewModel.currentAltitude,
+                heading: heading,
+                pitch: 0
+            )
+            mapPosition = .camera(newCamera)
         }
         
         // アニメーション完了後にフラグをリセット
@@ -116,17 +129,19 @@ struct MapControlsView: View {
 struct ControlButton: View {
     let icon: String
     let action: () -> Void
+    var isEnabled: Bool = true
     
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.primary)
+                .foregroundColor(isEnabled ? .primary : .gray)
                 .frame(width: 60, height: 60)
                 .background(Color(UIColor.systemBackground))
                 .clipShape(Circle())
                 .shadow(radius: 2)
         }
+        .disabled(!isEnabled)
     }
 }
 
@@ -136,15 +151,9 @@ struct MapControlsView_Previews: PreviewProvider {
         MapControlsView(
             mapViewModel: MapViewModel(),
             controlsViewModel: MapControlsViewModel(),
-            mapPosition: .constant(.region(MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))),
+            mapPosition: .constant(.automatic),
             isZoomingByButton: .constant(false),
-            currentRegion: MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            )
+            currentMapCamera: nil
         )
         .padding()
         .background(Color.gray.opacity(0.2))

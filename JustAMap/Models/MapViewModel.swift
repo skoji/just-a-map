@@ -10,7 +10,7 @@ class MapViewModel: ObservableObject {
         center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503), // 東京駅をデフォルト
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     )
-    @Published var currentSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    @Published var currentSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01) // 廃止予定
     
     @Published var userLocation: CLLocation?
     @Published var isLocationAuthorized = false
@@ -55,16 +55,16 @@ class MapViewModel: ObservableObject {
         mapControlsViewModel.currentMapStyle = settingsStorage.loadMapStyle()
         mapControlsViewModel.isNorthUp = settingsStorage.loadMapOrientation()
         
-        if let savedSpan = settingsStorage.loadZoomLevel() {
-            region.span = savedSpan
-            currentSpan = savedSpan
+        // 保存されたズームレベルインデックスを読み込む
+        if let savedZoomIndex = settingsStorage.loadZoomIndex() {
+            mapControlsViewModel.setZoomIndex(savedZoomIndex)
         }
     }
     
     func saveSettings() {
         settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
         settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
-        settingsStorage.saveZoomLevel(span: currentSpan)
+        settingsStorage.saveZoomIndex(mapControlsViewModel.currentZoomIndex)
     }
     
     func requestLocationPermission() {

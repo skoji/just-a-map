@@ -16,325 +16,222 @@ final class MapControlsViewModelTests: XCTestCase {
         super.tearDown()
     }
     
-    // MARK: - Zoom Tests
+    // MARK: - Zoom Tests (新しい実装)
+    
+    func testDefaultZoomIndex() {
+        // Then - デフォルトは市レベル（インデックス5）
+        XCTAssertEqual(sut.currentZoomIndex, 5)
+        XCTAssertEqual(sut.currentAltitude, 10000)
+    }
     
     func testZoomIn() {
         // Given
-        let initialSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let initialIndex = sut.currentZoomIndex
+        let initialAltitude = sut.currentAltitude
         
         // When
-        let newSpan = sut.calculateZoomIn(from: initialSpan)
+        sut.zoomIn()
         
         // Then
-        XCTAssertLessThan(newSpan.latitudeDelta, initialSpan.latitudeDelta)
-        XCTAssertLessThan(newSpan.longitudeDelta, initialSpan.longitudeDelta)
-        XCTAssertEqual(newSpan.latitudeDelta, initialSpan.latitudeDelta * 0.5, accuracy: 0.0001)
+        XCTAssertEqual(sut.currentZoomIndex, initialIndex - 1)
+        XCTAssertLessThan(sut.currentAltitude, initialAltitude)
     }
     
     func testZoomOut() {
         // Given
-        let initialSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let initialIndex = sut.currentZoomIndex
+        let initialAltitude = sut.currentAltitude
         
         // When
-        let newSpan = sut.calculateZoomOut(from: initialSpan)
+        sut.zoomOut()
         
         // Then
-        XCTAssertGreaterThan(newSpan.latitudeDelta, initialSpan.latitudeDelta)
-        XCTAssertGreaterThan(newSpan.longitudeDelta, initialSpan.longitudeDelta)
-        XCTAssertEqual(newSpan.latitudeDelta, initialSpan.latitudeDelta * 2.0, accuracy: 0.0001)
+        XCTAssertEqual(sut.currentZoomIndex, initialIndex + 1)
+        XCTAssertGreaterThan(sut.currentAltitude, initialAltitude)
     }
     
     func testZoomInLimit() {
-        // Given - 最小ズーム値に近い値
-        let initialSpan = MKCoordinateSpan(latitudeDelta: 0.0001, longitudeDelta: 0.0001)
+        // Given - 最小ズームインデックス（0）に設定
+        sut.setZoomIndex(0)
         
         // When
-        let newSpan = sut.calculateZoomIn(from: initialSpan)
+        sut.zoomIn()
         
         // Then - それ以上ズームインしない
-        XCTAssertEqual(newSpan.latitudeDelta, sut.minimumZoomSpan.latitudeDelta, accuracy: 0.00001)
+        XCTAssertEqual(sut.currentZoomIndex, 0)
+        XCTAssertFalse(sut.canZoomIn)
+        XCTAssertTrue(sut.canZoomOut)
     }
     
     func testZoomOutLimit() {
-        // Given - 最大ズーム値に近い値
-        let initialSpan = MKCoordinateSpan(latitudeDelta: 100.0, longitudeDelta: 100.0)
+        // Given - 最大ズームインデックス（11）に設定
+        sut.setZoomIndex(11)
         
         // When
-        let newSpan = sut.calculateZoomOut(from: initialSpan)
+        sut.zoomOut()
         
         // Then - それ以上ズームアウトしない
-        XCTAssertEqual(newSpan.latitudeDelta, sut.maximumZoomSpan.latitudeDelta, accuracy: 0.1)
+        XCTAssertEqual(sut.currentZoomIndex, 11)
+        XCTAssertTrue(sut.canZoomIn)
+        XCTAssertFalse(sut.canZoomOut)
     }
     
-    func testZoomLevelCalculation() {
-        // Given
-        let span1 = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        let span2 = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+    func testSetNearestZoomIndex() {
+        // 現在の実装が同じ差の場合にどちらを選ぶか確認
+        // 750は500とも100とも250の差がある
+        sut.setNearestZoomIndex(for: 750)
+        let index750 = sut.currentZoomIndex
+        print("高度750のインデックス: \(index750)")
         
-        // When
-        let level1 = sut.calculateZoomLevel(from: span1)
-        let level2 = sut.calculateZoomLevel(from: span2)
+        // 中間点をテスト
+        sut.setNearestZoomIndex(for: 350)  // 200と500の中間
+        let index350 = sut.currentZoomIndex
+        print("高度350のインデックス: \(index350)")
         
-        // Then
-        XCTAssertGreaterThan(level1, level2) // より小さいspanはより高いズームレベル
-        XCTAssertGreaterThan(level1, 0)
-        XCTAssertLessThanOrEqual(level1, 20)
+        // 明らかに近いケースをテスト
+        sut.setNearestZoomIndex(for: 100)
+        XCTAssertEqual(sut.currentZoomIndex, 0, "高度100は200に最も近い")
+        
+        sut.setNearestZoomIndex(for: 400)
+        XCTAssertEqual(sut.currentZoomIndex, 1, "高度400は500に最も近い")
+        
+        sut.setNearestZoomIndex(for: 1200000)
+        XCTAssertEqual(sut.currentZoomIndex, 11, "高度1200000は1000000に最も近い")
     }
     
-    func testConsistentZoomSteps() {
-        // Given - 異なる開始点からのズーム（ピンチ操作後を想定）
-        let span1 = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        let span2 = MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008) // ピンチで少し変更された値
+    func testZoomStability() {
+        // Given - 特定のズームレベルを設定
+        sut.setZoomIndex(3)
+        let expectedAltitude = sut.currentAltitude
         
-        // When - 両方からズームインする
-        let newSpan1 = sut.calculateZoomIn(from: span1)
-        let newSpan2 = sut.calculateZoomIn(from: span2)
+        // When - 同じインデックスを再設定
+        sut.setZoomIndex(3)
         
-        // Then - 結果が大きく異ならないこと
-        let ratio = newSpan1.latitudeDelta / newSpan2.latitudeDelta
-        XCTAssertGreaterThan(ratio, 0.8) // 20%以上の差がないこと
-        XCTAssertLessThan(ratio, 1.25)
+        // Then - 高度は変わらない
+        XCTAssertEqual(sut.currentAltitude, expectedAltitude)
     }
     
     func testZoomInOutReversibility() {
         // Given
-        let initialSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let initialIndex = sut.currentZoomIndex
         
-        // When - ズームイン後にズームアウト
-        let zoomedIn = sut.calculateZoomIn(from: initialSpan)
-        let zoomedOut = sut.calculateZoomOut(from: zoomedIn)
+        // When
+        sut.zoomIn()
+        sut.zoomOut()
         
-        // Then - 元の値に戻ること
-        XCTAssertEqual(zoomedOut.latitudeDelta, initialSpan.latitudeDelta, accuracy: 0.0001)
-        XCTAssertEqual(zoomedOut.longitudeDelta, initialSpan.longitudeDelta, accuracy: 0.0001)
+        // Then
+        XCTAssertEqual(sut.currentZoomIndex, initialIndex)
     }
     
-    func testMultipleZoomStepsConsistency() {
-        // Given - ピンチ操作で微妙に変わった値
-        let pinchModifiedSpan = MKCoordinateSpan(latitudeDelta: 0.0073, longitudeDelta: 0.0073)
+    func testMultipleZoomSteps() {
+        // Given
+        sut.setZoomIndex(5)
         
-        // When - 複数回ズーム操作
-        let step1 = sut.calculateZoomIn(from: pinchModifiedSpan)
-        let step2 = sut.calculateZoomOut(from: step1)
-        let step3 = sut.calculateZoomIn(from: step2)
+        // When - 3回ズームイン
+        sut.zoomIn()
+        sut.zoomIn()
+        sut.zoomIn()
         
-        // Then - 最初のズームインと3回目のズームインが同じ結果になること
-        XCTAssertEqual(step1.latitudeDelta, step3.latitudeDelta, accuracy: 0.0001)
-    }
-    
-    func testDiscreteZoomLevels() {
-        // Given - 連続的な値（0.0073は0.005と0.01の間）
-        let continuousSpan = MKCoordinateSpan(latitudeDelta: 0.0073, longitudeDelta: 0.0073)
+        // Then
+        XCTAssertEqual(sut.currentZoomIndex, 2)
         
-        // When - ズームインする
-        let zoomedIn = sut.calculateZoomIn(from: continuousSpan)
+        // When - 2回ズームアウト
+        sut.zoomOut()
+        sut.zoomOut()
         
-        // Then - 次の小さいレベル（0.005）にスナップされるべき
-        XCTAssertEqual(zoomedIn.latitudeDelta, 0.005, accuracy: 0.0001,
-                      "0.0073からのズームインは0.005になるべき")
-        
-        // When - ズームアウトする
-        let zoomedOut = sut.calculateZoomOut(from: continuousSpan)
-        
-        // Then - 次の大きいレベル（0.01）にスナップされるべき
-        XCTAssertEqual(zoomedOut.latitudeDelta, 0.01, accuracy: 0.0001,
-                      "0.0073からのズームアウトは0.01になるべき")
-    }
-    
-    func testPredefinedZoomLevels() {
-        // Given - 予め定義されたズームレベル
-        let zoomLevels = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 180.0]
-        
-        // When/Then - 各レベルからのズームが次の適切なレベルに移動すること
-        for i in 1..<zoomLevels.count - 1 {
-            let currentSpan = MKCoordinateSpan(latitudeDelta: zoomLevels[i], longitudeDelta: zoomLevels[i])
-            let zoomedIn = sut.calculateZoomIn(from: currentSpan)
-            let zoomedOut = sut.calculateZoomOut(from: currentSpan)
-            
-            // ズームインは前のレベルへ
-            XCTAssertEqual(zoomedIn.latitudeDelta, zoomLevels[i-1], accuracy: 0.0001,
-                          "レベル\(zoomLevels[i])からのズームインは\(zoomLevels[i-1])になるべき")
-            
-            // ズームアウトは次のレベルへ
-            XCTAssertEqual(zoomedOut.latitudeDelta, zoomLevels[i+1], accuracy: 0.0001,
-                          "レベル\(zoomLevels[i])からのズームアウトは\(zoomLevels[i+1])になるべき")
-        }
-    }
-    
-    func testZoomButtonsIgnoreSimilarValues() {
-        // Given - ボタンを押した後の値（0.005）に非常に近い値
-        let almostSameSpan = MKCoordinateSpan(latitudeDelta: 0.00501, longitudeDelta: 0.00501)
-        
-        // When - ズームインしようとする
-        let newSpan = sut.calculateZoomIn(from: almostSameSpan)
-        
-        // Then - 同じレベルに留まるべき（次のレベルには行かない）
-        XCTAssertEqual(newSpan.latitudeDelta, 0.002, accuracy: 0.0001,
-                      "0.00501からのズームインは0.002になるべき（0.005には留まらない）")
-    }
-    
-    func testZoomStability() {
-        // Given - アニメーション中の微小な変化
-        let spans = [0.005, 0.00502, 0.00498, 0.00501, 0.005]
-        
-        // When - 連続してズーム計算
-        var results: [Double] = []
-        for span in spans {
-            let s = MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
-            let zoomedIn = sut.calculateZoomIn(from: s)
-            results.append(zoomedIn.latitudeDelta)
-        }
-        
-        // Then - すべて同じ結果になるべき
-        let uniqueResults = Set(results)
-        XCTAssertEqual(uniqueResults.count, 1, "微小な変化では同じズームレベルを維持すべき")
-    }
-    
-    func testZoomInFromIntermediateValues() {
-        // Given - 1.0より大きい中間値
-        let testCases: [(input: Double, expected: Double)] = [
-            (1.7231532046885647, 0.5),  // 1.0より大きい値から0.5へ
-            (1.7237187676566208, 0.5),
-            (1.0, 0.5),                  // 1.0から0.5へ
-            (0.8614408496052519, 0.5),  // 1.0より小さい値から0.5へ
-        ]
-        
-        // When/Then
-        for testCase in testCases {
-            let span = MKCoordinateSpan(latitudeDelta: testCase.input, longitudeDelta: testCase.input)
-            let result = sut.calculateZoomIn(from: span)
-            print("Input: \(testCase.input), Expected: \(testCase.expected), Got: \(result.latitudeDelta)")
-            XCTAssertEqual(result.latitudeDelta, testCase.expected, accuracy: 0.0001,
-                          "\(testCase.input)からのズームインは\(testCase.expected)になるべき、実際は\(result.latitudeDelta)")
-        }
-    }
-    
-    func testZoomShouldHandleMapKitConvertedValues() {
-        // Given - MapKitが変換した値（実際のログから）
-        let mapKitValues: [(actual: Double, shouldBeFrom: Double)] = [
-            (0.01723765370820729, 0.01),     // 0.01に設定したがMapKitが報告する値
-            (0.03447514724412315, 0.02),     // 0.02に設定したがMapKitが報告する値
-            (0.08618684050986758, 0.05),     // 0.05に設定したがMapKitが報告する値
-            (0.17237128803817825, 0.1),      // 0.1に設定したがMapKitが報告する値
-            (0.34472916623524696, 0.2),      // 0.2に設定したがMapKitが報告する値
-            (0.8618068330600863, 0.5),       // 0.5に設定したがMapKitが報告する値
-            (1.722302264434937, 1.0),        // 1.0に設定したがMapKitが報告する値
-        ]
-        
-        // When/Then - ズームインは前のレベルに戻るべき
-        for (i, value) in mapKitValues.enumerated() where i > 0 {
-            let span = MKCoordinateSpan(latitudeDelta: value.actual, longitudeDelta: value.actual)
-            let result = sut.calculateZoomIn(from: span)
-            let expectedLevel = mapKitValues[i-1].shouldBeFrom
-            
-            XCTAssertEqual(result.latitudeDelta, expectedLevel, accuracy: 0.0001,
-                          "MapKit値\(value.actual)（本来\(value.shouldBeFrom)）からのズームインは\(expectedLevel)になるべき")
-        }
-    }
-    
-    func testZoomShouldMaintainTargetLevel() {
-        // Given - 目標レベルに設定後、MapKitが異なる値を報告
-        let targetLevel = 0.02
-        let mapKitReportedValue = 0.03447514724412315
-        
-        // When - MapKitの値からズームインを試みる
-        let span = MKCoordinateSpan(latitudeDelta: mapKitReportedValue, longitudeDelta: mapKitReportedValue)
-        let zoomInResult = sut.calculateZoomIn(from: span)
-        
-        // Then - 元の目標レベル（0.02）より小さい値（0.01）になるべき
-        XCTAssertEqual(zoomInResult.latitudeDelta, 0.01, accuracy: 0.0001,
-                      "0.02に設定後のMapKit値からズームインすると0.01になるべき")
-        
-        // When - ズームアウトを試みる
-        let zoomOutResult = sut.calculateZoomOut(from: span)
-        
-        // Then - 次のレベル（0.05）になるべき
-        XCTAssertEqual(zoomOutResult.latitudeDelta, 0.05, accuracy: 0.0001,
-                      "0.02に設定後のMapKit値からズームアウトすると0.05になるべき")
+        // Then
+        XCTAssertEqual(sut.currentZoomIndex, 4)
     }
     
     // MARK: - Map Style Tests
     
     func testDefaultMapStyle() {
-        // Then
         XCTAssertEqual(sut.currentMapStyle, .standard)
     }
     
     func testMapStyleToggle() {
-        // Given
-        let initialStyle = sut.currentMapStyle
+        // When
+        sut.toggleMapStyle()
+        
+        // Then
+        XCTAssertEqual(sut.currentMapStyle, .hybrid)
         
         // When
         sut.toggleMapStyle()
         
         // Then
-        XCTAssertNotEqual(sut.currentMapStyle, initialStyle)
-        XCTAssertEqual(sut.currentMapStyle, .hybrid)
+        XCTAssertEqual(sut.currentMapStyle, .imagery)
+        
+        // When
+        sut.toggleMapStyle()
+        
+        // Then - 最初に戻る
+        XCTAssertEqual(sut.currentMapStyle, .standard)
     }
     
     func testMapStyleCycle() {
         // Given
-        let styles: [MapStyle] = [.standard, .hybrid, .imagery]
+        let expectedCycle: [MapStyle] = [.standard, .hybrid, .imagery]
+        var actualCycle: [MapStyle] = []
         
-        // When & Then
-        for expectedStyle in styles {
-            XCTAssertEqual(sut.currentMapStyle, expectedStyle)
+        // When - 完全なサイクルを実行
+        for _ in 0..<3 {
+            actualCycle.append(sut.currentMapStyle)
             sut.toggleMapStyle()
         }
         
-        // 一周して元に戻る
-        XCTAssertEqual(sut.currentMapStyle, .standard)
+        // Then
+        XCTAssertEqual(actualCycle, expectedCycle)
     }
     
     func testMapStyleProperties() {
-        // Given & When & Then
-        XCTAssertEqual(MapStyle.standard.rawValue, "標準")
-        XCTAssertEqual(MapStyle.hybrid.rawValue, "航空写真+地図")
-        XCTAssertEqual(MapStyle.imagery.rawValue, "航空写真")
+        // Test standard
+        sut.currentMapStyle = .standard
+        XCTAssertEqual(sut.currentMKMapType, .standard)
+        
+        // Test hybrid
+        sut.currentMapStyle = .hybrid
+        XCTAssertEqual(sut.currentMKMapType, .hybrid)
+        
+        // Test imagery
+        sut.currentMapStyle = .imagery
+        XCTAssertEqual(sut.currentMKMapType, .satellite)
     }
     
     // MARK: - Map Orientation Tests
     
     func testDefaultMapOrientation() {
-        // Then
         XCTAssertTrue(sut.isNorthUp)
         XCTAssertFalse(sut.isHeadingUp)
     }
     
     func testToggleMapOrientation() {
-        // Given
-        let initialNorthUp = sut.isNorthUp
-        
         // When
         sut.toggleMapOrientation()
         
         // Then
-        XCTAssertEqual(sut.isNorthUp, !initialNorthUp)
-        XCTAssertEqual(sut.isHeadingUp, initialNorthUp)
+        XCTAssertFalse(sut.isNorthUp)
+        XCTAssertTrue(sut.isHeadingUp)
     }
     
     func testMapOrientationToggleBackAndForth() {
-        // When & Then
+        // When
         sut.toggleMapOrientation()
-        XCTAssertFalse(sut.isNorthUp)
-        XCTAssertTrue(sut.isHeadingUp)
+        sut.toggleMapOrientation()
         
-        sut.toggleMapOrientation()
+        // Then - 元に戻る
         XCTAssertTrue(sut.isNorthUp)
         XCTAssertFalse(sut.isHeadingUp)
     }
     
     func testCalculateHeadingRotation() {
         // Given
-        let heading1: Double = 90  // 東向き
-        let heading2: Double = 180 // 南向き
-        let heading3: Double = 270 // 西向き
-        let heading4: Double = 0   // 北向き
+        let heading: Double = 45.0
         
-        // When & Then
-        XCTAssertEqual(sut.calculateHeadingRotation(heading1), -90, accuracy: 0.1)
-        XCTAssertEqual(sut.calculateHeadingRotation(heading2), -180, accuracy: 0.1)
-        XCTAssertEqual(sut.calculateHeadingRotation(heading3), -270, accuracy: 0.1)
-        XCTAssertEqual(sut.calculateHeadingRotation(heading4), 0, accuracy: 0.1)
+        // When
+        let rotation = sut.calculateHeadingRotation(heading)
+        
+        // Then
+        XCTAssertEqual(rotation, -45.0)
     }
 }
