@@ -18,6 +18,7 @@ class MapViewModel: ObservableObject {
     @Published var isFollowingUser = true
     @Published var formattedAddress: FormattedAddress?
     @Published var isLoadingAddress = false
+    @Published var mapCenterCoordinate = CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503)
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -120,6 +121,11 @@ class MapViewModel: ObservableObject {
                 span: region.span
             )
         }
+    }
+    
+    /// ユーザーが地図を操作したときに呼ばれる
+    func handleUserMapInteraction() {
+        isFollowingUser = false
     }
     
     private func updateRegionIfFollowing(location: CLLocation) {
