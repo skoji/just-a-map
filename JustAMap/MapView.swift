@@ -4,6 +4,15 @@ import Combine
 
 /// 地図を表示するView
 struct MapView: View {
+    // MARK: - Constants
+    private enum Constants {
+        static let styleChangeDelay: TimeInterval = 0.1
+        static let animationDuration: TimeInterval = 0.3
+        static let flagResetDelay: TimeInterval = 0.5
+        static let followingDistanceThreshold: CLLocationDistance = 100.0
+    }
+    
+    // MARK: - State
     @StateObject private var viewModel = MapViewModel()
     @State private var mapPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -16,7 +25,7 @@ struct MapView: View {
     @State private var isShowingSettings = false
     @State private var isChangingMapStyle = false
     
-    private var currentMapStyle: MapStyle {
+    private var currentMapStyle: MapKit.MapStyle {
         switch viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
             return .standard
