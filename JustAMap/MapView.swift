@@ -14,10 +14,10 @@ struct MapView: View {
     @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
     @State private var isShowingSettings = false
-    @State private var mapStyleForDisplay: JustAMap.MapStyle = .standard
+    @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
     private var mapStyleValue: MapKit.MapStyle {
-        switch mapStyleForDisplay {
+        switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
             return .standard
         case .hybrid:
@@ -174,8 +174,10 @@ struct MapView: View {
                 distance: viewModel.mapControlsViewModel.currentAltitude
             )
             mapPosition = .camera(initialCamera)
-            // 初期スタイルを設定
-            mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
+            // 初期スタイルを設定（まだ設定されていない場合のみ）
+            if mapStyleForDisplay == nil {
+                mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
+            }
         }
         .onDisappear {
             viewModel.stopLocationTracking()
