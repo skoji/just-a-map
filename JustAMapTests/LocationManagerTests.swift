@@ -91,6 +91,45 @@ final class LocationManagerTests: XCTestCase {
         // Then
         XCTAssertEqual(mockDelegate.lastAuthorizationStatus, .authorizedWhenInUse)
     }
+    
+    func testLocationManagerAdjustsDistanceFilterForHighSpeedAndCloseZoom() {
+        // Given
+        sut = MockLocationManager()
+        let speed = 60.0 // km/h
+        let zoomDistance = 500.0 // meters (close zoom)
+        
+        // When
+        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        
+        // Then
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 5.0) // 5m for high speed + close zoom
+    }
+    
+    func testLocationManagerAdjustsDistanceFilterForLowSpeedAndFarZoom() {
+        // Given
+        sut = MockLocationManager()
+        let speed = 10.0 // km/h
+        let zoomDistance = 5000.0 // meters (far zoom)
+        
+        // When
+        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        
+        // Then
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 50.0) // 50m for low speed + far zoom
+    }
+    
+    func testLocationManagerAdjustsDistanceFilterForMediumSpeed() {
+        // Given
+        sut = MockLocationManager()
+        let speed = 30.0 // km/h
+        let zoomDistance = 1000.0 // meters
+        
+        // When
+        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        
+        // Then
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 10.0) // 10m for medium conditions
+    }
 }
 
 // MARK: - Mock Delegate
