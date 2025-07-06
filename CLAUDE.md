@@ -81,7 +81,6 @@
 - North Up / Heading Up の切り替え（実際の回転は今後実装）
 - 地図表示モード（標準/ハイブリッド/航空写真）の切り替え
 - 大きめのタップしやすいコントロールボタン（60x60pt）
-- （将来）音声コマンドによる操作
 
 **テスト対象**:
 - ズームインデックス管理ロジック
@@ -186,22 +185,6 @@ JustAMapUITests/
 - 「@StateObjectと@ObservedObjectの違いは？」
 - 「なぜプロトコルを使うのか？」
 - 「async/awaitはどう動作するのか？」
-
-## 将来の拡張予定
-
-### 設定画面
-- デフォルトズームレベル
-- 地図の種類の初期設定
-- 住所表示のフォーマット選択
-
-### 音声操作
-- 「ズームイン/アウト」
-- 「ノースアップ/ヘディングアップ」
-- 「標準地図/航空写真」
-
-### その他（将来的に）
-- Apple Watchとの連携
-- CarPlay対応
 
 ## エラーハンドリング戦略
 
@@ -312,6 +295,36 @@ let testScenarios = [
 - **使用ライブラリ**: Apple純正フレームワークのみ
 - **広告/トラッキング**: 一切使用しない
 - **アナリティクス**: 実装していない
+
+## 将来の拡張予定
+
+> **メンテナンス指示**: 各機能が実装されIssueがCloseされた際は、該当項目を「実装済み機能」セクションに移動し、実装日とPR番号を記録してください。
+
+### North Up / Heading Up
+- North Up / Heading Up 切り替え時の回転 ([Issue #1](https://github.com/skoji/just-a-map/issues/1))
+
+### 多言語化
+- 日本語に加えて、英語 ([Issue #2](https://github.com/skoji/just-a-map/issues/2))
+
+### 設定画面
+- デフォルトズームレベル
+- 地図の種類の初期設定
+- 住所表示のフォーマット選択
+- ([Issue #3](https://github.com/skoji/just-a-map/issues/3))
+
+### 音声操作
+- 「ズームイン/アウト」
+- 「ノースアップ/ヘディングアップ」
+- 「標準地図/航空写真」
+- ([Issue #4](https://github.com/skoji/just-a-map/issues/4))
+
+### その他
+- Apple Watchとの連携 ([Issue #5](https://github.com/skoji/just-a-map/issues/5))
+- CarPlay対応 ([Issue #6](https://github.com/skoji/just-a-map/issues/6))
+
+## 実装済み機能
+
+> **記録形式**: 機能名 (実装日: YYYY-MM-DD, PR: #番号)
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
