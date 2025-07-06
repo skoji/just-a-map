@@ -1,47 +1,59 @@
-# Just a Map - エミュレータでの動作確認手順
+# Just a Map
 
-## 1. Xcodeでプロジェクトを開く
+**just a map** - リアルタイムで更新される以外は単なる地図
 
-### 方法A: 新規プロジェクトを作成（推奨）
-1. Xcodeを開く
-2. "Create New Project" を選択
-3. iOS > App を選択して "Next"
-4. 以下の設定で作成:
-   - Product Name: `JustAMap`
-   - Team: あなたのApple Developer Team（なければ個人を選択）
-   - Organization Identifier: `com.example`（任意）
-   - Interface: `SwiftUI`
-   - Language: `Swift`
-   - Use Core Data: オフ
-   - Include Tests: オン
-5. プロジェクトの保存場所をこのディレクトリ（`just-a-map`）に設定
+バイク（オートバイ）のハンドルマウントで使用することを想定した、シンプルで実用的な地図アプリケーション。
 
-### 方法B: 既存ファイルを使用
-1. 作成したプロジェクトに既存のSwiftファイルを追加
-2. File > Add Files to "JustAMap"...
-3. `JustAMap`フォルダ内の全ファイルを選択（Tests含む）
-4. "Copy items if needed" はオフ
-5. Target membershipで`JustAMap`にチェック
+## 主な機能
 
-## 2. Info.plist の設定
+### 段階1（実装済み）
+- ✅ 現在位置を中心とした地図表示
+- ✅ 位置情報の自動追従（10m以上移動時）
+- ✅ 手動で地図を動かすと追従モード解除
+- ✅ 現在地に戻るボタン（60x60ptでグローブ対応）
+- ✅ 位置情報権限の適切な処理
+- ✅ エラー表示と設定画面への誘導
 
-プロジェクトナビゲーターで:
-1. JustAMap > Info.plist を選択
-2. 右クリックして "Open As > Source Code"
-3. 以下のキーが含まれていることを確認:
-```xml
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>現在地を地図の中心に表示するために位置情報を使用します</string>
+### 段階2（未実装）
+- 現在位置の住所表示
+- スリープ防止機能
+
+### 段階3（未実装）
+- ズームレベルの調整
+- North Up / Heading Up の切り替え
+- 地図表示モードの切り替え（標準/航空写真）
+
+## 技術仕様
+
+- **iOS**: 17.0以上
+- **フレームワーク**: SwiftUI, MapKit
+- **位置情報精度**: 最高精度（kCLLocationAccuracyBest）
+- **更新頻度**: 10m移動ごと
+
+## 開発環境
+
+- Xcode 16.0以上
+- macOS 14.0以上
+- iOS Simulator（iOS 18.5推奨）
+
+## セットアップ
+
+### 1. プロジェクトを開く
+```bash
+git clone <repository-url>
+cd just-a-map
+open JustAMap.xcodeproj
 ```
 
-## 3. エミュレータの起動と設定
+### 2. ビルドと実行
+1. Xcodeでプロジェクトが開いたら、スキームが「JustAMap」になっていることを確認
+2. シミュレータデバイスを選択（iPhone 16推奨）
+3. ⌘+R でビルド&実行
 
-1. Xcodeの上部にあるデバイス選択から任意のiPhoneシミュレータを選択（例: iPhone 15）
-2. ▶️ ボタンでビルド&実行
-3. アプリが起動したら位置情報の許可ダイアログが表示される
-4. "Allow While Using App" を選択
+### 3. 位置情報の権限設定
+アプリ起動時に位置情報の許可ダイアログが表示されるので、「Allow While Using App」を選択
 
-## 4. エミュレータで位置情報をシミュレート
+## エミュレータで位置情報をシミュレート
 
 ### 位置情報の設定方法:
 1. エミュレータのメニューバーから: Features > Location
@@ -79,11 +91,35 @@
 ### コンソールログの確認:
 Xcodeの下部にあるデバッグエリアでログを確認できます。
 
-## 7. 実機でのテスト（オプション）
+## テスト
 
-実機でテストする場合:
-1. iPhone/iPadをMacに接続
-2. デバイス選択で接続したデバイスを選択
-3. 初回は開発者として信頼する設定が必要:
-   - 設定 > 一般 > VPNとデバイス管理 > デベロッパAPP
-4. 実際のGPSで動作確認可能
+### ユニットテストの実行
+```bash
+xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+または、Xcode内で ⌘+U
+
+### 現在のテストカバレッジ
+- LocationManagerのプロトコル準拠
+- 位置情報の権限処理
+- 位置情報更新のデリゲート通知
+- エラーハンドリング
+
+## トラブルシューティング
+
+### 位置情報が取得できない場合
+1. シミュレータの位置情報設定を確認: Features > Location
+2. Settings > Privacy & Security > Location Services がオンになっているか確認
+3. アプリを削除して再インストール
+
+### "kCLErrorDomain Code=0" エラーが表示される場合
+これはシミュレータ特有の一時的なエラーで、アプリの動作には影響しません。実機では発生しません。
+
+## ライセンス
+
+[ライセンス情報を追加]
+
+## 貢献
+
+[貢献方法を追加]

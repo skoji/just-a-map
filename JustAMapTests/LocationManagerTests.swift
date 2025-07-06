@@ -62,8 +62,9 @@ final class LocationManagerTests: XCTestCase {
         (sut as! MockLocationManager).simulateLocationUpdate(expectedLocation)
         
         // Then
-        XCTAssertEqual(mockDelegate.lastReceivedLocation?.coordinate.latitude, expectedLocation.coordinate.latitude, accuracy: 0.0001)
-        XCTAssertEqual(mockDelegate.lastReceivedLocation?.coordinate.longitude, expectedLocation.coordinate.longitude, accuracy: 0.0001)
+        XCTAssertNotNil(mockDelegate.lastReceivedLocation)
+        XCTAssertEqual(mockDelegate.lastReceivedLocation!.coordinate.latitude, expectedLocation.coordinate.latitude, accuracy: 0.0001)
+        XCTAssertEqual(mockDelegate.lastReceivedLocation!.coordinate.longitude, expectedLocation.coordinate.longitude, accuracy: 0.0001)
     }
     
     func testLocationManagerReportsErrorToDelegate() {
