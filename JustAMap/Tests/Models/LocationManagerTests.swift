@@ -1,0 +1,112 @@
+import XCTest
+import CoreLocation
+@testable import JustAMap
+
+final class LocationManagerTests: XCTestCase {
+    var sut: LocationManagerProtocol!
+    var mockDelegate: MockLocationManagerDelegate!
+    
+    override func setUp() {
+        super.setUp()
+        mockDelegate = MockLocationManagerDelegate()
+    }
+    
+    override func tearDown() {
+        sut = nil
+        mockDelegate = nil
+        super.tearDown()
+    }
+    
+    func testLocationManagerRequestsAuthorization() {
+        // Given
+        sut = MockLocationManager()
+        
+        // When
+        sut.requestLocationPermission()
+        
+        // Then
+        XCTAssertTrue((sut as! MockLocationManager).didRequestAuthorization)
+    }
+    
+    func testLocationManagerStartsLocationUpdates() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        
+        // When
+        sut.startLocationUpdates()
+        
+        // Then
+        XCTAssertTrue((sut as! MockLocationManager).isUpdatingLocation)
+    }
+    
+    func testLocationManagerStopsLocationUpdates() {
+        // Given
+        sut = MockLocationManager()
+        sut.startLocationUpdates()
+        
+        // When
+        sut.stopLocationUpdates()
+        
+        // Then
+        XCTAssertFalse((sut as! MockLocationManager).isUpdatingLocation)
+    }
+    
+    func testLocationManagerReportsLocationToDelegate() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        let expectedLocation = CLLocation(latitude: 35.6762, longitude: 139.6503) // Tokyo Station
+        
+        // When
+        (sut as! MockLocationManager).simulateLocationUpdate(expectedLocation)
+        
+        // Then
+        XCTAssertEqual(mockDelegate.lastReceivedLocation?.coordinate.latitude, expectedLocation.coordinate.latitude, accuracy: 0.0001)
+        XCTAssertEqual(mockDelegate.lastReceivedLocation?.coordinate.longitude, expectedLocation.coordinate.longitude, accuracy: 0.0001)
+    }
+    
+    func testLocationManagerReportsErrorToDelegate() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        let expectedError = LocationError.authorizationDenied
+        
+        // When
+        (sut as! MockLocationManager).simulateError(expectedError)
+        
+        // Then
+        XCTAssertEqual(mockDelegate.lastReceivedError as? LocationError, expectedError)
+    }
+    
+    func testLocationManagerReportsAuthorizationChangeToDelegate() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        
+        // When
+        (sut as! MockLocationManager).simulateAuthorizationChange(.authorizedWhenInUse)
+        
+        // Then
+        XCTAssertEqual(mockDelegate.lastAuthorizationStatus, .authorizedWhenInUse)
+    }
+}
+
+// MARK: - Mock Delegate
+class MockLocationManagerDelegate: LocationManagerDelegate {
+    var lastReceivedLocation: CLLocation?
+    var lastReceivedError: Error?
+    var lastAuthorizationStatus: CLAuthorizationStatus?
+    
+    func locationManager(_ manager: LocationManagerProtocol, didUpdateLocation location: CLLocation) {
+        lastReceivedLocation = location
+    }
+    
+    func locationManager(_ manager: LocationManagerProtocol, didFailWithError error: Error) {
+        lastReceivedError = error
+    }
+    
+    func locationManager(_ manager: LocationManagerProtocol, didChangeAuthorization status: CLAuthorizationStatus) {
+        lastAuthorizationStatus = status
+    }
+}
