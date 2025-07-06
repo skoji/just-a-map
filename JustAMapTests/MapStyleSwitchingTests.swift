@@ -1,6 +1,4 @@
 import XCTest
-import MapKit
-import SwiftUI
 @testable import JustAMap
 
 /// 地図スタイル切り替え時の挙動をテストするクラス
