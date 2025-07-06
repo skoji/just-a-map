@@ -7,6 +7,10 @@ enum MapStyle: String, CaseIterable {
     case standard = "標準"
     case hybrid = "航空写真+地図"
     case imagery = "航空写真"
+    
+    var displayName: String {
+        return self.rawValue
+    }
 }
 
 /// 地図コントロールのビジネスロジックを管理
