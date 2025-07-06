@@ -22,6 +22,7 @@ struct MapView: View {
                 MapCompass()
                 MapScaleView()
             }
+            .mapStyle(viewModel.mapControlsViewModel.mapTypeForStyle(viewModel.mapControlsViewModel.currentMapStyle))
             .ignoresSafeArea()
             .onMapCameraChange { context in
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
@@ -61,9 +62,17 @@ struct MapView: View {
             VStack {
                 Spacer()
                 HStack {
+                    // 地図コントロール（左側）
+                    MapControlsView(
+                        mapViewModel: viewModel,
+                        controlsViewModel: viewModel.mapControlsViewModel,
+                        mapPosition: $mapPosition
+                    )
+                    .padding(.leading, 20)
+                    
                     Spacer()
                     
-                    // 現在地に戻るボタン
+                    // 現在地に戻るボタン（右側）
                     Button(action: {
                         viewModel.isFollowingUser = true
                         if let location = viewModel.userLocation {
@@ -84,8 +93,8 @@ struct MapView: View {
                             .shadow(radius: 4)
                     }
                     .padding(.trailing, 20)
-                    .padding(.bottom, 40)
                 }
+                .padding(.bottom, 40)
             }
         }
         .onAppear {
@@ -93,6 +102,7 @@ struct MapView: View {
         }
         .onDisappear {
             viewModel.stopLocationTracking()
+            viewModel.saveSettings()
         }
         .onReceive(viewModel.$userLocation) { newLocation in
             // 追従モードの場合は地図を更新
@@ -110,6 +120,12 @@ struct MapView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             viewModel.handleAppWillEnterForeground()
+        }
+        .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { _ in
+            viewModel.saveSettings()
+        }
+        .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
+            viewModel.saveSettings()
         }
     }
 }

@@ -22,21 +22,45 @@ class MapViewModel: ObservableObject {
     private let geocodeService: GeocodeServiceProtocol
     private let addressFormatter: AddressFormatter
     private let idleTimerManager: IdleTimerManagerProtocol
+    let mapControlsViewModel: MapControlsViewModel
+    private let settingsStorage: MapSettingsStorageProtocol
     
     private var geocodingTask: Task<Void, Never>?
     
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
          addressFormatter: AddressFormatter = AddressFormatter(),
-         idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager()) {
+         idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager(),
+         mapControlsViewModel: MapControlsViewModel = MapControlsViewModel(),
+         settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
         self.locationManager = locationManager
         self.geocodeService = geocodeService
         self.addressFormatter = addressFormatter
         self.idleTimerManager = idleTimerManager
+        self.mapControlsViewModel = mapControlsViewModel
+        self.settingsStorage = settingsStorage
         self.locationManager.delegate = self
         
         // スリープ防止を有効化
         self.idleTimerManager.setIdleTimerDisabled(true)
+        
+        // 保存された設定を読み込む
+        loadSettings()
+    }
+    
+    private func loadSettings() {
+        mapControlsViewModel.currentMapStyle = settingsStorage.loadMapStyle()
+        mapControlsViewModel.isNorthUp = settingsStorage.loadMapOrientation()
+        
+        if let savedSpan = settingsStorage.loadZoomLevel() {
+            region.span = savedSpan
+        }
+    }
+    
+    func saveSettings() {
+        settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
+        settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
+        settingsStorage.saveZoomLevel(span: region.span)
     }
     
     func requestLocationPermission() {
