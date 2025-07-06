@@ -111,6 +111,9 @@ class MapViewModel: ObservableObject {
     func centerOnUserLocation() {
         guard let location = userLocation else { return }
         
+        // 追従モードを有効化
+        isFollowingUser = true
+        
         withAnimation(.easeInOut(duration: 0.3)) {
             region = MKCoordinateRegion(
                 center: location.coordinate,
