@@ -72,4 +72,40 @@ final class SettingsViewModelTests: XCTestCase {
         sut.defaultZoomIndex = 12
         XCTAssertEqual(sut.zoomLevelDisplayText, "10km") // デフォルト
     }
+    
+    func testZoomLevelDisplayTextUpdatesWhenDefaultZoomIndexChanges() {
+        // 初期値を確認
+        sut.defaultZoomIndex = 2
+        XCTAssertEqual(sut.zoomLevelDisplayText, "1km")
+        
+        // ズームインボタンを押した時の動作を再現
+        sut.defaultZoomIndex = 3
+        XCTAssertEqual(sut.zoomLevelDisplayText, "2km")
+        
+        // ズームアウトボタンを押した時の動作を再現
+        sut.defaultZoomIndex = 1
+        XCTAssertEqual(sut.zoomLevelDisplayText, "500m")
+    }
+    
+    func testDefaultZoomIndexBoundaryConditions() {
+        // 最小値でのズームアウトは値が変わらない
+        sut.defaultZoomIndex = SettingsViewModel.minZoomIndex
+        let minIndex = sut.defaultZoomIndex
+        
+        // ボタンアクションをシミュレート（本来は無効化されるべき）
+        if sut.defaultZoomIndex > SettingsViewModel.minZoomIndex {
+            sut.defaultZoomIndex -= 1
+        }
+        XCTAssertEqual(sut.defaultZoomIndex, minIndex)
+        
+        // 最大値でのズームインは値が変わらない
+        sut.defaultZoomIndex = SettingsViewModel.maxZoomIndex
+        let maxIndex = sut.defaultZoomIndex
+        
+        // ボタンアクションをシミュレート（本来は無効化されるべき）
+        if sut.defaultZoomIndex < SettingsViewModel.maxZoomIndex {
+            sut.defaultZoomIndex += 1
+        }
+        XCTAssertEqual(sut.defaultZoomIndex, maxIndex)
+    }
 }

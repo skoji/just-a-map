@@ -53,7 +53,8 @@ struct MapView: View {
                 viewModel.updateMapCenter(context.region.center)
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
-                if viewModel.isFollowingUser {
+                // ただし、ズームボタン操作中は無視
+                if viewModel.isFollowingUser && !isZoomingByButton {
                     if let userLocation = viewModel.userLocation {
                         let mapCenter = CLLocation(
                             latitude: context.region.center.latitude,
@@ -129,9 +130,13 @@ struct MapView: View {
                     
                     // 現在地に戻るボタン（右側）
                     Button(action: {
+                        // ズーム中フラグを立てて、onMapCameraChangeでの追従解除を防ぐ
+                        isZoomingByButton = true
                         viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
                             withAnimation {
+                                // centerOnUserLocationでデフォルトズームが適用されるので、
+                                // ここでもcurrentAltitudeを使用（既に更新されている）
                                 let camera = MapCamera(
                                     centerCoordinate: location.coordinate,
                                     distance: viewModel.mapControlsViewModel.currentAltitude,
@@ -140,6 +145,10 @@ struct MapView: View {
                                 )
                                 mapPosition = .camera(camera)
                             }
+                        }
+                        // アニメーション完了後にフラグをリセット
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isZoomingByButton = false
                         }
                     }) {
                         Image(systemName: viewModel.isFollowingUser ? "location.fill" : "location")

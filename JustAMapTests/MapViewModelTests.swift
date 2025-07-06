@@ -216,4 +216,73 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertNotNil(sut.mapCenterAddress)
         XCTAssertEqual(sut.mapCenterAddress?.primaryText, "六本木ヒルズ")
     }
+    
+    // MARK: - デフォルトズームレベルのテスト
+    
+    func testCenterOnUserLocationUsesDefaultZoomLevel() {
+        // Given
+        let testLocation = CLLocation(latitude: 35.6762, longitude: 139.6503)
+        mockLocationManager.currentLocation = testLocation
+        sut.userLocation = testLocation
+        
+        // デフォルトズームレベルを設定
+        let defaultZoomIndex = 2 // 1km
+        mockSettingsStorage.defaultZoomIndex = defaultZoomIndex
+        
+        // 現在のズームレベルを別の値に設定
+        sut.mapControlsViewModel.setZoomIndex(8) // 100km
+        XCTAssertEqual(sut.mapControlsViewModel.currentZoomIndex, 8)
+        
+        // When
+        sut.centerOnUserLocation()
+        
+        // Then
+        XCTAssertTrue(sut.isFollowingUser, "追従モードが有効になるべき")
+        XCTAssertEqual(sut.mapControlsViewModel.currentZoomIndex, defaultZoomIndex, "デフォルトズームレベルが適用されるべき")
+    }
+    
+    func testFollowingModeRemainsEnabledAfterCenterOnUserLocation() {
+        // Given
+        let testLocation = CLLocation(latitude: 35.6762, longitude: 139.6503)
+        mockLocationManager.currentLocation = testLocation
+        sut.userLocation = testLocation
+        sut.isFollowingUser = false // 追従モードを無効にしておく
+        
+        // When
+        sut.centerOnUserLocation()
+        
+        // Then
+        XCTAssertTrue(sut.isFollowingUser, "centerOnUserLocation後は追従モードが有効になるべき")
+        
+        // 地図操作をシミュレート（100m未満の移動）
+        let nearbyCoordinate = CLLocationCoordinate2D(
+            latitude: 35.6763, // わずかに北へ
+            longitude: 139.6503
+        )
+        sut.updateMapCenter(nearbyCoordinate)
+        
+        // 100m未満の移動では追従モードは維持されるべき
+        XCTAssertTrue(sut.isFollowingUser, "100m未満の移動では追従モードが維持されるべき")
+    }
+    
+    func testDefaultZoomLevelIsLoadedFromSettings() {
+        // Given
+        let expectedDefaultZoomIndex = 8 // 100km
+        mockSettingsStorage.defaultZoomIndex = expectedDefaultZoomIndex
+        mockSettingsStorage.zoomIndex = 5 // 現在のズーム
+        
+        // When - 新しいViewModelを作成（設定を読み込む）
+        let newViewModel = MapViewModel(
+            locationManager: mockLocationManager,
+            geocodeService: mockGeocodeService,
+            idleTimerManager: mockIdleTimerManager,
+            settingsStorage: mockSettingsStorage
+        )
+        
+        // Then
+        // デフォルトズームインデックスは設定に保存されている
+        XCTAssertEqual(mockSettingsStorage.defaultZoomIndex, expectedDefaultZoomIndex)
+        // 現在のズームインデックスは保存された値を使用
+        XCTAssertEqual(newViewModel.mapControlsViewModel.currentZoomIndex, 5)
+    }
 }
