@@ -6,6 +6,8 @@ struct MapControlsView: View {
     @ObservedObject var mapViewModel: MapViewModel
     @ObservedObject var controlsViewModel: MapControlsViewModel
     @Binding var mapPosition: MapCameraPosition
+    @Binding var isZoomingByButton: Bool
+    let currentRegion: MKCoordinateRegion
     
     var body: some View {
         VStack(spacing: 16) {
@@ -71,45 +73,42 @@ struct MapControlsView: View {
     
     // MARK: - Methods
     
-    @MainActor
     private func zoomIn() {
-        // MapCameraPositionから直接regionを取得する別の方法
-        Task { @MainActor in
-            // 現在のカメラ位置を取得してズームイン
-            if let currentRegion = getCurrentRegion() {
-                let newSpan = controlsViewModel.calculateZoomIn(from: currentRegion.span)
-                withAnimation {
-                    mapPosition = .region(MKCoordinateRegion(
-                        center: currentRegion.center,
-                        span: newSpan
-                    ))
-                    mapViewModel.currentSpan = newSpan
-                }
-            }
+        let newSpan = controlsViewModel.calculateZoomIn(from: currentRegion.span)
+        print("ズームイン: \(currentRegion.span.latitudeDelta) -> \(newSpan.latitudeDelta)")
+        
+        isZoomingByButton = true
+        withAnimation {
+            mapPosition = .region(MKCoordinateRegion(
+                center: currentRegion.center,
+                span: newSpan
+            ))
+            mapViewModel.currentSpan = newSpan
+        }
+        
+        // アニメーション完了後にフラグをリセット
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isZoomingByButton = false
         }
     }
     
-    @MainActor
     private func zoomOut() {
-        // MapCameraPositionから直接regionを取得する別の方法
-        Task { @MainActor in
-            // 現在のカメラ位置を取得してズームアウト
-            if let currentRegion = getCurrentRegion() {
-                let newSpan = controlsViewModel.calculateZoomOut(from: currentRegion.span)
-                withAnimation {
-                    mapPosition = .region(MKCoordinateRegion(
-                        center: currentRegion.center,
-                        span: newSpan
-                    ))
-                    mapViewModel.currentSpan = newSpan
-                }
-            }
+        let newSpan = controlsViewModel.calculateZoomOut(from: currentRegion.span)
+        print("ズームアウト: \(currentRegion.span.latitudeDelta) -> \(newSpan.latitudeDelta)")
+        
+        isZoomingByButton = true
+        withAnimation {
+            mapPosition = .region(MKCoordinateRegion(
+                center: currentRegion.center,
+                span: newSpan
+            ))
+            mapViewModel.currentSpan = newSpan
         }
-    }
-    
-    private func getCurrentRegion() -> MKCoordinateRegion? {
-        // MapViewModelから現在の地域を取得
-        return mapViewModel.region
+        
+        // アニメーション完了後にフラグをリセット
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isZoomingByButton = false
+        }
     }
 }
 
@@ -140,7 +139,12 @@ struct MapControlsView_Previews: PreviewProvider {
             mapPosition: .constant(.region(MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            )))
+            ))),
+            isZoomingByButton: .constant(false),
+            currentRegion: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
         )
         .padding()
         .background(Color.gray.opacity(0.2))

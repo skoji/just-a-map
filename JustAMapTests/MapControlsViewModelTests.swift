@@ -123,16 +123,22 @@ final class MapControlsViewModelTests: XCTestCase {
     }
     
     func testDiscreteZoomLevels() {
-        // Given - 連続的な値
+        // Given - 連続的な値（0.0073は0.005と0.01の間）
         let continuousSpan = MKCoordinateSpan(latitudeDelta: 0.0073, longitudeDelta: 0.0073)
         
         // When - ズームインする
         let zoomedIn = sut.calculateZoomIn(from: continuousSpan)
         
-        // Then - 離散的なレベルにスナップされるべき
-        let expectedDiscrete = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-        XCTAssertEqual(zoomedIn.latitudeDelta, expectedDiscrete.latitudeDelta, accuracy: 0.0001,
-                      "ズームは離散的なレベルにスナップされるべき")
+        // Then - 次の小さいレベル（0.005）にスナップされるべき
+        XCTAssertEqual(zoomedIn.latitudeDelta, 0.005, accuracy: 0.0001,
+                      "0.0073からのズームインは0.005になるべき")
+        
+        // When - ズームアウトする
+        let zoomedOut = sut.calculateZoomOut(from: continuousSpan)
+        
+        // Then - 次の大きいレベル（0.01）にスナップされるべき
+        XCTAssertEqual(zoomedOut.latitudeDelta, 0.01, accuracy: 0.0001,
+                      "0.0073からのズームアウトは0.01になるべき")
     }
     
     func testPredefinedZoomLevels() {
@@ -152,6 +158,54 @@ final class MapControlsViewModelTests: XCTestCase {
             // ズームアウトは次のレベルへ
             XCTAssertEqual(zoomedOut.latitudeDelta, zoomLevels[i+1], accuracy: 0.0001,
                           "レベル\(zoomLevels[i])からのズームアウトは\(zoomLevels[i+1])になるべき")
+        }
+    }
+    
+    func testZoomButtonsIgnoreSimilarValues() {
+        // Given - ボタンを押した後の値（0.005）に非常に近い値
+        let almostSameSpan = MKCoordinateSpan(latitudeDelta: 0.00501, longitudeDelta: 0.00501)
+        
+        // When - ズームインしようとする
+        let newSpan = sut.calculateZoomIn(from: almostSameSpan)
+        
+        // Then - 同じレベルに留まるべき（次のレベルには行かない）
+        XCTAssertEqual(newSpan.latitudeDelta, 0.002, accuracy: 0.0001,
+                      "0.00501からのズームインは0.002になるべき（0.005には留まらない）")
+    }
+    
+    func testZoomStability() {
+        // Given - アニメーション中の微小な変化
+        let spans = [0.005, 0.00502, 0.00498, 0.00501, 0.005]
+        
+        // When - 連続してズーム計算
+        var results: [Double] = []
+        for span in spans {
+            let s = MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
+            let zoomedIn = sut.calculateZoomIn(from: s)
+            results.append(zoomedIn.latitudeDelta)
+        }
+        
+        // Then - すべて同じ結果になるべき
+        let uniqueResults = Set(results)
+        XCTAssertEqual(uniqueResults.count, 1, "微小な変化では同じズームレベルを維持すべき")
+    }
+    
+    func testZoomInFromIntermediateValues() {
+        // Given - 1.0より大きい中間値
+        let testCases: [(input: Double, expected: Double)] = [
+            (1.7231532046885647, 0.5),  // 1.0より大きい値から0.5へ
+            (1.7237187676566208, 0.5),
+            (1.0, 0.5),                  // 1.0から0.5へ
+            (0.8614408496052519, 0.5),  // 1.0より小さい値から0.5へ
+        ]
+        
+        // When/Then
+        for testCase in testCases {
+            let span = MKCoordinateSpan(latitudeDelta: testCase.input, longitudeDelta: testCase.input)
+            let result = sut.calculateZoomIn(from: span)
+            print("Input: \(testCase.input), Expected: \(testCase.expected), Got: \(result.latitudeDelta)")
+            XCTAssertEqual(result.latitudeDelta, testCase.expected, accuracy: 0.0001,
+                          "\(testCase.input)からのズームインは\(testCase.expected)になるべき、実際は\(result.latitudeDelta)")
         }
     }
     

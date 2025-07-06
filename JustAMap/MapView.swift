@@ -11,6 +11,11 @@ struct MapView: View {
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
     )
+    @State private var currentMapRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    )
+    @State private var isZoomingByButton = false
     
     var body: some View {
         ZStack {
@@ -48,7 +53,11 @@ struct MapView: View {
             }
             .ignoresSafeArea()
             .onMapCameraChange { context in
-                // 現在のズームレベルを追跡
+                // ボタンによるズーム中は無視
+                guard !isZoomingByButton else { return }
+                
+                // 現在のズームレベルと地域を追跡
+                currentMapRegion = context.region
                 viewModel.currentSpan = context.region.span
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
@@ -92,7 +101,9 @@ struct MapView: View {
                     MapControlsView(
                         mapViewModel: viewModel,
                         controlsViewModel: viewModel.mapControlsViewModel,
-                        mapPosition: $mapPosition
+                        mapPosition: $mapPosition,
+                        isZoomingByButton: $isZoomingByButton,
+                        currentRegion: currentMapRegion
                     )
                     .padding(.leading, 20)
                     

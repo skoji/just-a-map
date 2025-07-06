@@ -27,6 +27,8 @@ class MapViewModel: ObservableObject {
     private let settingsStorage: MapSettingsStorageProtocol
     
     private var geocodingTask: Task<Void, Never>?
+    private var lastGeocodedLocation: CLLocation?
+    private let geocodingMinimumDistance: CLLocationDistance = 50.0 // 50m以上移動したら住所を更新
     
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
@@ -112,12 +114,25 @@ class MapViewModel: ObservableObject {
     }
     
     private func fetchAddress(for location: CLLocation) {
+        // 前回のジオコーディング位置から十分離れているかチェック
+        if let lastLocation = lastGeocodedLocation {
+            let distance = location.distance(from: lastLocation)
+            if distance < geocodingMinimumDistance {
+                return // まだ住所を更新する必要がない
+            }
+        }
+        
         // 前のタスクをキャンセル
         geocodingTask?.cancel()
         
         // 新しいタスクを開始
         geocodingTask = Task {
             isLoadingAddress = true
+            
+            // 少し遅延を入れて連続リクエストを防ぐ
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+            
+            guard !Task.isCancelled else { return }
             
             do {
                 let address = try await geocodeService.reverseGeocode(location: location)
@@ -127,6 +142,7 @@ class MapViewModel: ObservableObject {
                 
                 self.formattedAddress = addressFormatter.formatForDisplay(address)
                 self.isLoadingAddress = false
+                self.lastGeocodedLocation = location // 成功時のみ更新
             } catch {
                 // タスクがキャンセルされていないか確認
                 guard !Task.isCancelled else { return }

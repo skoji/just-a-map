@@ -20,8 +20,27 @@ class MapControlsViewModel: ObservableObject {
     /// 最大ズームスパン（最大ズームアウト）
     let maximumZoomSpan = MKCoordinateSpan(latitudeDelta: 180.0, longitudeDelta: 180.0)
     
-    /// ズーム倍率
-    private let zoomFactor: Double = 2.0
+    /// 予め定義されたズームレベル（latitudeDelta値）
+    private let predefinedZoomLevels: [Double] = [
+        0.0005,  // 最大ズームイン
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.2,
+        0.5,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0,
+        50.0,
+        100.0,
+        180.0    // 最大ズームアウト
+    ]
     
     // MARK: - Map Style Properties
     
@@ -40,25 +59,74 @@ class MapControlsViewModel: ObservableObject {
     
     // MARK: - Zoom Methods
     
+    /// 現在のスパンに最も近いズームレベルのインデックスを取得
+    private func findClosestZoomLevelIndex(for span: MKCoordinateSpan) -> Int {
+        let currentDelta = span.latitudeDelta
+        
+        // 最も近いレベルを見つける
+        var closestIndex = 0
+        var minDifference = abs(currentDelta - predefinedZoomLevels[0])
+        
+        for i in 1..<predefinedZoomLevels.count {
+            let difference = abs(currentDelta - predefinedZoomLevels[i])
+            if difference < minDifference {
+                minDifference = difference
+                closestIndex = i
+            }
+        }
+        
+        return closestIndex
+    }
+    
     /// ズームイン計算
     func calculateZoomIn(from span: MKCoordinateSpan) -> MKCoordinateSpan {
-        let newLatDelta = max(span.latitudeDelta / zoomFactor, minimumZoomSpan.latitudeDelta)
-        let newLonDelta = max(span.longitudeDelta / zoomFactor, minimumZoomSpan.longitudeDelta)
+        let currentDelta = span.latitudeDelta
+        
+        // 現在の値以下の最大のレベルを見つける（現在のズームレベル）
+        var currentLevelIndex = predefinedZoomLevels.count - 1
+        for i in 0..<predefinedZoomLevels.count {
+            if predefinedZoomLevels[i] >= currentDelta - 0.0001 {
+                currentLevelIndex = i
+                break
+            }
+        }
+        
+        // より小さいレベルへ移動（ズームイン）
+        let targetIndex = max(0, currentLevelIndex - 1)
+        
+        // 現在のレベルと同じ場合はそのまま
+        if targetIndex == currentLevelIndex && abs(currentDelta - predefinedZoomLevels[currentLevelIndex]) < 0.0001 {
+            return MKCoordinateSpan(
+                latitudeDelta: predefinedZoomLevels[currentLevelIndex],
+                longitudeDelta: predefinedZoomLevels[currentLevelIndex]
+            )
+        }
         
         return MKCoordinateSpan(
-            latitudeDelta: newLatDelta,
-            longitudeDelta: newLonDelta
+            latitudeDelta: predefinedZoomLevels[targetIndex],
+            longitudeDelta: predefinedZoomLevels[targetIndex]
         )
     }
     
     /// ズームアウト計算
     func calculateZoomOut(from span: MKCoordinateSpan) -> MKCoordinateSpan {
-        let newLatDelta = min(span.latitudeDelta * zoomFactor, maximumZoomSpan.latitudeDelta)
-        let newLonDelta = min(span.longitudeDelta * zoomFactor, maximumZoomSpan.longitudeDelta)
+        let currentDelta = span.latitudeDelta
         
+        // 現在の値より大きい最初のレベルを見つける
+        for level in predefinedZoomLevels {
+            if level > currentDelta + 0.0001 { // 許容誤差を考慮
+                return MKCoordinateSpan(
+                    latitudeDelta: level,
+                    longitudeDelta: level
+                )
+            }
+        }
+        
+        // すでに最大レベルの場合
+        let lastIndex = predefinedZoomLevels.count - 1
         return MKCoordinateSpan(
-            latitudeDelta: newLatDelta,
-            longitudeDelta: newLonDelta
+            latitudeDelta: predefinedZoomLevels[lastIndex],
+            longitudeDelta: predefinedZoomLevels[lastIndex]
         )
     }
     
