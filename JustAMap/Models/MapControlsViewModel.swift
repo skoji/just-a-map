@@ -86,9 +86,9 @@ class MapControlsViewModel: ObservableObject {
         currentMapStyle = allStyles[nextIndex]
     }
     
-    /// MapStyleからMKMapTypeに変換
-    func mapTypeForStyle(_ style: MapStyle) -> MKMapType {
-        switch style {
+    /// MapStyleに対応するMKMapTypeを返す
+    var currentMKMapType: MKMapType {
+        switch currentMapStyle {
         case .standard:
             return .standard
         case .hybrid:

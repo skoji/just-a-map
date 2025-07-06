@@ -15,14 +15,37 @@ struct MapView: View {
     var body: some View {
         ZStack {
             // 地図
-            Map(position: $mapPosition) {
-                UserAnnotation()
+            Group {
+                switch viewModel.mapControlsViewModel.currentMapStyle {
+                case .standard:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.standard)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                case .hybrid:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.hybrid)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                case .imagery:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.imagery)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                }
             }
-            .mapControls {
-                MapCompass()
-                MapScaleView()
-            }
-            .mapStyle(viewModel.mapControlsViewModel.mapTypeForStyle(viewModel.mapControlsViewModel.currentMapStyle))
             .ignoresSafeArea()
             .onMapCameraChange { context in
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
@@ -79,7 +102,7 @@ struct MapView: View {
                             withAnimation {
                                 mapPosition = .region(MKCoordinateRegion(
                                     center: location.coordinate,
-                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                    span: viewModel.currentSpan
                                 ))
                             }
                         }
@@ -110,7 +133,7 @@ struct MapView: View {
                 withAnimation {
                     mapPosition = .region(MKCoordinateRegion(
                         center: location.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                        span: viewModel.currentSpan
                     ))
                 }
             }

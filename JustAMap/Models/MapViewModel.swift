@@ -10,6 +10,7 @@ class MapViewModel: ObservableObject {
         center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503), // 東京駅をデフォルト
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     )
+    @Published var currentSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     
     @Published var userLocation: CLLocation?
     @Published var isLocationAuthorized = false
@@ -31,13 +32,13 @@ class MapViewModel: ObservableObject {
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
          addressFormatter: AddressFormatter = AddressFormatter(),
          idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager(),
-         mapControlsViewModel: MapControlsViewModel = MapControlsViewModel(),
+         mapControlsViewModel: MapControlsViewModel? = nil,
          settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
         self.locationManager = locationManager
         self.geocodeService = geocodeService
         self.addressFormatter = addressFormatter
         self.idleTimerManager = idleTimerManager
-        self.mapControlsViewModel = mapControlsViewModel
+        self.mapControlsViewModel = mapControlsViewModel ?? MapControlsViewModel()
         self.settingsStorage = settingsStorage
         self.locationManager.delegate = self
         
@@ -54,13 +55,14 @@ class MapViewModel: ObservableObject {
         
         if let savedSpan = settingsStorage.loadZoomLevel() {
             region.span = savedSpan
+            currentSpan = savedSpan
         }
     }
     
     func saveSettings() {
         settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
         settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
-        settingsStorage.saveZoomLevel(span: region.span)
+        settingsStorage.saveZoomLevel(span: currentSpan)
     }
     
     func requestLocationPermission() {
@@ -100,11 +102,11 @@ class MapViewModel: ObservableObject {
     private func updateRegionIfFollowing(location: CLLocation) {
         guard isFollowingUser else { return }
         
-        // スムーズなアニメーションで地図を更新
+        // スムーズなアニメーションで地図を更新（現在のズームレベルを保持）
         withAnimation(.easeInOut(duration: 0.5)) {
             region = MKCoordinateRegion(
                 center: location.coordinate,
-                span: region.span
+                span: currentSpan
             )
         }
     }

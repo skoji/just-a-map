@@ -17,7 +17,7 @@ protocol IdleTimerManagerProtocol {
 
 /// スリープ防止機能の実装
 class IdleTimerManager: IdleTimerManagerProtocol {
-    private let application: UIApplicationProtocol
+    private var application: UIApplicationProtocol
     private var shouldKeepScreenOn = false
     
     init(application: UIApplicationProtocol = UIApplication.shared) {
@@ -33,9 +33,7 @@ class IdleTimerManager: IdleTimerManagerProtocol {
     /// アプリがバックグラウンドに入った時の処理
     func handleAppDidEnterBackground() {
         // バックグラウンドでは必ずスリープ防止を解除
-        if var app = application as? UIApplication {
-            app.isIdleTimerDisabled = false
-        }
+        application.isIdleTimerDisabled = false
     }
     
     /// アプリがフォアグラウンドに戻った時の処理
@@ -45,8 +43,6 @@ class IdleTimerManager: IdleTimerManagerProtocol {
     }
     
     private func updateIdleTimerState() {
-        if var app = application as? UIApplication {
-            app.isIdleTimerDisabled = shouldKeepScreenOn
-        }
+        application.isIdleTimerDisabled = shouldKeepScreenOn
     }
 }

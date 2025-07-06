@@ -2,6 +2,7 @@ import XCTest
 import MapKit
 @testable import JustAMap
 
+@MainActor
 final class MapControlsViewModelTests: XCTestCase {
     var sut: MapControlsViewModel!
     
@@ -113,11 +114,11 @@ final class MapControlsViewModelTests: XCTestCase {
         XCTAssertEqual(sut.currentMapStyle, .standard)
     }
     
-    func testMapStyleToMapType() {
+    func testMapStyleProperties() {
         // Given & When & Then
-        XCTAssertEqual(sut.mapTypeForStyle(.standard), .standard)
-        XCTAssertEqual(sut.mapTypeForStyle(.hybrid), .hybrid)
-        XCTAssertEqual(sut.mapTypeForStyle(.imagery), .satellite)
+        XCTAssertEqual(MapStyle.standard.rawValue, "標準")
+        XCTAssertEqual(MapStyle.hybrid.rawValue, "航空写真+地図")
+        XCTAssertEqual(MapStyle.imagery.rawValue, "航空写真")
     }
     
     // MARK: - Map Orientation Tests

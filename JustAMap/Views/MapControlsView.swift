@@ -71,28 +71,45 @@ struct MapControlsView: View {
     
     // MARK: - Methods
     
+    @MainActor
     private func zoomIn() {
-        guard case .region(let region) = mapPosition else { return }
-        
-        let newSpan = controlsViewModel.calculateZoomIn(from: region.span)
-        withAnimation {
-            mapPosition = .region(MKCoordinateRegion(
-                center: region.center,
-                span: newSpan
-            ))
+        // MapCameraPositionから直接regionを取得する別の方法
+        Task { @MainActor in
+            // 現在のカメラ位置を取得してズームイン
+            if let currentRegion = getCurrentRegion() {
+                let newSpan = controlsViewModel.calculateZoomIn(from: currentRegion.span)
+                withAnimation {
+                    mapPosition = .region(MKCoordinateRegion(
+                        center: currentRegion.center,
+                        span: newSpan
+                    ))
+                    mapViewModel.currentSpan = newSpan
+                }
+            }
         }
     }
     
+    @MainActor
     private func zoomOut() {
-        guard case .region(let region) = mapPosition else { return }
-        
-        let newSpan = controlsViewModel.calculateZoomOut(from: region.span)
-        withAnimation {
-            mapPosition = .region(MKCoordinateRegion(
-                center: region.center,
-                span: newSpan
-            ))
+        // MapCameraPositionから直接regionを取得する別の方法
+        Task { @MainActor in
+            // 現在のカメラ位置を取得してズームアウト
+            if let currentRegion = getCurrentRegion() {
+                let newSpan = controlsViewModel.calculateZoomOut(from: currentRegion.span)
+                withAnimation {
+                    mapPosition = .region(MKCoordinateRegion(
+                        center: currentRegion.center,
+                        span: newSpan
+                    ))
+                    mapViewModel.currentSpan = newSpan
+                }
+            }
         }
+    }
+    
+    private func getCurrentRegion() -> MKCoordinateRegion? {
+        // MapViewModelから現在の地域を取得
+        return mapViewModel.region
     }
 }
 
