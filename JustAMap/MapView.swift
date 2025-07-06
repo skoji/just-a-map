@@ -14,45 +14,34 @@ struct MapView: View {
     @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
     @State private var isShowingSettings = false
+    @State private var isChangingMapStyle = false
+    
+    private var currentMapStyle: MapStyle {
+        switch viewModel.mapControlsViewModel.currentMapStyle {
+        case .standard:
+            return .standard
+        case .hybrid:
+            return .hybrid
+        case .imagery:
+            return .imagery
+        }
+    }
     
     var body: some View {
         ZStack {
             // 地図
-            Group {
-                switch viewModel.mapControlsViewModel.currentMapStyle {
-                case .standard:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.standard)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                case .hybrid:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.hybrid)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                case .imagery:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.imagery)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                }
+            Map(position: $mapPosition) {
+                UserAnnotation()
+            }
+            .mapStyle(currentMapStyle)
+            .mapControls {
+                MapCompass()
+                MapScaleView()
             }
             .ignoresSafeArea()
             .onMapCameraChange { context in
-                // ボタンによるズーム中は無視
-                guard !isZoomingByButton else { return }
+                // ボタンによるズーム中またはスタイル変更中は無視
+                guard !isZoomingByButton && !isChangingMapStyle else { return }
                 
                 // カメラ情報を更新
                 let camera = context.camera
@@ -210,8 +199,28 @@ struct MapView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             viewModel.handleAppWillEnterForeground()
         }
-        .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { _ in
+        .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
+            // スタイル変更開始
+            isChangingMapStyle = true
             viewModel.saveSettings()
+            
+            // カメラ位置を保持して再設定
+            if let camera = currentMapCamera {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        mapPosition = .camera(camera)
+                    }
+                    // スタイル変更完了
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isChangingMapStyle = false
+                    }
+                }
+            } else {
+                // カメラ情報がない場合は即座にフラグをリセット
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isChangingMapStyle = false
+                }
+            }
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
             viewModel.saveSettings()
