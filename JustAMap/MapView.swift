@@ -16,39 +16,27 @@ struct MapView: View {
     @State private var isShowingSettings = false
     @State private var mapStyleForDisplay: JustAMap.MapStyle = .standard
     
+    private var mapStyleValue: MapKit.MapStyle {
+        switch mapStyleForDisplay {
+        case .standard:
+            return .standard
+        case .hybrid:
+            return .hybrid
+        case .imagery:
+            return .imagery
+        }
+    }
+    
     var body: some View {
         ZStack {
             // 地図
-            Group {
-                switch mapStyleForDisplay {
-                case .standard:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.standard)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                case .hybrid:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.hybrid)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                case .imagery:
-                    Map(position: $mapPosition) {
-                        UserAnnotation()
-                    }
-                    .mapStyle(.imagery)
-                    .mapControls {
-                        MapCompass()
-                        MapScaleView()
-                    }
-                }
+            Map(position: $mapPosition) {
+                UserAnnotation()
+            }
+            .mapStyle(mapStyleValue)
+            .mapControls {
+                MapCompass()
+                MapScaleView()
             }
             .ignoresSafeArea()
             .onMapCameraChange { context in
@@ -215,8 +203,20 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
             viewModel.saveSettings()
+            
+            // カメラ位置を保存
+            let savedCamera = currentMapCamera
+            
             // State変数を更新してSwiftUIの再描画を促す
             mapStyleForDisplay = newStyle
+            
+            // カメラ位置を復元
+            if let camera = savedCamera {
+                // 少し遅延を入れて、新しいMapスタイルが適用された後に位置を設定
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    mapPosition = .camera(camera)
+                }
+            }
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
             viewModel.saveSettings()
