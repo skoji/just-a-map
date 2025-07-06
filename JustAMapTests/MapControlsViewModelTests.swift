@@ -79,4 +79,44 @@ final class MapControlsViewModelTests: XCTestCase {
         XCTAssertGreaterThan(level1, 0)
         XCTAssertLessThanOrEqual(level1, 20)
     }
+    
+    // MARK: - Map Style Tests
+    
+    func testDefaultMapStyle() {
+        // Then
+        XCTAssertEqual(sut.currentMapStyle, .standard)
+    }
+    
+    func testMapStyleToggle() {
+        // Given
+        let initialStyle = sut.currentMapStyle
+        
+        // When
+        sut.toggleMapStyle()
+        
+        // Then
+        XCTAssertNotEqual(sut.currentMapStyle, initialStyle)
+        XCTAssertEqual(sut.currentMapStyle, .hybrid)
+    }
+    
+    func testMapStyleCycle() {
+        // Given
+        let styles: [MapStyle] = [.standard, .hybrid, .imagery]
+        
+        // When & Then
+        for expectedStyle in styles {
+            XCTAssertEqual(sut.currentMapStyle, expectedStyle)
+            sut.toggleMapStyle()
+        }
+        
+        // 一周して元に戻る
+        XCTAssertEqual(sut.currentMapStyle, .standard)
+    }
+    
+    func testMapStyleToMapType() {
+        // Given & When & Then
+        XCTAssertEqual(sut.mapTypeForStyle(.standard), .standard)
+        XCTAssertEqual(sut.mapTypeForStyle(.hybrid), .hybrid)
+        XCTAssertEqual(sut.mapTypeForStyle(.imagery), .satellite)
+    }
 }
