@@ -163,12 +163,14 @@ final class MapViewModelTests: XCTestCase {
         
         // Then - 即座には住所取得が開始されない
         XCTAssertFalse(sut.isLoadingMapCenterAddress)
+        XCTAssertNil(sut.mapCenterAddress)
         
         // デバウンス時間（300ms）待つ
-        try? await Task.sleep(nanoseconds: 400_000_000) // 0.4秒
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
         
-        // Then - デバウンス後に住所取得が開始される
-        XCTAssertTrue(sut.isLoadingMapCenterAddress)
+        // Then - デバウンス後に住所が取得される
+        XCTAssertNotNil(sut.mapCenterAddress)
+        XCTAssertFalse(sut.isLoadingMapCenterAddress) // 取得完了後はfalseになる
     }
     
     func testRapidMapCenterUpdatesCancelPreviousFetch() async {
@@ -212,6 +214,6 @@ final class MapViewModelTests: XCTestCase {
         
         // Then
         XCTAssertNotNil(sut.mapCenterAddress)
-        XCTAssertEqual(sut.mapCenterAddress?.placeName, "六本木ヒルズ")
+        XCTAssertEqual(sut.mapCenterAddress?.primaryText, "六本木ヒルズ")
     }
 }
