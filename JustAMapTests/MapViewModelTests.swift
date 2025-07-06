@@ -229,13 +229,16 @@ final class MapViewModelTests: XCTestCase {
         let defaultZoomIndex = 2 // 1km
         mockSettingsStorage.defaultZoomIndex = defaultZoomIndex
         
+        // 現在のズームレベルを別の値に設定
+        sut.mapControlsViewModel.setZoomIndex(8) // 100km
+        XCTAssertEqual(sut.mapControlsViewModel.currentZoomIndex, 8)
+        
         // When
         sut.centerOnUserLocation()
         
         // Then
         XCTAssertTrue(sut.isFollowingUser, "追従モードが有効になるべき")
-        // NOTE: 現在の実装では、centerOnUserLocationはデフォルトズームレベルを使用していない
-        // この動作を確認するためのテスト
+        XCTAssertEqual(sut.mapControlsViewModel.currentZoomIndex, defaultZoomIndex, "デフォルトズームレベルが適用されるべき")
     }
     
     func testDefaultZoomLevelIsLoadedFromSettings() {

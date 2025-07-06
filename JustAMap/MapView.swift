@@ -132,6 +132,8 @@ struct MapView: View {
                         viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
                             withAnimation {
+                                // centerOnUserLocationでデフォルトズームが適用されるので、
+                                // ここでもcurrentAltitudeを使用（既に更新されている）
                                 let camera = MapCamera(
                                     centerCoordinate: location.coordinate,
                                     distance: viewModel.mapControlsViewModel.currentAltitude,

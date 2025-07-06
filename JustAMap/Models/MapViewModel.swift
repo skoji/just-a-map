@@ -121,6 +121,10 @@ class MapViewModel: ObservableObject {
         // 追従モードを有効化
         isFollowingUser = true
         
+        // デフォルトズームレベルを適用
+        let defaultZoomIndex = settingsStorage.defaultZoomIndex
+        mapControlsViewModel.setZoomIndex(defaultZoomIndex)
+        
         withAnimation(.easeInOut(duration: 0.3)) {
             region = MKCoordinateRegion(
                 center: location.coordinate,
