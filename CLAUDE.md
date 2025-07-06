@@ -23,6 +23,7 @@
 
 ### 開発方針
 - **TDD（Test-Driven Development）**: t-wada流のTDDを採用
+  - 問題が発生した場合の修正でも必ずTDDを行うこと。
 - **設計思想**: John Carmack（シンプルさと効率性）、Robert C. Martin（Clean Architecture）、Rob Pike（簡潔性）の思想を意識
 - **ドキュメント**: iOS開発経験のないプログラマーが理解し、自力で開発できるレベルの説明を提供
 
