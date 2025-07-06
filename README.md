@@ -23,11 +23,16 @@
 - ✅ バックグラウンド/フォアグラウンド遷移の適切な処理
 
 ### 段階3（実装済み）
-- ✅ ズームレベルの調整（ボタンとピンチ操作）
-- ✅ ズームレベルの保持（移動後も維持）
+- ✅ ズームコントロール（12段階の離散的ズームレベル）
+  - 建物レベル（200m）から地球レベル（1,000,000m）まで
+  - 高度ベースの安定した実装（MapKitの内部変換に影響されない）
+  - ズーム制限時のボタングレーアウト表示
 - ✅ 地図表示モードの切り替え（標準/ハイブリッド/航空写真）
 - ✅ North Up / Heading Up の切り替えボタン（実際の回転は今後実装）
 - ✅ 設定の永続化（UserDefaults）
+  - ズームレベル（インデックスとして保存）
+  - 地図スタイル
+  - 地図の向き設定
 
 ## 技術仕様
 
@@ -37,6 +42,7 @@
 - **更新頻度**: 10m移動ごと
 - **住所取得**: CLGeocoder（逆ジオコーディング）
 - **スリープ防止**: UIApplication.shared.isIdleTimerDisabled
+- **ズーム実装**: MKMapCamera.distance（高度）ベース
 
 ## 開発環境
 
@@ -97,9 +103,9 @@ open JustAMap.xcodeproj
 - [ ] バックグラウンドに移行するとスリープ防止が解除される
 
 ### 地図コントロール
-- [ ] ズームイン/アウトボタンで地図を拡大/縮小できる
-- [ ] ピンチ操作でもズーム可能
-- [ ] ズームレベルが移動後も保持される
+- [ ] ズームイン/アウトボタンで12段階のズームレベルを切り替えられる
+- [ ] ズーム限界に達するとボタンがグレーアウトする
+- [ ] ピンチ操作後もボタンで確実に次のレベルに移動する
 - [ ] 地図スタイルボタンで標準/ハイブリッド/航空写真を切り替えられる
 - [ ] North Up/Heading Upボタンが表示される（タップで状態が切り替わる）
 - [ ] アプリ再起動時に前回の設定が復元される
@@ -112,7 +118,7 @@ open JustAMap.xcodeproj
 3. エミュレータの位置情報設定を確認: Settings > Privacy & Security > Location Services
 
 ### コンソールログの確認:
-Xcodeの下部にあるデバッグエリアでログを確認できます。
+Xcodeの下部にあるデバッグエリアでログを確認できます。ズーム操作時は現在のレベルがコンソールに出力されます。
 
 ## テスト
 
@@ -130,8 +136,12 @@ xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=
 - エラーハンドリング
 - 住所フォーマットの変換（AddressFormatterTests）
 - スリープ防止機能（IdleTimerManagerTests）
-- ズーム計算とマップスタイル切り替え（MapControlsViewModelTests）
+- 高度ベースズーム機能とマップスタイル切り替え（MapControlsViewModelTests）
+  - 12段階のズームレベル管理
+  - ズーム制限のテスト
+  - 高度からズームインデックスへの変換
 - 設定の永続化（MapSettingsStorageTests）
+  - ズームインデックスの保存/読み込み
 
 ## トラブルシューティング
 
@@ -150,3 +160,12 @@ xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=
 ## 貢献
 
 プルリクエストを歓迎します。大きな変更を行う場合は、まずissueを開いて変更内容について議論してください。
+
+## ドキュメント
+
+より詳細な技術ドキュメントは[doc](doc)ディレクトリを参照してください。
+- [段階1実装ガイド](doc/stage1-implementation-guide.md)
+- [段階2実装ガイド](doc/stage2-implementation-guide.md)
+- [段階3実装ガイド](doc/stage3-implementation-guide.md)
+- [iOS開発の基本概念](doc/ios-development-basics.md)
+- [トラブルシューティングガイド](doc/troubleshooting-guide.md)
