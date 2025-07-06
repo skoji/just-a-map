@@ -69,7 +69,7 @@ struct MapView: View {
                             longitude: context.region.center.longitude
                         )
                         let distance = userLocation.distance(from: mapCenter)
-                        if distance > 100 { // 100m以上離れたら追従解除
+                        if distance > Constants.followingDistanceThreshold {
                             viewModel.handleUserMapInteraction()
                         }
                     }
@@ -215,18 +215,18 @@ struct MapView: View {
             
             // カメラ位置を保持して再設定
             if let camera = currentMapCamera {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.styleChangeDelay) {
+                    withAnimation(.easeInOut(duration: Constants.animationDuration)) {
                         mapPosition = .camera(camera)
                     }
                     // スタイル変更完了
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Constants.flagResetDelay) {
                         isChangingMapStyle = false
                     }
                 }
             } else {
                 // カメラ情報がない場合は即座にフラグをリセット
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.flagResetDelay) {
                     isChangingMapStyle = false
                 }
             }
