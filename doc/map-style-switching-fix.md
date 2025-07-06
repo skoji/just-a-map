@@ -65,12 +65,12 @@ Group {
 struct MapView: View {
     // ... 他のプロパティ ...
     
-    // マップスタイル表示用の@State変数
-    @State private var mapStyleForDisplay: JustAMap.MapStyle = .standard
+    // マップスタイル表示用の@State変数（初期値はnil）
+    @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
     // MapKit.MapStyleに変換する計算プロパティ
-    private var mapStyleValue: MapKit.MapStyle {
-        switch mapStyleForDisplay {
+    private var currentMapKitStyle: MapKit.MapStyle {
+        switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
             return .standard
         case .hybrid:
@@ -86,12 +86,19 @@ struct MapView: View {
             Map(position: $mapPosition) {
                 UserAnnotation()
             }
-            .mapStyle(mapStyleValue)  // 動的にスタイルを適用
+            .mapStyle(currentMapKitStyle)  // 動的にスタイルを適用
             .mapControls {
                 MapCompass()
                 MapScaleView()
             }
             // ... 他のモディファイア ...
+        }
+        .onAppear {
+            // ... 他の初期化処理 ...
+            // 初期スタイルを設定（まだ設定されていない場合のみ）
+            if mapStyleForDisplay == nil {
+                mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
+            }
         }
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
             viewModel.saveSettings()
@@ -106,7 +113,8 @@ struct MapView: View {
 
 1. **単一のMapインスタンス**：`switch`文による複数インスタンスではなく、単一の`Map`を使用
 2. **@State変数の活用**：`mapStyleForDisplay`を介することで、SwiftUIの再描画メカニズムを適切に動作させる
-3. **シンプルな実装**：カメラ位置の保存・復元などの複雑な処理は不要
+3. **初期値の適切な処理**：オプショナル型にして、`onAppear`でviewModelから初期値を設定することで、フリッカーを防止
+4. **シンプルな実装**：カメラ位置の保存・復元などの複雑な処理は不要
 
 ## なぜこの解決策が機能するか
 
