@@ -4,20 +4,21 @@ import SwiftUI
 @testable import JustAMap
 
 /// 地図スタイル切り替え時の挙動をテストするクラス
+@MainActor
 class MapStyleSwitchingTests: XCTestCase {
     var mapViewModel: MapViewModel!
     var mapControlsViewModel: MapControlsViewModel!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mapControlsViewModel = MapControlsViewModel()
         mapViewModel = MapViewModel(mapControlsViewModel: mapControlsViewModel)
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         mapViewModel = nil
         mapControlsViewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     /// 地図スタイル切り替え時にズームレベルが保持されることをテスト
