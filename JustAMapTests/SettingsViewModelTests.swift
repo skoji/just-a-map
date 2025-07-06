@@ -1,4 +1,5 @@
 import XCTest
+import MapKit
 @testable import JustAMap
 
 final class SettingsViewModelTests: XCTestCase {
@@ -72,4 +73,36 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var defaultMapStyle: MapStyle = .standard
     var defaultIsNorthUp: Bool = true
     var addressFormat: AddressFormat = .standard
+    
+    func saveMapStyle(_ style: MapStyle) {
+        mapStyle = style
+    }
+    
+    func loadMapStyle() -> MapStyle {
+        return mapStyle
+    }
+    
+    func saveMapOrientation(isNorthUp: Bool) {
+        self.isNorthUp = isNorthUp
+    }
+    
+    func loadMapOrientation() -> Bool {
+        return isNorthUp
+    }
+    
+    func saveZoomLevel(span: MKCoordinateSpan) {
+        // Not needed for these tests
+    }
+    
+    func loadZoomLevel() -> MKCoordinateSpan? {
+        return nil
+    }
+    
+    func saveZoomIndex(_ index: Int) {
+        zoomIndex = index
+    }
+    
+    func loadZoomIndex() -> Int? {
+        return zoomIndex
+    }
 }
