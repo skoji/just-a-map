@@ -48,7 +48,7 @@ struct SettingsView: View {
                     
                     // 地図の種類
                     Picker("地図の種類", selection: $viewModel.defaultMapStyle) {
-                        ForEach([MapStyle.standard, .hybrid, .imagery], id: \.self) { style in
+                        ForEach(MapStyle.allCases, id: \.self) { style in
                             Text(style.displayName).tag(style)
                         }
                     }

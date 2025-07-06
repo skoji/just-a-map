@@ -98,6 +98,7 @@ struct MapView: View {
                             .clipShape(Circle())
                             .shadow(radius: 2)
                     }
+                    .accessibilityLabel("設定")
                     .padding(.trailing, 20)
                     .padding(.top, 10)
                 }
