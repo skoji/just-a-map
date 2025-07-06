@@ -7,8 +7,9 @@
 
 ### 1. ズームコントロール
 - **ズームイン/アウトボタン**: 虫眼鏡アイコンで表示される60x60ポイントの大きなボタン
-- **ズームレベルの保持**: ピンチ操作やボタン操作でのズーム変更が、地図移動後も保持される
-- **ズーム範囲制限**: 最小0.0005度、最大180度の範囲で制限
+- **12段階の離散的ズームレベル**: 建物レベル（200m）から地球レベル（1,000,000m）まで
+- **高度ベースの実装**: MapKitの内部変換に影響されない安定した動作
+- **ズーム制限インジケーター**: ズームの限界に達した時はボタンがグレーアウト
 - **スムーズなアニメーション**: withAnimationによる自然な拡大縮小
 
 ### 2. 地図表示モード切り替え
@@ -28,7 +29,7 @@
 - **UserDefaultsによる保存**:
   - 現在の地図スタイル
   - North Up/Heading Upの設定
-  - ズームレベル
+  - ズームレベル（インデックスとして保存）
 - **アプリ再起動時の復元**: 前回の設定が自動的に適用される
 
 ## 実装の詳細
@@ -41,15 +42,58 @@
 class MapControlsViewModel: ObservableObject {
     @Published var currentMapStyle: MapStyle = .standard
     @Published var isNorthUp: Bool = true
+    @Published private(set) var currentZoomIndex: Int = 5
     
-    // ズーム計算
-    func calculateZoomIn(from currentSpan: MKCoordinateSpan) -> MKCoordinateSpan
-    func calculateZoomOut(from currentSpan: MKCoordinateSpan) -> MKCoordinateSpan
+    // 高度ベースのズームレベル（12段階）
+    private let predefinedAltitudes: [Double] = [
+        200,      // 建物レベル
+        500,      // 街区レベル
+        1000,     // 近隣レベル
+        2000,     // 地区レベル
+        5000,     // 市区レベル
+        10000,    // 市レベル
+        20000,    // 都市圏レベル
+        50000,    // 県レベル
+        100000,   // 地方レベル
+        200000,   // 国レベル
+        500000,   // 大陸レベル
+        1000000,  // 地球レベル
+    ]
     
-    // スタイル切り替え
-    func toggleMapStyle()
-    func toggleMapOrientation()
+    // ズーム操作
+    func zoomIn()
+    func zoomOut()
+    func setNearestZoomIndex(for altitude: Double)
+    
+    // プロパティ
+    var currentAltitude: Double { get }
+    var canZoomIn: Bool { get }
+    var canZoomOut: Bool { get }
 }
+```
+
+### ズーム実装の改善
+
+#### 問題点
+以前のspan（緯度経度の範囲）ベースの実装では、MapKitが内部で値を変換するため、期待した値と異なる値が返される問題がありました：
+
+```
+期待値: 0.02 -> MapKitからの戻り値: 0.034474...
+期待値: 0.05 -> MapKitからの戻り値: 0.08618...
+```
+
+#### 解決策
+MKMapCameraのaltitude（高度）プロパティを使用することで、より安定したズーム管理を実現：
+
+```swift
+// 新しいズーム実装
+let camera = MapCamera(
+    centerCoordinate: coordinate,
+    distance: viewModel.mapControlsViewModel.currentAltitude,
+    heading: heading,
+    pitch: 0
+)
+mapPosition = .camera(camera)
 ```
 
 ### MapControlsView
@@ -60,13 +104,23 @@ struct MapControlsView: View {
     @ObservedObject var mapViewModel: MapViewModel
     @ObservedObject var controlsViewModel: MapControlsViewModel
     @Binding var mapPosition: MapCameraPosition
+    @Binding var isZoomingByButton: Bool
+    let currentMapCamera: MapCamera?
     
     var body: some View {
         VStack(spacing: 16) {
             // ズームコントロール
             VStack(spacing: 8) {
-                ControlButton(icon: "plus.magnifyingglass", action: { zoomIn() })
-                ControlButton(icon: "minus.magnifyingglass", action: { zoomOut() })
+                ControlButton(
+                    icon: "plus.magnifyingglass",
+                    action: { zoomIn() },
+                    isEnabled: controlsViewModel.canZoomIn
+                )
+                ControlButton(
+                    icon: "minus.magnifyingglass",
+                    action: { zoomOut() },
+                    isEnabled: controlsViewModel.canZoomOut
+                )
             }
             
             Divider()
@@ -90,70 +144,82 @@ protocol MapSettingsStorageProtocol {
     func loadMapStyle() -> MapStyle
     func saveMapOrientation(isNorthUp: Bool)
     func loadMapOrientation() -> Bool
-    func saveZoomLevel(span: MKCoordinateSpan?)
-    func loadZoomLevel() -> MKCoordinateSpan?
+    func saveZoomIndex(_ index: Int)
+    func loadZoomIndex() -> Int?
 }
 ```
-
-### ズームレベルの追跡と保持
-MapViewModelに`currentSpan`プロパティを追加し、以下の場面で更新：
-- onMapCameraChangeでユーザーのピンチ操作を追跡
-- ズームボタンでの変更を反映
-- 現在地に戻る際も現在のズームレベルを維持
 
 ## iOS開発の学習ポイント
 
-### 1. @ViewBuilderの活用
-SwiftUIの地図スタイル切り替えで、複数の条件分岐を使った実装：
+### 1. MapCameraとMapCameraPosition
+iOS 17の新しいMapKit APIでは、`MapCamera`と`MapCameraPosition`を使用して地図の位置を管理：
 
 ```swift
-Group {
-    switch viewModel.mapControlsViewModel.currentMapStyle {
-    case .standard:
-        Map(position: $mapPosition).mapStyle(.standard)
-    case .hybrid:
-        Map(position: $mapPosition).mapStyle(.hybrid)
-    case .imagery:
-        Map(position: $mapPosition).mapStyle(.imagery)
-    }
+// MapCameraの作成
+let camera = MapCamera(
+    centerCoordinate: location.coordinate,
+    distance: 10000,  // 高度（メートル）
+    heading: 0,       // 方向（度）
+    pitch: 0          // 傾き（度）
+)
+
+// MapCameraPositionへの適用
+@State private var mapPosition: MapCameraPosition = .automatic
+mapPosition = .camera(camera)
+```
+
+### 2. onMapCameraChangeの活用
+地図の変更を監視し、ユーザーの操作を追跡：
+
+```swift
+.onMapCameraChange { context in
+    // contextから現在のカメラ情報を取得
+    let camera = context.camera
+    currentMapCamera = camera
+    
+    // 高度から最も近いズームレベルを設定
+    viewModel.mapControlsViewModel.setNearestZoomIndex(for: camera.distance)
 }
 ```
 
-### 2. MapCameraPositionの扱い
-iOS 17の新しいMapKit APIでは、`MapCameraPosition`を使用して地図の位置を管理：
+### 3. SwiftUIの状態管理
+ボタン操作とピンチ操作を区別するためのフラグ管理：
 
 ```swift
-@State private var mapPosition: MapCameraPosition = .region(
-    MKCoordinateRegion(center: location, span: span)
-)
-```
+@State private var isZoomingByButton = false
 
-### 3. パターンマッチングの注意点
-Swiftのパターンマッチングで、以下のような構文エラーに注意：
-
-```swift
-// ❌ エラー
-if case .region(let region) = mapPosition { }
-
-// ✅ 正しい
-switch mapPosition {
-case let .region(region):
-    // 処理
-default:
-    break
+// ボタンでのズーム時
+isZoomingByButton = true
+withAnimation {
+    mapPosition = .camera(newCamera)
+}
+DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+    isZoomingByButton = false
 }
 ```
 
 ## テスト駆動開発（TDD）の実践
 
 ### 1. MapControlsViewModelTests
-ズーム計算、スタイル切り替え、向き切り替えのロジックをテスト：
+ズーム操作、スタイル切り替え、向き切り替えのロジックをテスト：
 
 ```swift
 func testZoomInLimit() {
-    let span = MKCoordinateSpan(latitudeDelta: 0.0001, longitudeDelta: 0.0001)
-    let newSpan = sut.calculateZoomIn(from: span)
-    XCTAssertEqual(newSpan.latitudeDelta, sut.minimumZoomSpan.latitudeDelta)
+    // 最小ズームレベルに設定
+    sut.setZoomIndex(0)
+    
+    // ズームインを試みる
+    sut.zoomIn()
+    
+    // それ以上ズームインできないことを確認
+    XCTAssertEqual(sut.currentZoomIndex, 0)
+    XCTAssertFalse(sut.canZoomIn)
+}
+
+func testSetNearestZoomIndex() {
+    // 高度750mは1000m（インデックス2）に最も近い
+    sut.setNearestZoomIndex(for: 750)
+    XCTAssertEqual(sut.currentZoomIndex, 2)
 }
 ```
 
@@ -161,9 +227,9 @@ func testZoomInLimit() {
 設定の保存と読み込みをモックを使用してテスト：
 
 ```swift
-func testSaveMapStyle() {
-    sut.saveMapStyle(.hybrid)
-    XCTAssertEqual(mockUserDefaults.storage["mapStyle"] as? String, "hybrid")
+func testSaveZoomIndex() {
+    sut.saveZoomIndex(7)
+    XCTAssertEqual(mockUserDefaults.storage["zoomIndex"] as? Int, 7)
 }
 ```
 
@@ -177,20 +243,38 @@ final class MapControlsViewModelTests: XCTestCase {
 }
 ```
 
+## 実装の利点
+
+### 1. 安定したズーム動作
+- MapKitの内部変換に依存しない
+- 常に予測可能な12段階のズームレベル
+- ピンチ操作後もボタンで確実に次のレベルへ移動
+
+### 2. 優れたユーザー体験
+- ズーム制限が視覚的に分かる（ボタンのグレーアウト）
+- 一貫性のあるズームステップ
+- スムーズなアニメーション
+
+### 3. 保守性の向上
+- インデックスベースのシンプルな実装
+- テストが書きやすく、動作の検証が容易
+- 将来の拡張（音声コマンドなど）に対応しやすい設計
+
 ## 今後の拡張予定
 
 ### Heading Up機能の実装
 現在はボタンとフラグのみ実装。今後の実装に必要な要素：
 - CLLocationManagerDelegateでheading情報を取得
-- MapCameraPositionにrotation角度を適用
+- MapCameraのheadingプロパティに適用
 - 磁北と真北の選択オプション
 
 ### 音声コマンド対応
 将来的な音声操作のための基盤：
 - 各操作メソッドが独立している設計
 - 音声認識からの呼び出しが容易
+- "ズームイン"、"ズームアウト"などのシンプルなコマンド
 
 ## まとめ
-段階3では、バイクでの使用を考慮した直感的な地図コントロールを実装しました。大きなタップターゲット、視覚的なフィードバック、設定の永続化により、実用的な地図アプリとしての基本機能が完成しました。
+段階3では、バイクでの使用を考慮した直感的な地図コントロールを実装しました。特に、高度ベースのズーム実装により、MapKitの内部動作に左右されない安定した操作性を実現しました。大きなタップターゲット、視覚的なフィードバック、設定の永続化により、実用的な地図アプリとしての基本機能が完成しました。
 
 TDDアプローチにより、各機能が確実に動作することを保証しながら、段階的に機能を追加することができました。
