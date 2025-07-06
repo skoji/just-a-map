@@ -18,6 +18,9 @@ class MapViewModel: ObservableObject {
     @Published var isFollowingUser = true
     @Published var formattedAddress: FormattedAddress?
     @Published var isLoadingAddress = false
+    @Published var mapCenterCoordinate = CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503)
+    @Published var mapCenterAddress: FormattedAddress?
+    @Published var isLoadingMapCenterAddress = false
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -29,6 +32,9 @@ class MapViewModel: ObservableObject {
     private var geocodingTask: Task<Void, Never>?
     private var lastGeocodedLocation: CLLocation?
     private let geocodingMinimumDistance: CLLocationDistance = 50.0 // 50m以上移動したら住所を更新
+    
+    private var mapCenterGeocodingTask: Task<Void, Never>?
+    private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
     
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
@@ -96,6 +102,7 @@ class MapViewModel: ObservableObject {
     func stopLocationTracking() {
         locationManager.stopLocationUpdates()
         geocodingTask?.cancel()
+        mapCenterGeocodingTask?.cancel()
     }
     
     /// アプリがバックグラウンドに入った時
@@ -111,11 +118,64 @@ class MapViewModel: ObservableObject {
     func centerOnUserLocation() {
         guard let location = userLocation else { return }
         
+        // 追従モードを有効化
+        isFollowingUser = true
+        
         withAnimation(.easeInOut(duration: 0.3)) {
             region = MKCoordinateRegion(
                 center: location.coordinate,
                 span: region.span
             )
+        }
+    }
+    
+    /// ユーザーが地図を操作したときに呼ばれる
+    func handleUserMapInteraction() {
+        isFollowingUser = false
+    }
+    
+    /// 地図の中心座標を更新（デバウンス処理付き）
+    func updateMapCenter(_ coordinate: CLLocationCoordinate2D) {
+        mapCenterCoordinate = coordinate
+        
+        // 追従モードでない場合のみ、地図中心の住所を取得
+        guard !isFollowingUser else { return }
+        
+        // 前のタスクをキャンセル
+        mapCenterGeocodingTask?.cancel()
+        
+        // 新しいタスクを開始
+        mapCenterGeocodingTask = Task {
+            // デバウンス
+            try? await Task.sleep(nanoseconds: mapCenterDebounceDelay)
+            
+            guard !Task.isCancelled else { return }
+            
+            // 住所を取得
+            await fetchAddressForMapCenter()
+        }
+    }
+    
+    private func fetchAddressForMapCenter() async {
+        isLoadingMapCenterAddress = true
+        
+        let location = CLLocation(
+            latitude: mapCenterCoordinate.latitude,
+            longitude: mapCenterCoordinate.longitude
+        )
+        
+        do {
+            let address = try await geocodeService.reverseGeocode(location: location)
+            
+            guard !Task.isCancelled else { return }
+            
+            self.mapCenterAddress = addressFormatter.formatForDisplay(address)
+            self.isLoadingMapCenterAddress = false
+        } catch {
+            guard !Task.isCancelled else { return }
+            
+            print("Map center geocoding error: \(error)")
+            self.isLoadingMapCenterAddress = false
         }
     }
     

@@ -60,6 +60,9 @@ struct MapView: View {
                 // 高度から最も近いズームインデックスを設定
                 viewModel.mapControlsViewModel.setNearestZoomIndex(for: camera.distance)
                 
+                // 地図中心座標を更新
+                viewModel.updateMapCenter(context.region.center)
+                
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 if viewModel.isFollowingUser {
                     if let userLocation = viewModel.userLocation {
@@ -69,10 +72,16 @@ struct MapView: View {
                         )
                         let distance = userLocation.distance(from: mapCenter)
                         if distance > 100 { // 100m以上離れたら追従解除
-                            viewModel.isFollowingUser = false
+                            viewModel.handleUserMapInteraction()
                         }
                     }
                 }
+            }
+            
+            // クロスヘア（追従モード解除時のみ表示）
+            if !viewModel.isFollowingUser {
+                CrosshairView()
+                    .allowsHitTesting(false) // タッチイベントを透過
             }
             
             // 上部のUI（住所表示とエラー表示）
@@ -80,8 +89,8 @@ struct MapView: View {
                 // 住所表示と設定ボタン
                 HStack(alignment: .top) {
                     AddressView(
-                        formattedAddress: viewModel.formattedAddress,
-                        isLoading: viewModel.isLoadingAddress
+                        formattedAddress: viewModel.isFollowingUser ? viewModel.formattedAddress : viewModel.mapCenterAddress,
+                        isLoading: viewModel.isFollowingUser ? viewModel.isLoadingAddress : viewModel.isLoadingMapCenterAddress
                     )
                     
                     Spacer()
@@ -131,7 +140,7 @@ struct MapView: View {
                     
                     // 現在地に戻るボタン（右側）
                     Button(action: {
-                        viewModel.isFollowingUser = true
+                        viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
                             withAnimation {
                                 let camera = MapCamera(
@@ -148,9 +157,20 @@ struct MapView: View {
                             .font(.title2)
                             .foregroundColor(.white)
                             .frame(width: 60, height: 60)
-                            .background(Color.blue)
+                            .background(viewModel.isFollowingUser ? Color.blue : Color.gray)
                             .clipShape(Circle())
                             .shadow(radius: 4)
+                            .overlay(
+                                // 追従モード解除時にパルスアニメーション
+                                Circle()
+                                    .stroke(Color.blue, lineWidth: 2)
+                                    .scaleEffect(viewModel.isFollowingUser ? 1 : 1.3)
+                                    .opacity(viewModel.isFollowingUser ? 0 : 0.6)
+                                    .animation(
+                                        viewModel.isFollowingUser ? .none : Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                                        value: viewModel.isFollowingUser
+                                    )
+                            )
                     }
                     .padding(.trailing, 20)
                 }

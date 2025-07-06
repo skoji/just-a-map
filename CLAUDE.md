@@ -332,6 +332,15 @@ let testScenarios = [
 - 設定の永続化とアプリ起動時の適用
 - (実装日: 2025-01-06, PR: #7, [Issue #3](https://github.com/skoji/just-a-map/issues/3))
 
+### 地図スクロール時の中心点表示と住所表示
+- 追従モード状態管理（isFollowing）
+- 地図操作による追従モード解除
+- 地図中心にクロスヘア（十字マーク）表示
+- デバウンス処理付き中心点住所取得（300ms）
+- 現在位置/地図中心の住所表示切り替え
+- 現在位置ボタンの視覚的フィードバック（パルスアニメーション）
+- (実装日: 2025-01-06, PR: #未定, [Issue #8](https://github.com/skoji/just-a-map/issues/8))
+
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
 - [SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)
