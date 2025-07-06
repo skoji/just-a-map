@@ -4,17 +4,14 @@ import XCTest
 /// 地図スタイル切り替え時の挙動をテストするクラス
 @MainActor
 class MapStyleSwitchingTests: XCTestCase {
-    var mapViewModel: MapViewModel!
     var mapControlsViewModel: MapControlsViewModel!
     
     override func setUp() async throws {
         try await super.setUp()
         mapControlsViewModel = MapControlsViewModel()
-        mapViewModel = MapViewModel(mapControlsViewModel: mapControlsViewModel)
     }
     
     override func tearDown() async throws {
-        mapViewModel = nil
         mapControlsViewModel = nil
         try await super.tearDown()
     }
