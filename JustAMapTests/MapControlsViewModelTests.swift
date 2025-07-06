@@ -119,4 +119,49 @@ final class MapControlsViewModelTests: XCTestCase {
         XCTAssertEqual(sut.mapTypeForStyle(.hybrid), .hybrid)
         XCTAssertEqual(sut.mapTypeForStyle(.imagery), .satellite)
     }
+    
+    // MARK: - Map Orientation Tests
+    
+    func testDefaultMapOrientation() {
+        // Then
+        XCTAssertTrue(sut.isNorthUp)
+        XCTAssertFalse(sut.isHeadingUp)
+    }
+    
+    func testToggleMapOrientation() {
+        // Given
+        let initialNorthUp = sut.isNorthUp
+        
+        // When
+        sut.toggleMapOrientation()
+        
+        // Then
+        XCTAssertEqual(sut.isNorthUp, !initialNorthUp)
+        XCTAssertEqual(sut.isHeadingUp, initialNorthUp)
+    }
+    
+    func testMapOrientationToggleBackAndForth() {
+        // When & Then
+        sut.toggleMapOrientation()
+        XCTAssertFalse(sut.isNorthUp)
+        XCTAssertTrue(sut.isHeadingUp)
+        
+        sut.toggleMapOrientation()
+        XCTAssertTrue(sut.isNorthUp)
+        XCTAssertFalse(sut.isHeadingUp)
+    }
+    
+    func testCalculateHeadingRotation() {
+        // Given
+        let heading1: Double = 90  // 東向き
+        let heading2: Double = 180 // 南向き
+        let heading3: Double = 270 // 西向き
+        let heading4: Double = 0   // 北向き
+        
+        // When & Then
+        XCTAssertEqual(sut.calculateHeadingRotation(heading1), -90, accuracy: 0.1)
+        XCTAssertEqual(sut.calculateHeadingRotation(heading2), -180, accuracy: 0.1)
+        XCTAssertEqual(sut.calculateHeadingRotation(heading3), -270, accuracy: 0.1)
+        XCTAssertEqual(sut.calculateHeadingRotation(heading4), 0, accuracy: 0.1)
+    }
 }
