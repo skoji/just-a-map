@@ -4,15 +4,6 @@ import Combine
 
 /// 地図を表示するView
 struct MapView: View {
-    // MARK: - Constants
-    private enum Constants {
-        static let styleChangeDelay: TimeInterval = 0.1
-        static let animationDuration: TimeInterval = 0.3
-        static let flagResetDelay: TimeInterval = 0.5
-        static let followingDistanceThreshold: CLLocationDistance = 100.0
-    }
-    
-    // MARK: - State
     @StateObject private var viewModel = MapViewModel()
     @State private var mapPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -23,35 +14,46 @@ struct MapView: View {
     @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
     @State private var isShowingSettings = false
-    @State private var isChangingMapStyle = false
-    
-    private var currentMapStyle: MapKit.MapStyle {
-        switch viewModel.mapControlsViewModel.currentMapStyle {
-        case .standard:
-            return .standard
-        case .hybrid:
-            return .hybrid
-        case .imagery:
-            return .imagery
-        }
-    }
+    @State private var mapStyleForDisplay: JustAMap.MapStyle = .standard
     
     var body: some View {
         ZStack {
             // 地図
-            Map(position: $mapPosition) {
-                UserAnnotation()
-            }
-            .mapStyle(currentMapStyle)
-            .mapControls {
-                MapCompass()
-                MapScaleView()
+            Group {
+                switch mapStyleForDisplay {
+                case .standard:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.standard)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                case .hybrid:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.hybrid)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                case .imagery:
+                    Map(position: $mapPosition) {
+                        UserAnnotation()
+                    }
+                    .mapStyle(.imagery)
+                    .mapControls {
+                        MapCompass()
+                        MapScaleView()
+                    }
+                }
             }
             .ignoresSafeArea()
-            .id(viewModel.mapControlsViewModel.currentMapStyle)
             .onMapCameraChange { context in
-                // ボタンによるズーム中またはスタイル変更中は無視
-                guard !isZoomingByButton && !isChangingMapStyle else { return }
+                // ボタンによるズーム中は無視
+                guard !isZoomingByButton else { return }
                 
                 // カメラ情報を更新
                 let camera = context.camera
@@ -70,7 +72,7 @@ struct MapView: View {
                             longitude: context.region.center.longitude
                         )
                         let distance = userLocation.distance(from: mapCenter)
-                        if distance > Constants.followingDistanceThreshold {
+                        if distance > 100 { // 100m以上離れたら追従解除
                             viewModel.handleUserMapInteraction()
                         }
                     }
@@ -184,6 +186,8 @@ struct MapView: View {
                 distance: viewModel.mapControlsViewModel.currentAltitude
             )
             mapPosition = .camera(initialCamera)
+            // 初期スタイルを設定
+            mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
         }
         .onDisappear {
             viewModel.stopLocationTracking()
@@ -210,40 +214,9 @@ struct MapView: View {
             viewModel.handleAppWillEnterForeground()
         }
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
-            // スタイル変更開始
-            isChangingMapStyle = true
             viewModel.saveSettings()
-            
-            // カメラ位置を保持して再設定（微小な変更を加えて強制更新）
-            if let camera = currentMapCamera {
-                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.styleChangeDelay) {
-                    // 微小な距離変更を加えて強制的に地図を更新
-                    let adjustedCamera = MapCamera(
-                        centerCoordinate: camera.centerCoordinate,
-                        distance: camera.distance * 1.0001, // 0.01%の微調整
-                        heading: camera.heading,
-                        pitch: camera.pitch
-                    )
-                    withAnimation(.easeInOut(duration: Constants.animationDuration)) {
-                        mapPosition = .camera(adjustedCamera)
-                    }
-                    
-                    // 元のカメラ位置に戻す
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                        mapPosition = .camera(camera)
-                    }
-                    
-                    // スタイル変更完了
-                    DispatchQueue.main.asyncAfter(deadline: .now() + Constants.flagResetDelay) {
-                        isChangingMapStyle = false
-                    }
-                }
-            } else {
-                // カメラ情報がない場合は即座にフラグをリセット
-                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.flagResetDelay) {
-                    isChangingMapStyle = false
-                }
-            }
+            // State変数を更新してSwiftUIの再描画を促す
+            mapStyleForDisplay = newStyle
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
             viewModel.saveSettings()
