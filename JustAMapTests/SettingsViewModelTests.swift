@@ -73,6 +73,7 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var defaultMapStyle: MapStyle = .standard
     var defaultIsNorthUp: Bool = true
     var addressFormat: AddressFormat = .standard
+    var mockIsFirstLaunch: Bool = false
     
     func saveMapStyle(_ style: MapStyle) {
         mapStyle = style
@@ -104,5 +105,9 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     
     func loadZoomIndex() -> Int? {
         return zoomIndex
+    }
+    
+    func isFirstLaunch() -> Bool {
+        return mockIsFirstLaunch
     }
 }

@@ -14,15 +14,15 @@ struct SettingsView: View {
                             .font(.headline)
                         HStack {
                             Button {
-                                if viewModel.defaultZoomIndex > 0 {
+                                if viewModel.defaultZoomIndex > SettingsViewModel.minZoomIndex {
                                     viewModel.defaultZoomIndex -= 1
                                 }
                             } label: {
                                 Image(systemName: "minus.circle.fill")
                                     .font(.title2)
-                                    .foregroundColor(viewModel.defaultZoomIndex > 0 ? .blue : .gray)
+                                    .foregroundColor(viewModel.defaultZoomIndex > SettingsViewModel.minZoomIndex ? .blue : .gray)
                             }
-                            .disabled(viewModel.defaultZoomIndex <= 0)
+                            .disabled(viewModel.defaultZoomIndex <= SettingsViewModel.minZoomIndex)
                             
                             Spacer()
                             
@@ -33,15 +33,15 @@ struct SettingsView: View {
                             Spacer()
                             
                             Button {
-                                if viewModel.defaultZoomIndex < 11 {
+                                if viewModel.defaultZoomIndex < SettingsViewModel.maxZoomIndex {
                                     viewModel.defaultZoomIndex += 1
                                 }
                             } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
-                                    .foregroundColor(viewModel.defaultZoomIndex < 11 ? .blue : .gray)
+                                    .foregroundColor(viewModel.defaultZoomIndex < SettingsViewModel.maxZoomIndex ? .blue : .gray)
                             }
-                            .disabled(viewModel.defaultZoomIndex >= 11)
+                            .disabled(viewModel.defaultZoomIndex >= SettingsViewModel.maxZoomIndex)
                         }
                     }
                     .padding(.vertical, 8)

@@ -4,6 +4,10 @@ import SwiftUI
 class SettingsViewModel: ObservableObject {
     private var settingsStorage: MapSettingsStorageProtocol
     
+    // ズームインデックスの範囲
+    static let minZoomIndex = ZoomConstants.minIndex
+    static let maxZoomIndex = ZoomConstants.maxIndex
+    
     @Published var defaultZoomIndex: Int {
         didSet {
             settingsStorage.defaultZoomIndex = defaultZoomIndex

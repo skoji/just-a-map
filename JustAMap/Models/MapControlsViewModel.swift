@@ -13,6 +13,12 @@ enum MapStyle: String, CaseIterable {
     }
 }
 
+/// ズームレベルの定数
+enum ZoomConstants {
+    static let minIndex = 0
+    static let maxIndex = 11
+}
+
 /// 地図コントロールのビジネスロジックを管理
 @MainActor
 class MapControlsViewModel: ObservableObject {
@@ -34,6 +40,7 @@ class MapControlsViewModel: ObservableObject {
         500000,   // 大陸レベル
         1000000,  // 最大ズームアウト - 地球レベル
     ]
+    
     
     /// 現在のズームレベルインデックス
     @Published private(set) var currentZoomIndex: Int = 5 // デフォルトは市レベル
@@ -62,14 +69,14 @@ class MapControlsViewModel: ObservableObject {
     
     /// ズームイン
     func zoomIn() {
-        if currentZoomIndex > 0 {
+        if currentZoomIndex > ZoomConstants.minIndex {
             currentZoomIndex -= 1
         }
     }
     
     /// ズームアウト
     func zoomOut() {
-        if currentZoomIndex < predefinedAltitudes.count - 1 {
+        if currentZoomIndex < ZoomConstants.maxIndex {
             currentZoomIndex += 1
         }
     }
