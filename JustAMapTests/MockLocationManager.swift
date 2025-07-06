@@ -10,6 +10,9 @@ class MockLocationManager: LocationManagerProtocol {
     private(set) var didRequestAuthorization = false
     private(set) var isUpdatingLocation = false
     
+    /// テスト用: 現在位置を設定できるプロパティ
+    var currentLocation: CLLocation?
+    
     func requestLocationPermission() {
         didRequestAuthorization = true
     }
