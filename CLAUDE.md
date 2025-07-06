@@ -75,19 +75,23 @@
 **目標**: 直感的な地図操作と表示カスタマイズ
 
 **実装内容**:
-- ズームレベルの調整（ピンチ操作＋ボタン）
-- North Up / Heading Up の切り替え
-- 地図表示モード（標準/ドライブ/航空写真）の切り替え
-- 大きめのタップしやすいコントロールボタン
+- 12段階の離散的ズームレベル（200m〜1,000,000m）
+- 高度（altitude）ベースの安定したズーム実装
+- ズーム制限時のボタングレーアウト
+- North Up / Heading Up の切り替え（実際の回転は今後実装）
+- 地図表示モード（標準/ハイブリッド/航空写真）の切り替え
+- 大きめのタップしやすいコントロールボタン（60x60pt）
 - （将来）音声コマンドによる操作
 
 **テスト対象**:
-- ズームレベル計算ロジック
-- 地図回転の状態管理
-- UI状態の永続化
+- ズームインデックス管理ロジック
+- 高度からズームインデックスへの変換
+- 地図スタイル切り替え
+- UI状態の永続化（ズームインデックスとして保存）
 
 **学習ポイント**:
-- SwiftUIのジェスチャー処理
+- MapCameraとMapCameraPositionの使い方
+- onMapCameraChangeによる地図状態の追跡
 - UserDefaultsによる設定保存
 - カスタムUIコンポーネントの作成
 
@@ -134,23 +138,41 @@
 ### ファイル構成
 ```
 JustAMap/
-├── App/
-│   └── JustAMapApp.swift
-├── Views/
-│   ├── ContentView.swift
-│   ├── MapView.swift
-│   └── AddressView.swift
+├── JustAMapApp.swift
+├── ContentView.swift  
+├── MapView.swift
 ├── Models/
 │   ├── LocationManager.swift
-│   └── AddressFormatter.swift
+│   ├── LocationManagerProtocol.swift
+│   ├── AddressFormatter.swift
+│   ├── MapViewModel.swift
+│   └── MapControlsViewModel.swift
 ├── Services/
-│   └── GeocodeService.swift
+│   ├── GeocodeService.swift
+│   ├── IdleTimerManager.swift
+│   └── MapSettingsStorage.swift
+├── Views/
+│   ├── AddressView.swift
+│   └── MapControlsView.swift
 ├── Extensions/
-│   └── CLLocationCoordinate2D+Extensions.swift
-└── Tests/
-    ├── Models/
-    ├── Services/
-    └── TestDoubles/
+│   └── (現在は空)
+└── Assets.xcassets/
+    ├── AppIcon.appiconset/
+    └── AccentColor.colorset/
+
+JustAMapTests/
+├── JustAMapTests.swift
+├── LocationManagerTests.swift
+├── AddressFormatterTests.swift
+├── IdleTimerManagerTests.swift
+├── MapControlsViewModelTests.swift
+├── MapSettingsStorageTests.swift
+└── TestDoubles/
+    └── MockLocationManager.swift
+
+JustAMapUITests/
+├── JustAMapUITests.swift
+└── JustAMapUITestsLaunchTests.swift
 ```
 
 ## 実装時の注意事項
