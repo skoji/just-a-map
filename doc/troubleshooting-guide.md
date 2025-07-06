@@ -266,6 +266,111 @@ print("User location: \(userLocation?.coordinate ?? CLLocationCoordinate2D())")
 
 Xcodeの下部のデバッグエリアで、アプリのログとシステムログを確認できます。
 
+## 段階2関連の問題
+
+### 1. 住所が表示されない
+
+**原因：**
+- ネットワーク接続がない
+- 逆ジオコーディングのレート制限
+- 位置情報の精度が低い
+
+**解決方法：**
+```swift
+// デバッグ用ログを追加
+print("Geocoding location: \(location.coordinate)")
+print("Geocoding error: \(error)")
+```
+
+**確認事項：**
+1. シミュレータのネットワーク接続
+2. コンソールでエラーメッセージを確認
+3. 実機でテスト（シミュレータは逆ジオコーディングが不安定な場合がある）
+
+### 2. スリープ防止が効かない
+
+**症状：**
+画面が自動的に消える
+
+**原因：**
+- `isIdleTimerDisabled`の設定タイミング
+- バックグラウンド復帰時の設定漏れ
+
+**解決方法：**
+```swift
+// デバッグ確認
+print("Idle timer disabled: \(UIApplication.shared.isIdleTimerDisabled)")
+```
+
+### 3. async/awaitのエラー
+
+**エラー：**
+```
+'async' call in a function that does not support concurrency
+```
+
+**解決方法：**
+```swift
+// Task内で非同期処理を実行
+Task {
+    do {
+        let address = try await geocodeService.reverseGeocode(location: location)
+        // UI更新
+    } catch {
+        // エラー処理
+    }
+}
+```
+
+### 4. 住所取得が遅い
+
+**症状：**
+住所表示まで数秒かかる
+
+**原因：**
+- ネットワークの遅延
+- 連続したリクエスト
+
+**解決方法：**
+```swift
+// 前のタスクをキャンセル
+geocodingTask?.cancel()
+
+// デバウンス処理を追加（オプション）
+private var geocodingTimer: Timer?
+
+func scheduleGeocoding(for location: CLLocation) {
+    geocodingTimer?.invalidate()
+    geocodingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+        self.fetchAddress(for: location)
+    }
+}
+```
+
+### 5. テストのモック作成エラー
+
+**エラー：**
+```
+Cannot override with a stored property 'name'
+```
+
+**原因：**
+CLPlacemarkのプロパティは`override`できない
+
+**解決方法：**
+```swift
+class MockPlacemark: CLPlacemark {
+    private let _name: String?
+    
+    override var name: String? { _name }
+    
+    init(name: String?) {
+        self._name = name
+        super.init()
+    }
+}
+```
+
 ## まとめ
 
 多くの問題は以下が原因です：
@@ -274,5 +379,6 @@ Xcodeの下部のデバッグエリアで、アプリのログとシステムロ
 2. **新旧APIの混在**
 3. **シミュレータ特有の挙動**
 4. **非同期処理の扱い**
+5. **ネットワーク関連のエラー**
 
 これらを理解することで、トラブルシューティングが効率的に行えます。
