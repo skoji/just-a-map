@@ -36,6 +36,9 @@ protocol MapSettingsStorageProtocol {
     func loadZoomLevel() -> MKCoordinateSpan?
     func saveZoomIndex(_ index: Int)
     func loadZoomIndex() -> Int?
+    
+    // 初回起動チェック
+    func isFirstLaunch() -> Bool
 }
 
 /// 地図設定の永続化サービス
@@ -188,5 +191,14 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
             return userDefaults.integer(forKey: Keys.zoomIndex)
         }
         return nil
+    }
+    
+    // MARK: - First Launch Check
+    
+    func isFirstLaunch() -> Bool {
+        // いずれかの現在の設定が保存されていない場合は初回起動と判定
+        return userDefaults.object(forKey: Keys.mapStyle) == nil &&
+               userDefaults.object(forKey: Keys.isNorthUp) == nil &&
+               userDefaults.object(forKey: Keys.zoomIndex) == nil
     }
 }

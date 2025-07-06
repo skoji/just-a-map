@@ -52,16 +52,8 @@ class MapViewModel: ObservableObject {
     }
     
     private func loadSettings() {
-        // 現在の設定を読み込む（なければデフォルト設定を使用）
-        let currentMapStyle = settingsStorage.mapStyle
-        let currentIsNorthUp = settingsStorage.isNorthUp
-        let currentZoomIndex = settingsStorage.zoomIndex
-        
-        // 保存された現在の設定がない場合は、デフォルト設定を使用
-        if settingsStorage.loadMapStyle() == .standard && 
-           settingsStorage.loadMapOrientation() == true && 
-           settingsStorage.loadZoomIndex() == nil {
-            // 初回起動時：デフォルト設定を現在の設定として保存
+        if settingsStorage.isFirstLaunch() {
+            // 初回起動時：デフォルト設定を現在の設定として使用・保存
             mapControlsViewModel.currentMapStyle = settingsStorage.defaultMapStyle
             mapControlsViewModel.isNorthUp = settingsStorage.defaultIsNorthUp
             mapControlsViewModel.setZoomIndex(settingsStorage.defaultZoomIndex)
@@ -70,9 +62,9 @@ class MapViewModel: ObservableObject {
             saveSettings()
         } else {
             // 保存された設定を読み込む
-            mapControlsViewModel.currentMapStyle = currentMapStyle
-            mapControlsViewModel.isNorthUp = currentIsNorthUp
-            mapControlsViewModel.setZoomIndex(currentZoomIndex)
+            mapControlsViewModel.currentMapStyle = settingsStorage.mapStyle
+            mapControlsViewModel.isNorthUp = settingsStorage.isNorthUp
+            mapControlsViewModel.setZoomIndex(settingsStorage.zoomIndex)
         }
     }
     

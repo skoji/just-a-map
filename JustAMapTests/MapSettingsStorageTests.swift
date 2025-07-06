@@ -238,6 +238,42 @@ final class MapSettingsStorageTests: XCTestCase {
         // Then
         XCTAssertEqual(value, .standard) // デフォルト値
     }
+    
+    // MARK: - First Launch Tests
+    
+    func testIsFirstLaunchReturnsTrueWhenNoSettingsSaved() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertTrue(isFirstLaunch)
+    }
+    
+    func testIsFirstLaunchReturnsFalseWhenAnySettingSaved() {
+        // Given - いずれかの設定が保存されている
+        mockUserDefaults.storage["mapStyle"] = MapStyle.standard.rawValue
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertFalse(isFirstLaunch)
+    }
+    
+    func testIsFirstLaunchReturnsFalseWhenAllSettingsSaved() {
+        // Given - すべての設定が保存されている
+        mockUserDefaults.storage["mapStyle"] = MapStyle.hybrid.rawValue
+        mockUserDefaults.storage["isNorthUp"] = false
+        mockUserDefaults.storage["zoomIndex"] = 7
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertFalse(isFirstLaunch)
+    }
 }
 
 // MARK: - Mock UserDefaults
