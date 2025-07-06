@@ -48,6 +48,7 @@ struct MapView: View {
                 MapScaleView()
             }
             .ignoresSafeArea()
+            .id(viewModel.mapControlsViewModel.currentMapStyle)
             .onMapCameraChange { context in
                 // ボタンによるズーム中またはスタイル変更中は無視
                 guard !isZoomingByButton && !isChangingMapStyle else { return }
@@ -213,12 +214,25 @@ struct MapView: View {
             isChangingMapStyle = true
             viewModel.saveSettings()
             
-            // カメラ位置を保持して再設定
+            // カメラ位置を保持して再設定（微小な変更を加えて強制更新）
             if let camera = currentMapCamera {
                 DispatchQueue.main.asyncAfter(deadline: .now() + Constants.styleChangeDelay) {
+                    // 微小な距離変更を加えて強制的に地図を更新
+                    let adjustedCamera = MapCamera(
+                        centerCoordinate: camera.centerCoordinate,
+                        distance: camera.distance * 1.0001, // 0.01%の微調整
+                        heading: camera.heading,
+                        pitch: camera.pitch
+                    )
                     withAnimation(.easeInOut(duration: Constants.animationDuration)) {
+                        mapPosition = .camera(adjustedCamera)
+                    }
+                    
+                    // 元のカメラ位置に戻す
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                         mapPosition = .camera(camera)
                     }
+                    
                     // スタイル変更完了
                     DispatchQueue.main.asyncAfter(deadline: .now() + Constants.flagResetDelay) {
                         isChangingMapStyle = false
