@@ -241,6 +241,30 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertEqual(sut.mapControlsViewModel.currentZoomIndex, defaultZoomIndex, "デフォルトズームレベルが適用されるべき")
     }
     
+    func testFollowingModeRemainsEnabledAfterCenterOnUserLocation() {
+        // Given
+        let testLocation = CLLocation(latitude: 35.6762, longitude: 139.6503)
+        mockLocationManager.currentLocation = testLocation
+        sut.userLocation = testLocation
+        sut.isFollowingUser = false // 追従モードを無効にしておく
+        
+        // When
+        sut.centerOnUserLocation()
+        
+        // Then
+        XCTAssertTrue(sut.isFollowingUser, "centerOnUserLocation後は追従モードが有効になるべき")
+        
+        // 地図操作をシミュレート（100m未満の移動）
+        let nearbyCoordinate = CLLocationCoordinate2D(
+            latitude: 35.6763, // わずかに北へ
+            longitude: 139.6503
+        )
+        sut.updateMapCenter(nearbyCoordinate)
+        
+        // 100m未満の移動では追従モードは維持されるべき
+        XCTAssertTrue(sut.isFollowingUser, "100m未満の移動では追従モードが維持されるべき")
+    }
+    
     func testDefaultZoomLevelIsLoadedFromSettings() {
         // Given
         let expectedDefaultZoomIndex = 8 // 100km
