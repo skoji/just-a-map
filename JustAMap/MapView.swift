@@ -16,7 +16,7 @@ struct MapView: View {
     @State private var isShowingSettings = false
     @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
-    private var mapStyleValue: MapKit.MapStyle {
+    private var currentMapKitStyle: MapKit.MapStyle {
         switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
             return .standard
@@ -33,7 +33,7 @@ struct MapView: View {
             Map(position: $mapPosition) {
                 UserAnnotation()
             }
-            .mapStyle(mapStyleValue)
+            .mapStyle(currentMapKitStyle)
             .mapControls {
                 MapCompass()
                 MapScaleView()
