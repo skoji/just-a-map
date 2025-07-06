@@ -15,12 +15,28 @@ class MapViewModel: ObservableObject {
     @Published var isLocationAuthorized = false
     @Published var locationError: LocationError?
     @Published var isFollowingUser = true
+    @Published var formattedAddress: FormattedAddress?
+    @Published var isLoadingAddress = false
     
     private let locationManager: LocationManagerProtocol
+    private let geocodeService: GeocodeServiceProtocol
+    private let addressFormatter: AddressFormatter
+    private let idleTimerManager: IdleTimerManagerProtocol
     
-    init(locationManager: LocationManagerProtocol = LocationManager()) {
+    private var geocodingTask: Task<Void, Never>?
+    
+    init(locationManager: LocationManagerProtocol = LocationManager(),
+         geocodeService: GeocodeServiceProtocol = GeocodeService(),
+         addressFormatter: AddressFormatter = AddressFormatter(),
+         idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager()) {
         self.locationManager = locationManager
+        self.geocodeService = geocodeService
+        self.addressFormatter = addressFormatter
+        self.idleTimerManager = idleTimerManager
         self.locationManager.delegate = self
+        
+        // スリープ防止を有効化
+        self.idleTimerManager.setIdleTimerDisabled(true)
     }
     
     func requestLocationPermission() {
@@ -33,6 +49,17 @@ class MapViewModel: ObservableObject {
     
     func stopLocationTracking() {
         locationManager.stopLocationUpdates()
+        geocodingTask?.cancel()
+    }
+    
+    /// アプリがバックグラウンドに入った時
+    func handleAppDidEnterBackground() {
+        idleTimerManager.handleAppDidEnterBackground()
+    }
+    
+    /// アプリがフォアグラウンドに戻った時
+    func handleAppWillEnterForeground() {
+        idleTimerManager.handleAppWillEnterForeground()
     }
     
     func centerOnUserLocation() {
@@ -57,6 +84,33 @@ class MapViewModel: ObservableObject {
             )
         }
     }
+    
+    private func fetchAddress(for location: CLLocation) {
+        // 前のタスクをキャンセル
+        geocodingTask?.cancel()
+        
+        // 新しいタスクを開始
+        geocodingTask = Task {
+            isLoadingAddress = true
+            
+            do {
+                let address = try await geocodeService.reverseGeocode(location: location)
+                
+                // タスクがキャンセルされていないか確認
+                guard !Task.isCancelled else { return }
+                
+                self.formattedAddress = addressFormatter.formatForDisplay(address)
+                self.isLoadingAddress = false
+            } catch {
+                // タスクがキャンセルされていないか確認
+                guard !Task.isCancelled else { return }
+                
+                print("Geocoding error: \(error)")
+                self.isLoadingAddress = false
+                // エラーの場合は住所を空にしない（前の住所を保持）
+            }
+        }
+    }
 }
 
 // MARK: - LocationManagerDelegate
@@ -69,6 +123,8 @@ extension MapViewModel: LocationManagerDelegate {
             if self.locationError != nil && self.locationError != .authorizationDenied {
                 self.locationError = nil
             }
+            // 住所を取得
+            self.fetchAddress(for: location)
         }
     }
     

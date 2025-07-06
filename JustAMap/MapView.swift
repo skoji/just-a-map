@@ -39,13 +39,22 @@ struct MapView: View {
                 }
             }
             
-            // エラー表示
-            if let error = viewModel.locationError {
-                VStack {
+            // 上部のUI（住所表示とエラー表示）
+            VStack {
+                // 住所表示
+                AddressView(
+                    formattedAddress: viewModel.formattedAddress,
+                    isLoading: viewModel.isLoadingAddress
+                )
+                
+                // エラー表示
+                if let error = viewModel.locationError {
                     ErrorBanner(error: error)
-                    Spacer()
+                        .padding(.horizontal)
+                        .padding(.top, 8)
                 }
-                .padding(.top, 50)
+                
+                Spacer()
             }
             
             // コントロールボタン
@@ -95,6 +104,12 @@ struct MapView: View {
                     ))
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+            viewModel.handleAppDidEnterBackground()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            viewModel.handleAppWillEnterForeground()
         }
     }
 }
