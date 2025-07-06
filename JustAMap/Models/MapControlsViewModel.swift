@@ -2,6 +2,13 @@ import Foundation
 import MapKit
 import SwiftUI
 
+/// 地図の表示スタイル
+enum MapStyle: String, CaseIterable {
+    case standard = "標準"
+    case hybrid = "航空写真+地図"
+    case imagery = "航空写真"
+}
+
 /// 地図コントロールのビジネスロジックを管理
 @MainActor
 class MapControlsViewModel: ObservableObject {
@@ -15,6 +22,11 @@ class MapControlsViewModel: ObservableObject {
     
     /// ズーム倍率
     private let zoomFactor: Double = 2.0
+    
+    // MARK: - Map Style Properties
+    
+    /// 現在の地図スタイル
+    @Published var currentMapStyle: MapStyle = .standard
     
     // MARK: - Zoom Methods
     
@@ -51,5 +63,28 @@ class MapControlsViewModel: ObservableObject {
         
         // 0-20の範囲にクランプ
         return max(0, min(maxZoom, zoomLevel))
+    }
+    
+    // MARK: - Map Style Methods
+    
+    /// 地図スタイルを切り替え
+    func toggleMapStyle() {
+        let allStyles = MapStyle.allCases
+        guard let currentIndex = allStyles.firstIndex(of: currentMapStyle) else { return }
+        
+        let nextIndex = (currentIndex + 1) % allStyles.count
+        currentMapStyle = allStyles[nextIndex]
+    }
+    
+    /// MapStyleからMKMapTypeに変換
+    func mapTypeForStyle(_ style: MapStyle) -> MKMapType {
+        switch style {
+        case .standard:
+            return .standard
+        case .hybrid:
+            return .hybrid
+        case .imagery:
+            return .satellite
+        }
     }
 }
