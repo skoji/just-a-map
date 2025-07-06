@@ -28,6 +28,16 @@ class MapControlsViewModel: ObservableObject {
     /// 現在の地図スタイル
     @Published var currentMapStyle: MapStyle = .standard
     
+    // MARK: - Map Orientation Properties
+    
+    /// North Up（北が上）モード
+    @Published var isNorthUp: Bool = true
+    
+    /// Heading Up（進行方向が上）モード
+    var isHeadingUp: Bool {
+        !isNorthUp
+    }
+    
     // MARK: - Zoom Methods
     
     /// ズームイン計算
@@ -86,5 +96,18 @@ class MapControlsViewModel: ObservableObject {
         case .imagery:
             return .satellite
         }
+    }
+    
+    // MARK: - Map Orientation Methods
+    
+    /// 地図の向きを切り替え
+    func toggleMapOrientation() {
+        isNorthUp.toggle()
+    }
+    
+    /// ヘディングから地図の回転角度を計算
+    func calculateHeadingRotation(_ heading: Double) -> Double {
+        // MapKitは北が0度で時計回りなので、負の値で回転
+        return -heading
     }
 }
