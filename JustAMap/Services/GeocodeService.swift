@@ -25,6 +25,7 @@ struct Address: Equatable {
     let fullAddress: String
     let postalCode: String?
     let locality: String?         // 市区町村
+    let subAdministrativeArea: String? // 郡・地区
     let administrativeArea: String? // 都道府県
     let country: String?
 }
@@ -66,6 +67,7 @@ class GeocodeService: GeocodeServiceProtocol {
                 fullAddress: fullAddress,
                 postalCode: placemark.postalCode,
                 locality: placemark.locality,
+                subAdministrativeArea: placemark.subAdministrativeArea,
                 administrativeArea: placemark.administrativeArea,
                 country: placemark.country
             )

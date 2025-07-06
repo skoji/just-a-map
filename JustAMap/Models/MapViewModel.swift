@@ -32,16 +32,17 @@ class MapViewModel: ObservableObject {
     
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
-         addressFormatter: AddressFormatter = AddressFormatter(),
+         addressFormatter: AddressFormatter? = nil,
          idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager(),
          mapControlsViewModel: MapControlsViewModel? = nil,
          settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
         self.locationManager = locationManager
         self.geocodeService = geocodeService
-        self.addressFormatter = addressFormatter
+        self.settingsStorage = settingsStorage
+        // AddressFormatterはsettingsStorageを使用するため、ここで作成
+        self.addressFormatter = addressFormatter ?? AddressFormatter(settingsStorage: settingsStorage)
         self.idleTimerManager = idleTimerManager
         self.mapControlsViewModel = mapControlsViewModel ?? MapControlsViewModel()
-        self.settingsStorage = settingsStorage
         self.locationManager.delegate = self
         
         // スリープ防止を有効化
@@ -52,12 +53,19 @@ class MapViewModel: ObservableObject {
     }
     
     private func loadSettings() {
-        mapControlsViewModel.currentMapStyle = settingsStorage.loadMapStyle()
-        mapControlsViewModel.isNorthUp = settingsStorage.loadMapOrientation()
-        
-        // 保存されたズームレベルインデックスを読み込む
-        if let savedZoomIndex = settingsStorage.loadZoomIndex() {
-            mapControlsViewModel.setZoomIndex(savedZoomIndex)
+        if settingsStorage.isFirstLaunch() {
+            // 初回起動時：デフォルト設定を現在の設定として使用・保存
+            mapControlsViewModel.currentMapStyle = settingsStorage.defaultMapStyle
+            mapControlsViewModel.isNorthUp = settingsStorage.defaultIsNorthUp
+            mapControlsViewModel.setZoomIndex(settingsStorage.defaultZoomIndex)
+            
+            // 現在の設定として保存
+            saveSettings()
+        } else {
+            // 保存された設定を読み込む
+            mapControlsViewModel.currentMapStyle = settingsStorage.mapStyle
+            mapControlsViewModel.isNorthUp = settingsStorage.isNorthUp
+            mapControlsViewModel.setZoomIndex(settingsStorage.zoomIndex)
         }
     }
     
@@ -65,6 +73,16 @@ class MapViewModel: ObservableObject {
         settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
         settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
         settingsStorage.saveZoomIndex(mapControlsViewModel.currentZoomIndex)
+    }
+    
+    /// 設定変更時に呼び出される（住所の再フォーマットが必要な場合）
+    func refreshAddressFormat() {
+        // 現在の位置情報で住所を再取得
+        if let location = userLocation {
+            // 最後のジオコーディング位置をリセットして強制的に再取得
+            lastGeocodedLocation = nil
+            fetchAddress(for: location)
+        }
     }
     
     func requestLocationPermission() {

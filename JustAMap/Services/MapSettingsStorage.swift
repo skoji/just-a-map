@@ -16,6 +16,18 @@ extension UserDefaults: UserDefaultsProtocol {}
 
 /// 地図設定の永続化を管理するプロトコル
 protocol MapSettingsStorageProtocol {
+    // 現在の設定
+    var mapStyle: MapStyle { get set }
+    var isNorthUp: Bool { get set }
+    var zoomIndex: Int { get set }
+    
+    // デフォルト設定
+    var defaultZoomIndex: Int { get set }
+    var defaultMapStyle: MapStyle { get set }
+    var defaultIsNorthUp: Bool { get set }
+    var addressFormat: AddressFormat { get set }
+    
+    // 従来のメソッド（互換性のため維持）
     func saveMapStyle(_ style: MapStyle)
     func loadMapStyle() -> MapStyle
     func saveMapOrientation(isNorthUp: Bool)
@@ -24,6 +36,9 @@ protocol MapSettingsStorageProtocol {
     func loadZoomLevel() -> MKCoordinateSpan?
     func saveZoomIndex(_ index: Int)
     func loadZoomIndex() -> Int?
+    
+    // 初回起動チェック
+    func isFirstLaunch() -> Bool
 }
 
 /// 地図設定の永続化サービス
@@ -37,10 +52,81 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         static let zoomLatDelta = "zoomLatDelta"
         static let zoomLonDelta = "zoomLonDelta"
         static let zoomIndex = "zoomIndex"
+        static let defaultZoomIndex = "defaultZoomIndex"
+        static let defaultMapStyle = "defaultMapStyle"
+        static let defaultIsNorthUp = "defaultIsNorthUp"
+        static let addressFormat = "addressFormat"
     }
     
     init(userDefaults: UserDefaultsProtocol = UserDefaults.standard) {
         self.userDefaults = userDefaults
+    }
+    
+    // MARK: - Computed Properties for Protocol Conformance
+    
+    var mapStyle: MapStyle {
+        get { loadMapStyle() }
+        set { saveMapStyle(newValue) }
+    }
+    
+    var isNorthUp: Bool {
+        get { loadMapOrientation() }
+        set { saveMapOrientation(isNorthUp: newValue) }
+    }
+    
+    var zoomIndex: Int {
+        get { loadZoomIndex() ?? 5 }
+        set { saveZoomIndex(newValue) }
+    }
+    
+    var defaultZoomIndex: Int {
+        get {
+            if userDefaults.object(forKey: Keys.defaultZoomIndex) != nil {
+                return userDefaults.integer(forKey: Keys.defaultZoomIndex)
+            }
+            return 5 // デフォルト値
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.defaultZoomIndex)
+        }
+    }
+    
+    var defaultMapStyle: MapStyle {
+        get {
+            guard let rawValue = userDefaults.string(forKey: Keys.defaultMapStyle),
+                  let style = MapStyle(rawValue: rawValue) else {
+                return .standard // デフォルト
+            }
+            return style
+        }
+        set {
+            userDefaults.set(newValue.rawValue, forKey: Keys.defaultMapStyle)
+        }
+    }
+    
+    var defaultIsNorthUp: Bool {
+        get {
+            if userDefaults.object(forKey: Keys.defaultIsNorthUp) != nil {
+                return userDefaults.bool(forKey: Keys.defaultIsNorthUp)
+            }
+            return true // デフォルトはNorth Up
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.defaultIsNorthUp)
+        }
+    }
+    
+    var addressFormat: AddressFormat {
+        get {
+            guard let rawValue = userDefaults.string(forKey: Keys.addressFormat),
+                  let format = AddressFormat(rawValue: rawValue) else {
+                return .standard // デフォルト
+            }
+            return format
+        }
+        set {
+            userDefaults.set(newValue.rawValue, forKey: Keys.addressFormat)
+        }
     }
     
     // MARK: - Map Style
@@ -105,5 +191,14 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
             return userDefaults.integer(forKey: Keys.zoomIndex)
         }
         return nil
+    }
+    
+    // MARK: - First Launch Check
+    
+    func isFirstLaunch() -> Bool {
+        // いずれかの現在の設定が保存されていない場合は初回起動と判定
+        return userDefaults.object(forKey: Keys.mapStyle) == nil &&
+               userDefaults.object(forKey: Keys.isNorthUp) == nil &&
+               userDefaults.object(forKey: Keys.zoomIndex) == nil
     }
 }

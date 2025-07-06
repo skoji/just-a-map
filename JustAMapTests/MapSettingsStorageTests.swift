@@ -148,6 +148,132 @@ final class MapSettingsStorageTests: XCTestCase {
         // Then
         XCTAssertNil(index)
     }
+    
+    // MARK: - New Settings Tests
+    
+    func testDefaultZoomIndex() {
+        // Given
+        let newValue = 8
+        
+        // When
+        sut.defaultZoomIndex = newValue
+        
+        // Then
+        XCTAssertEqual(mockUserDefaults.storage["defaultZoomIndex"] as? Int, newValue)
+        XCTAssertEqual(sut.defaultZoomIndex, newValue)
+    }
+    
+    func testDefaultZoomIndexDefaultValue() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let value = sut.defaultZoomIndex
+        
+        // Then
+        XCTAssertEqual(value, 5) // デフォルト値
+    }
+    
+    func testDefaultMapStyle() {
+        // Given
+        let newValue = MapStyle.hybrid
+        
+        // When
+        sut.defaultMapStyle = newValue
+        
+        // Then
+        XCTAssertEqual(mockUserDefaults.storage["defaultMapStyle"] as? String, newValue.rawValue)
+        XCTAssertEqual(sut.defaultMapStyle, newValue)
+    }
+    
+    func testDefaultMapStyleDefaultValue() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let value = sut.defaultMapStyle
+        
+        // Then
+        XCTAssertEqual(value, .standard) // デフォルト値
+    }
+    
+    func testDefaultIsNorthUp() {
+        // Given
+        let newValue = false
+        
+        // When
+        sut.defaultIsNorthUp = newValue
+        
+        // Then
+        XCTAssertEqual(mockUserDefaults.storage["defaultIsNorthUp"] as? Bool, newValue)
+        XCTAssertEqual(sut.defaultIsNorthUp, newValue)
+    }
+    
+    func testDefaultIsNorthUpDefaultValue() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let value = sut.defaultIsNorthUp
+        
+        // Then
+        XCTAssertTrue(value) // デフォルトはNorth Up
+    }
+    
+    func testAddressFormat() {
+        // Given
+        let newValue = AddressFormat.detailed
+        
+        // When
+        sut.addressFormat = newValue
+        
+        // Then
+        XCTAssertEqual(mockUserDefaults.storage["addressFormat"] as? String, newValue.rawValue)
+        XCTAssertEqual(sut.addressFormat, newValue)
+    }
+    
+    func testAddressFormatDefaultValue() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let value = sut.addressFormat
+        
+        // Then
+        XCTAssertEqual(value, .standard) // デフォルト値
+    }
+    
+    // MARK: - First Launch Tests
+    
+    func testIsFirstLaunchReturnsTrueWhenNoSettingsSaved() {
+        // Given - UserDefaultsに何も保存されていない
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertTrue(isFirstLaunch)
+    }
+    
+    func testIsFirstLaunchReturnsFalseWhenAnySettingSaved() {
+        // Given - いずれかの設定が保存されている
+        mockUserDefaults.storage["mapStyle"] = MapStyle.standard.rawValue
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertFalse(isFirstLaunch)
+    }
+    
+    func testIsFirstLaunchReturnsFalseWhenAllSettingsSaved() {
+        // Given - すべての設定が保存されている
+        mockUserDefaults.storage["mapStyle"] = MapStyle.hybrid.rawValue
+        mockUserDefaults.storage["isNorthUp"] = false
+        mockUserDefaults.storage["zoomIndex"] = 7
+        
+        // When
+        let isFirstLaunch = sut.isFirstLaunch()
+        
+        // Then
+        XCTAssertFalse(isFirstLaunch)
+    }
 }
 
 // MARK: - Mock UserDefaults

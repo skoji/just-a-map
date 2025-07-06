@@ -13,6 +13,7 @@ struct MapView: View {
     )
     @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
+    @State private var isShowingSettings = false
     
     var body: some View {
         ZStack {
@@ -76,11 +77,31 @@ struct MapView: View {
             
             // 上部のUI（住所表示とエラー表示）
             VStack {
-                // 住所表示
-                AddressView(
-                    formattedAddress: viewModel.formattedAddress,
-                    isLoading: viewModel.isLoadingAddress
-                )
+                // 住所表示と設定ボタン
+                HStack(alignment: .top) {
+                    AddressView(
+                        formattedAddress: viewModel.formattedAddress,
+                        isLoading: viewModel.isLoadingAddress
+                    )
+                    
+                    Spacer()
+                    
+                    // 設定ボタン
+                    Button(action: {
+                        isShowingSettings = true
+                    }) {
+                        Image(systemName: "gear")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                            .frame(width: 44, height: 44)
+                            .background(Color(.systemBackground))
+                            .clipShape(Circle())
+                            .shadow(radius: 2)
+                    }
+                    .accessibilityLabel("設定")
+                    .padding(.trailing, 20)
+                    .padding(.top, 10)
+                }
                 
                 // エラー表示
                 if let error = viewModel.locationError {
@@ -177,6 +198,13 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$currentZoomIndex) { _ in
             viewModel.saveSettings()
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
+                .onDisappear {
+                    // 設定画面が閉じられたときに住所フォーマットを更新
+                    viewModel.refreshAddressFormat()
+                }
         }
     }
 }

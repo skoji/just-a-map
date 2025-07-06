@@ -9,18 +9,51 @@ struct FormattedAddress {
 
 /// 住所を表示用にフォーマットするクラス
 class AddressFormatter {
+    private let settingsStorage: MapSettingsStorageProtocol
+    
+    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
+        self.settingsStorage = settingsStorage
+    }
     
     /// 住所を表示用にフォーマット
     func formatForDisplay(_ address: Address) -> FormattedAddress {
-        let primaryText = determinePrimaryText(from: address)
-        let secondaryText = address.fullAddress
-        let formattedPostalCode = formatPostalCode(address.postalCode)
+        let format = settingsStorage.addressFormat
         
-        return FormattedAddress(
-            primaryText: primaryText,
-            secondaryText: secondaryText,
-            postalCode: formattedPostalCode
-        )
+        switch format {
+        case .standard:
+            let primaryText = determinePrimaryText(from: address)
+            let secondaryText = address.fullAddress
+            let formattedPostalCode = formatPostalCode(address.postalCode)
+            
+            return FormattedAddress(
+                primaryText: primaryText,
+                secondaryText: secondaryText,
+                postalCode: formattedPostalCode
+            )
+            
+        case .detailed:
+            // 詳細フォーマット：常に完全な住所を表示
+            let primaryText = address.fullAddress
+            let secondaryText = buildDetailedSecondaryText(from: address)
+            let formattedPostalCode = formatPostalCode(address.postalCode)
+            
+            return FormattedAddress(
+                primaryText: primaryText,
+                secondaryText: secondaryText,
+                postalCode: formattedPostalCode
+            )
+            
+        case .simple:
+            // シンプルフォーマット：市区町村のみ
+            let primaryText = address.locality ?? "現在地"
+            let secondaryText = ""
+            
+            return FormattedAddress(
+                primaryText: primaryText,
+                secondaryText: secondaryText,
+                postalCode: nil
+            )
+        }
     }
     
     private func determinePrimaryText(from address: Address) -> String {
@@ -47,5 +80,36 @@ class AddressFormatter {
         }
         
         return "〒\(postalCode)"
+    }
+    
+    private func buildDetailedSecondaryText(from address: Address) -> String {
+        var components: [String] = []
+        
+        // 場所名
+        if let name = address.name, !name.isEmpty {
+            components.append(name)
+        }
+        
+        // 市区町村
+        if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        // 郡・地区
+        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+            components.append(subAdministrativeArea)
+        }
+        
+        // 都道府県
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 国
+        if let country = address.country, !country.isEmpty {
+            components.append(country)
+        }
+        
+        return components.joined(separator: " / ")
     }
 }

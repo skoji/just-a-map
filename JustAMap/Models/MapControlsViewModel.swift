@@ -7,6 +7,18 @@ enum MapStyle: String, CaseIterable {
     case standard = "標準"
     case hybrid = "航空写真+地図"
     case imagery = "航空写真"
+    
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
+/// ズームレベルの定数
+enum ZoomConstants {
+    static let minIndex = 0
+    // 将来的にpredefinedAltitudesの数が変わっても対応できるように
+    // 本来は配列のサイズから動的に計算したいが、staticプロパティの制約により固定値
+    static let maxIndex = 11  // predefinedAltitudes.count - 1
 }
 
 /// 地図コントロールのビジネスロジックを管理
@@ -30,6 +42,7 @@ class MapControlsViewModel: ObservableObject {
         500000,   // 大陸レベル
         1000000,  // 最大ズームアウト - 地球レベル
     ]
+    
     
     /// 現在のズームレベルインデックス
     @Published private(set) var currentZoomIndex: Int = 5 // デフォルトは市レベル
@@ -58,14 +71,14 @@ class MapControlsViewModel: ObservableObject {
     
     /// ズームイン
     func zoomIn() {
-        if currentZoomIndex > 0 {
+        if currentZoomIndex > ZoomConstants.minIndex {
             currentZoomIndex -= 1
         }
     }
     
     /// ズームアウト
     func zoomOut() {
-        if currentZoomIndex < predefinedAltitudes.count - 1 {
+        if currentZoomIndex < ZoomConstants.maxIndex {
             currentZoomIndex += 1
         }
     }

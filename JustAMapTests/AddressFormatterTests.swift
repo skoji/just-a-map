@@ -21,6 +21,7 @@ final class AddressFormatterTests: XCTestCase {
             fullAddress: "東京都千代田区丸の内1-9-1",
             postalCode: "100-0005",
             locality: "千代田区",
+            subAdministrativeArea: nil,
             administrativeArea: "東京都",
             country: "日本"
         )
@@ -41,6 +42,7 @@ final class AddressFormatterTests: XCTestCase {
             fullAddress: "東京都千代田区丸の内1-9-1",
             postalCode: "100-0005",
             locality: "千代田区",
+            subAdministrativeArea: nil,
             administrativeArea: "東京都",
             country: "日本"
         )
@@ -60,6 +62,7 @@ final class AddressFormatterTests: XCTestCase {
             fullAddress: "東京都千代田区丸の内1-9-1",
             postalCode: nil,
             locality: "千代田区",
+            subAdministrativeArea: nil,
             administrativeArea: "東京都",
             country: "日本"
         )
@@ -78,6 +81,7 @@ final class AddressFormatterTests: XCTestCase {
             fullAddress: "不明な場所",
             postalCode: nil,
             locality: nil,
+            subAdministrativeArea: nil,
             administrativeArea: nil,
             country: nil
         )
