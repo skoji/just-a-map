@@ -48,6 +48,9 @@ struct MapView: View {
             }
             .ignoresSafeArea()
             .onMapCameraChange { context in
+                // 現在のズームレベルを追跡
+                viewModel.currentSpan = context.region.span
+                
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 if viewModel.isFollowingUser {
                     if let userLocation = viewModel.userLocation {
