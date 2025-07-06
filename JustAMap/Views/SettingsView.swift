@@ -21,7 +21,7 @@ struct SettingsView: View {
                                     .foregroundColor(viewModel.defaultZoomIndex > SettingsViewModel.minZoomIndex ? .blue : .gray)
                             }
                             .disabled(viewModel.defaultZoomIndex <= SettingsViewModel.minZoomIndex)
-                            .buttonStyle(.plain)
+                            .buttonStyle(.borderless)
                             
                             Spacer()
                             
@@ -39,7 +39,7 @@ struct SettingsView: View {
                                     .foregroundColor(viewModel.defaultZoomIndex < SettingsViewModel.maxZoomIndex ? .blue : .gray)
                             }
                             .disabled(viewModel.defaultZoomIndex >= SettingsViewModel.maxZoomIndex)
-                            .buttonStyle(.plain)
+                            .buttonStyle(.borderless)
                         }
                     }
                     .padding(.vertical, 8)
