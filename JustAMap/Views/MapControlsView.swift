@@ -43,14 +43,6 @@ struct MapControlsView: View {
                     controlsViewModel.toggleMapStyle()
                 }
             )
-            
-            // North Up / Heading Up 切り替え
-            ControlButton(
-                icon: controlsViewModel.isNorthUp ? "location.north.fill" : "location.north.line.fill",
-                action: {
-                    controlsViewModel.toggleMapOrientation()
-                }
-            )
         }
         .padding()
         .background(
