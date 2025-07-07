@@ -50,8 +50,8 @@ final class CompassViewTests: XCTestCase {
     
     func testCompassConstants() {
         XCTAssertEqual(CompassView.Constants.size, 44)
-        XCTAssertEqual(CompassView.Constants.needleLength, 10)
-        XCTAssertEqual(CompassView.Constants.needleWidth, 3)
+        XCTAssertEqual(CompassView.Constants.needleLength, 14)
+        XCTAssertEqual(CompassView.Constants.needleWidth, 5)
         XCTAssertEqual(CompassView.Constants.borderWidth, 1.5)
         XCTAssertEqual(CompassView.Constants.shadowRadius, 3)
         XCTAssertEqual(CompassView.Constants.tickLength, 2)
