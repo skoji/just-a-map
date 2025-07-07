@@ -37,40 +37,48 @@ struct CompassView: View {
                         .rotationEffect(.degrees(Double(index) * 30))
                 }
                 
-                // Compass needle (Google Maps style)
+                // Compass needle container with fixed frame
                 ZStack {
-                    // North needle (red)
-                    Path { path in
-                        path.move(to: CGPoint(x: 0, y: -Constants.needleLength))
-                        path.addLine(to: CGPoint(x: -Constants.needleWidth / 2, y: 0))
-                        path.addLine(to: CGPoint(x: Constants.needleWidth / 2, y: 0))
-                        path.closeSubpath()
-                    }
-                    .fill(Color.red)
-                    
-                    // South needle (white with gray border)
-                    Path { path in
-                        path.move(to: CGPoint(x: 0, y: Constants.needleLength))
-                        path.addLine(to: CGPoint(x: -Constants.needleWidth / 2, y: 0))
-                        path.addLine(to: CGPoint(x: Constants.needleWidth / 2, y: 0))
-                        path.closeSubpath()
-                    }
-                    .fill(Color.white)
-                    .overlay(
+                    // Compass needle (Google Maps style)
+                    GeometryReader { geometry in
+                        let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                        
+                        // North needle (red)
                         Path { path in
-                            path.move(to: CGPoint(x: 0, y: Constants.needleLength))
-                            path.addLine(to: CGPoint(x: -Constants.needleWidth / 2, y: 0))
-                            path.addLine(to: CGPoint(x: Constants.needleWidth / 2, y: 0))
+                            path.move(to: CGPoint(x: center.x, y: center.y - Constants.needleLength))
+                            path.addLine(to: CGPoint(x: center.x - Constants.needleWidth / 2, y: center.y))
+                            path.addLine(to: CGPoint(x: center.x + Constants.needleWidth / 2, y: center.y))
                             path.closeSubpath()
                         }
-                        .stroke(Color(.systemGray3), lineWidth: 0.5)
-                    )
-                    
-                    // Center dot
-                    Circle()
-                        .fill(Color(.systemGray))
-                        .frame(width: 4, height: 4)
+                        .fill(Color.red)
+                        
+                        // South needle (white with gray border)
+                        Path { path in
+                            path.move(to: CGPoint(x: center.x, y: center.y + Constants.needleLength))
+                            path.addLine(to: CGPoint(x: center.x - Constants.needleWidth / 2, y: center.y))
+                            path.addLine(to: CGPoint(x: center.x + Constants.needleWidth / 2, y: center.y))
+                            path.closeSubpath()
+                        }
+                        .fill(Color.white)
+                        .overlay(
+                            Path { path in
+                                path.move(to: CGPoint(x: center.x, y: center.y + Constants.needleLength))
+                                path.addLine(to: CGPoint(x: center.x - Constants.needleWidth / 2, y: center.y))
+                                path.addLine(to: CGPoint(x: center.x + Constants.needleWidth / 2, y: center.y))
+                                path.closeSubpath()
+                            }
+                            .stroke(Color(.systemGray3), lineWidth: 0.5)
+                        )
+                        
+                        // Center dot
+                        Circle()
+                            .fill(Color(.systemGray))
+                            .frame(width: 4, height: 4)
+                            .position(center)
+                    }
+                    .frame(width: Constants.size, height: Constants.size)
                 }
+                .frame(width: Constants.size, height: Constants.size)
                 .rotationEffect(.degrees(-viewModel.rotation))
                 .animation(.easeInOut(duration: 0.3), value: viewModel.rotation)
                 
