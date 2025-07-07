@@ -3,14 +3,18 @@ import XCTest
 
 final class AddressFormatterTests: XCTestCase {
     var sut: AddressFormatter!
+    var mockSettingsStorage: MockMapSettingsStorage!
     
     override func setUp() {
         super.setUp()
-        sut = AddressFormatter()
+        mockSettingsStorage = MockMapSettingsStorage()
+        mockSettingsStorage.addressFormat = .standard // テストはstandardフォーマットを期待
+        sut = AddressFormatter(settingsStorage: mockSettingsStorage)
     }
     
     override func tearDown() {
         sut = nil
+        mockSettingsStorage = nil
         super.tearDown()
     }
     
