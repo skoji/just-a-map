@@ -28,70 +28,97 @@ jobs:
     
     - name: Select Xcode version
       run: |
-        # List available Xcode versions
-        ls -la /Applications/ | grep Xcode || true
-        # Use Xcode 15.4 which is known to work well with iOS simulators
-        sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode_15.2.app || sudo xcode-select -s /Applications/Xcode_15.0.1.app
-    
-    - name: Show Xcode version
-      run: xcodebuild -version
+        # Use latest stable Xcode
+        sudo xcode-select -s /Applications/Xcode.app
+        xcodebuild -version
     
     - name: Setup iOS Simulator
       run: |
+        # Download iOS runtime if needed (based on StackOverflow solution)
+        echo "Installing iOS Simulator runtime..."
+        
         # List available runtimes
+        echo "Available runtimes before:"
         xcrun simctl list runtimes
         
-        # List available devices
-        xcrun simctl list devices
+        # Download and install iOS 17.0 runtime (adjust version as needed)
+        sudo xcrun simctl runtime add "iOS 17.0" --download || true
         
-        # Create a new simulator if needed
-        DEVICE_ID=$(xcrun simctl create "Test iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-15" "com.apple.CoreSimulator.SimRuntime.iOS-17-5" 2>/dev/null || \
-                    xcrun simctl create "Test iPhone" "iPhone 14" 2>/dev/null || \
+        # List runtimes again
+        echo "Available runtimes after:"
+        xcrun simctl list runtimes
+        
+        # List available device types
+        echo "Available device types:"
+        xcrun simctl list devicetypes
+        
+        # Create iPhone 15 simulator
+        RUNTIME=$(xcrun simctl list runtimes | grep iOS | tail -1 | awk '{print $NF}')
+        echo "Using runtime: $RUNTIME"
+        
+        # Create simulator
+        DEVICE_ID=$(xcrun simctl create "iPhone 15 Test" "iPhone 15" "$RUNTIME" || \
+                    xcrun simctl create "iPhone 14 Test" "iPhone 14" "$RUNTIME" || \
                     echo "")
         
         if [ -n "$DEVICE_ID" ]; then
-          echo "Created device: $DEVICE_ID"
+          echo "Created simulator with ID: $DEVICE_ID"
+          # Boot the simulator
+          xcrun simctl boot "$DEVICE_ID" || true
           echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
         else
-          echo "Using default simulator"
-          echo "DEVICE_ID=default" >> $GITHUB_ENV
+          echo "Failed to create simulator"
+          echo "DEVICE_ID=none" >> $GITHUB_ENV
         fi
+        
+        # List all devices
+        echo "All devices:"
+        xcrun simctl list devices
     
     - name: Run tests
       run: |
-        # Show available destinations for debugging
+        # Show available destinations
         echo "Available destinations:"
-        xcodebuild -scheme JustAMapTests -showdestinations | grep "platform:iOS" || true
+        xcodebuild -scheme JustAMapTests -showdestinations || true
         
-        # Try to run tests
-        echo "Running tests..."
         set -o pipefail
         
-        if [ "$DEVICE_ID" != "default" ]; then
-          echo "Using created device: $DEVICE_ID"
-          # Boot the device
-          xcrun simctl boot "$DEVICE_ID" || true
+        if [ "$DEVICE_ID" != "none" ]; then
+          echo "Running tests on device: $DEVICE_ID"
           
-          # Run tests with the created device
           xcodebuild test \
             -scheme JustAMapTests \
             -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO 2>&1 | bundle exec xcpretty --report junit --output test_results.xml
+            CODE_SIGNING_REQUIRED=NO \
+            | bundle exec xcpretty --report junit --output test_results.xml
         else
-          echo "Trying with generic iOS simulator..."
-          # Try Mac Catalyst as a last resort since iOS simulators aren't working
+          echo "No iOS simulator available, trying alternative approaches..."
+          
+          # Try with generic platform specification
           xcodebuild test \
             -scheme JustAMapTests \
-            -destination "platform=macOS,variant=Mac Catalyst" \
+            -destination "generic/platform=iOS Simulator" \
+            -skip-testing-configuration \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO 2>&1 | bundle exec xcpretty --report junit --output test_results.xml || {
-            echo "All test attempts failed"
-            echo "This might be a known issue with GitHub Actions macOS runners"
-            echo "Consider running tests on Mac Catalyst or using a self-hosted runner"
-            exit 1
+            CODE_SIGNING_REQUIRED=NO \
+            | bundle exec xcpretty --report junit --output test_results.xml || {
+            
+            echo "iOS Simulator test failed, trying Mac Catalyst..."
+            # Last resort: Mac Catalyst
+            xcodebuild test \
+              -scheme JustAMapTests \
+              -destination "platform=macOS,variant=Mac Catalyst" \
+              -resultBundlePath TestResults \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              | bundle exec xcpretty --report junit --output test_results.xml || {
+              echo "All test attempts failed"
+              echo "Consider using self-hosted runners or Xcode Cloud"
+              exit 1
+            }
           }
         fi
     
