@@ -27,7 +27,7 @@ jobs:
         bundler-cache: true
     
     - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      run: sudo xcode-select -s /Applications/Xcode_16.1.app
     
     - name: Show Xcode version
       run: xcodebuild -version
@@ -39,25 +39,35 @@ jobs:
       run: |
         # Show available destinations for debugging
         echo "Available destinations:"
-        xcodebuild -scheme JustAMapTests -showdestinations | grep "platform:iOS"
+        xcodebuild -scheme JustAMapTests -showdestinations | grep "platform:iOS" || true
         
-        # Use the simplest approach - let xcodebuild choose an appropriate simulator
-        # First, try with a specific iOS version
+        # Try to run tests with specific simulator
         echo "Running tests..."
-        xcodebuild test \
-          -scheme JustAMapTests \
-          -destination "platform=iOS Simulator,OS=latest" \
-          -resultBundlePath TestResults \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          | bundle exec xcpretty --report junit --output test_results.xml || \
-        xcodebuild test \
+        set -o pipefail
+        
+        # Try with iPhone 15 first (most likely to be available)
+        if xcodebuild test \
           -scheme JustAMapTests \
           -destination "platform=iOS Simulator,name=iPhone 15" \
           -resultBundlePath TestResults \
           CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          | bundle exec xcpretty --report junit --output test_results.xml
+          CODE_SIGNING_REQUIRED=NO 2>&1 | bundle exec xcpretty --report junit --output test_results.xml; then
+          echo "Tests completed successfully"
+        else
+          echo "Failed to run tests with iPhone 15, trying iPhone 14..."
+          # Try with iPhone 14 as fallback
+          if xcodebuild test \
+            -scheme JustAMapTests \
+            -destination "platform=iOS Simulator,name=iPhone 14" \
+            -resultBundlePath TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO 2>&1 | bundle exec xcpretty --report junit --output test_results.xml; then
+            echo "Tests completed successfully with iPhone 14"
+          else
+            echo "Failed to run tests on any simulator"
+            exit 1
+          fi
+        fi
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
