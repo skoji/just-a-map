@@ -219,16 +219,16 @@ struct MapView: View {
             if viewModel.isFollowingUser, let location = newLocation {
                 // より滑らかなアニメーションを実現
                 withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
-                    let heading = viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course
+                    let mapHeading = viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
                         distance: viewModel.mapControlsViewModel.currentAltitude,
-                        heading: heading,
+                        heading: mapHeading,
                         pitch: 0
                     )
                     mapPosition = .camera(camera)
                     // コンパスの回転を更新
-                    compassViewModel.updateRotation(heading)
+                    compassViewModel.updateRotation(mapHeading)
                 }
             }
         }
@@ -252,12 +252,12 @@ struct MapView: View {
                 CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
             }) {
                 withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
-                    let heading = viewModel.calculateMapHeading(for: location)
+                    let calculatedHeading = viewModel.calculateMapHeading(for: location)
                     
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
                         distance: currentMapCamera?.distance ?? viewModel.mapControlsViewModel.currentAltitude,
-                        heading: heading,
+                        heading: calculatedHeading,
                         pitch: 0
                     )
                     mapPosition = .camera(camera)

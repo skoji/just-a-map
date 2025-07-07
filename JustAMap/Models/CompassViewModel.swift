@@ -6,6 +6,8 @@ class CompassViewModel: ObservableObject {
     @Published var rotation: Double = 0
     @Published var isNorthUp: Bool = false
     
+    /// Closure called when the compass orientation is toggled
+    /// - Parameter isNorthUp: The new orientation state (true for North Up, false for Heading Up)
     var onToggle: ((Bool) -> Void)?
     
     func updateRotation(_ degrees: Double) {

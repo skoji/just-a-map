@@ -95,5 +95,6 @@ struct CompassView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel("Compass. Tap to toggle map orientation")
+        .accessibilityValue(viewModel.isNorthUp ? "North Up mode" : "Heading Up mode")
     }
 }

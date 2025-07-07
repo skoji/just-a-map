@@ -11,6 +11,27 @@ class MockLocationManager: LocationManagerProtocol {
     private(set) var isUpdatingLocation = false
     private(set) var distanceFilter: Double = 10.0
     
+    // Speed thresholds (km/h)
+    private enum SpeedThreshold {
+        static let high: Double = 60.0
+        static let low: Double = 10.0
+        static let medium: Double = 30.0
+    }
+    
+    // Zoom distance thresholds (meters)
+    private enum ZoomThreshold {
+        static let close: Double = 500.0
+        static let far: Double = 5000.0
+        static let medium: Double = 1000.0
+    }
+    
+    // Distance filter values (meters)
+    private enum DistanceFilterValue {
+        static let high: Double = 5.0   // High speed + close zoom
+        static let low: Double = 50.0   // Low speed + far zoom
+        static let medium: Double = 10.0 // Medium conditions
+    }
+    
     /// テスト用: 現在位置を設定できるプロパティ
     var currentLocation: CLLocation?
     
@@ -36,15 +57,15 @@ class MockLocationManager: LocationManagerProtocol {
         // - 低速(10km/h) + 遠いズーム(5000m) = 50m
         // - 中速(30km/h) + 中間ズーム(1000m) = 10m
         
-        if speed >= 60.0 && zoomDistance <= 500.0 {
+        if speed >= SpeedThreshold.high && zoomDistance <= ZoomThreshold.close {
             // 高速 + 近いズーム
-            distanceFilter = 5.0
-        } else if speed <= 10.0 && zoomDistance >= 5000.0 {
+            distanceFilter = DistanceFilterValue.high
+        } else if speed <= SpeedThreshold.low && zoomDistance >= ZoomThreshold.far {
             // 低速 + 遠いズーム
-            distanceFilter = 50.0
-        } else if abs(speed - 30.0) < 0.0001 && abs(zoomDistance - 1000.0) < 0.0001 {
+            distanceFilter = DistanceFilterValue.low
+        } else if abs(speed - SpeedThreshold.medium) < 0.0001 && abs(zoomDistance - ZoomThreshold.medium) < 0.0001 {
             // 中速 + 中間ズーム
-            distanceFilter = 10.0
+            distanceFilter = DistanceFilterValue.medium
         } else {
             // その他の場合は速度とズームに基づいて計算
             let speedFactor = min(max(speed / 60.0, 0.1), 1.0) // 0.1 ~ 1.0 に正規化
