@@ -22,7 +22,7 @@ enum GeocodeError: Error, Equatable {
 /// 住所情報を表す構造体
 struct Address: Equatable {
     let name: String?
-    let fullAddress: String
+    let fullAddress: String?
     let postalCode: String?
     let locality: String?         // 市区町村
     let subAdministrativeArea: String? // 郡・地区
@@ -47,6 +47,9 @@ extension CLGeocoder: GeocoderProtocol {}
 class GeocodeService: GeocodeServiceProtocol {
     private let geocoder: GeocoderProtocol
     
+    // 地理的な大区分（施設名として扱わない）
+    private static let geographicTerms = ["本州", "四国", "九州", "北海道", "沖縄"]
+    
     init(geocoder: GeocoderProtocol = CLGeocoder()) {
         self.geocoder = geocoder
     }
@@ -62,8 +65,26 @@ class GeocodeService: GeocodeServiceProtocol {
             // 住所を構築
             let fullAddress = buildFullAddress(from: placemark)
             
+            // 施設名の判定: areasOfInterestがある場合、またはnameが番地情報を含まない場合のみ施設名として扱う
+            let facilityName: String? = {
+                if let areas = placemark.areasOfInterest, !areas.isEmpty {
+                    let area = areas.first!
+                    // 地理的な大区分（島、大陸など）は施設名として扱わない
+                    if GeocodeService.geographicTerms.contains(area) {
+                        return nil
+                    }
+                    return area
+                } else if let name = placemark.name {
+                    // 番地や丁目を含む場合は施設名ではなく住所として扱う
+                    let addressPatterns = ["丁目", "番地", "番", "号", "-"]
+                    let isAddress = addressPatterns.contains { name.contains($0) }
+                    return isAddress ? nil : name
+                }
+                return nil
+            }()
+            
             return Address(
-                name: placemark.name,
+                name: facilityName,
                 fullAddress: fullAddress,
                 postalCode: placemark.postalCode,
                 locality: placemark.locality,
@@ -82,9 +103,12 @@ class GeocodeService: GeocodeServiceProtocol {
     private func buildFullAddress(from placemark: CLPlacemark) -> String {
         var components: [String] = []
         
-        // 日本の住所フォーマット: 都道府県 > 市区町村 > 番地
+        // 日本の住所フォーマット: 都道府県 > 郡・市 > 区市町村 > 番地
         if let administrativeArea = placemark.administrativeArea {
             components.append(administrativeArea)
+        }
+        if let subAdministrativeArea = placemark.subAdministrativeArea {
+            components.append(subAdministrativeArea)
         }
         if let locality = placemark.locality {
             components.append(locality)

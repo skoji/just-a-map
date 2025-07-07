@@ -55,7 +55,7 @@ final class AddressFormatterTests: XCTestCase {
         let formatted = sut.formatForDisplay(address)
         
         // Then
-        XCTAssertEqual(formatted.primaryText, "千代田区")
+        XCTAssertEqual(formatted.primaryText, "東京都 千代田区")
         XCTAssertEqual(formatted.secondaryText, "東京都千代田区丸の内1-9-1")
     }
     
@@ -97,5 +97,65 @@ final class AddressFormatterTests: XCTestCase {
         XCTAssertEqual(formatted.primaryText, "現在地")
         XCTAssertEqual(formatted.secondaryText, "不明な場所")
         XCTAssertNil(formatted.postalCode)
+    }
+    
+    func testStandardFormatWithoutNameShowsAdministrativeAreaAndSubAdministrativeArea() {
+        // Given
+        let address = Address(
+            name: nil,
+            fullAddress: "神奈川県横浜市西区みなとみらい2-3-1",
+            postalCode: "220-0012",
+            locality: "西区",
+            subAdministrativeArea: "横浜市",
+            administrativeArea: "神奈川県",
+            country: "日本"
+        )
+        
+        // When
+        let formatted = sut.formatForDisplay(address)
+        
+        // Then
+        XCTAssertEqual(formatted.primaryText, "神奈川県 横浜市")
+        XCTAssertEqual(formatted.secondaryText, "神奈川県横浜市西区みなとみらい2-3-1")
+    }
+    
+    func testStandardFormatWithoutNameAndSubAdministrativeAreaShowsAdministrativeAreaAndLocality() {
+        // Given
+        let address = Address(
+            name: nil,
+            fullAddress: "東京都千代田区丸の内1-9-1",
+            postalCode: "100-0005",
+            locality: "千代田区",
+            subAdministrativeArea: nil,
+            administrativeArea: "東京都",
+            country: "日本"
+        )
+        
+        // When
+        let formatted = sut.formatForDisplay(address)
+        
+        // Then
+        XCTAssertEqual(formatted.primaryText, "東京都 千代田区")
+        XCTAssertEqual(formatted.secondaryText, "東京都千代田区丸の内1-9-1")
+    }
+    
+    func testStandardFormatWithNameShowsName() {
+        // Given
+        let address = Address(
+            name: "横浜ランドマークタワー",
+            fullAddress: "神奈川県横浜市西区みなとみらい2-2-1",
+            postalCode: "220-8138",
+            locality: "西区",
+            subAdministrativeArea: "横浜市",
+            administrativeArea: "神奈川県",
+            country: "日本"
+        )
+        
+        // When
+        let formatted = sut.formatForDisplay(address)
+        
+        // Then
+        XCTAssertEqual(formatted.primaryText, "横浜ランドマークタワー")
+        XCTAssertEqual(formatted.secondaryText, "神奈川県横浜市西区みなとみらい2-2-1")
     }
 }

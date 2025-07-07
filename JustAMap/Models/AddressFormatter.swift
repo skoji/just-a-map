@@ -22,7 +22,7 @@ class AddressFormatter {
         switch format {
         case .standard:
             let primaryText = determinePrimaryText(from: address)
-            let secondaryText = address.fullAddress
+            let secondaryText = buildFullAddressFromComponents(from: address)
             let formattedPostalCode = formatPostalCode(address.postalCode)
             
             return FormattedAddress(
@@ -33,7 +33,7 @@ class AddressFormatter {
             
         case .detailed:
             // 詳細フォーマット：常に完全な住所を表示
-            let primaryText = address.fullAddress
+            let primaryText = buildFullAddressFromComponents(from: address)
             let secondaryText = buildDetailedSecondaryText(from: address)
             let formattedPostalCode = formatPostalCode(address.postalCode)
             
@@ -57,13 +57,27 @@ class AddressFormatter {
     }
     
     private func determinePrimaryText(from address: Address) -> String {
-        // 優先順位: 1. 場所の名前, 2. 市区町村, 3. デフォルト
+        // 優先順位: 1. 場所の名前, 2. 都道府県+市区町村/郡など, 3. デフォルト
         if let name = address.name, !name.isEmpty {
             return name
         }
         
-        if let locality = address.locality, !locality.isEmpty {
-            return locality
+        var components: [String] = []
+        
+        // 都道府県を追加
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 市区町村/郡を追加（subAdministrativeAreaがあればそれを、なければlocalityを使用）
+        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+            components.append(subAdministrativeArea)
+        } else if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        if !components.isEmpty {
+            return components.joined(separator: " ")
         }
         
         return "現在地"
@@ -111,5 +125,49 @@ class AddressFormatter {
         }
         
         return components.joined(separator: " / ")
+    }
+    
+    private func buildFullAddressFromComponents(from address: Address) -> String {
+        var components: [String] = []
+        
+        // 都道府県
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 市区町村/郡
+        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+            components.append(subAdministrativeArea)
+        }
+        
+        // 区市町村
+        if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        // fullAddressが存在し、コンポーネントで構築した住所より詳細な情報を含む場合
+        if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
+            // コンポーネントで構築した住所
+            let builtAddress = components.joined(separator: "")
+            
+            // fullAddressがbuiltAddressで始まる場合、残りの部分（番地など）を取得
+            if fullAddress.hasPrefix(builtAddress) {
+                let remainingPart = String(fullAddress.dropFirst(builtAddress.count))
+                let trimmed = remainingPart.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    components.append(trimmed)
+                }
+            } else {
+                // fullAddressの構造が予期したものと異なる場合は、fullAddressをそのまま使用
+                return fullAddress
+            }
+        }
+        
+        // コンポーネントが空の場合はfullAddressをそのまま返す
+        if components.isEmpty {
+            return address.fullAddress ?? ""
+        }
+        
+        return components.joined(separator: "")
     }
 }
