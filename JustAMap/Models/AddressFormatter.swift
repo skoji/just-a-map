@@ -69,12 +69,6 @@ class AddressFormatter {
             components.append(administrativeArea)
         }
         
-        // デバッグ用
-        print("Debug - Address components:")
-        print("  administrativeArea: \(address.administrativeArea ?? "nil")")
-        print("  subAdministrativeArea: \(address.subAdministrativeArea ?? "nil")")
-        print("  locality: \(address.locality ?? "nil")")
-        
         // 市区町村/郡を追加（subAdministrativeAreaがあればそれを、なければlocalityを使用）
         if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
             components.append(subAdministrativeArea)

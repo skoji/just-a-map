@@ -62,14 +62,6 @@ class GeocodeService: GeocodeServiceProtocol {
             // 住所を構築
             let fullAddress = buildFullAddress(from: placemark)
             
-            // デバッグ用
-            print("Debug - GeocodeService placemark:")
-            print("  name: \(placemark.name ?? "nil")")
-            print("  administrativeArea: \(placemark.administrativeArea ?? "nil")")
-            print("  subAdministrativeArea: \(placemark.subAdministrativeArea ?? "nil")")
-            print("  locality: \(placemark.locality ?? "nil")")
-            print("  areasOfInterest: \(placemark.areasOfInterest ?? [])")
-            
             // 施設名の判定: areasOfInterestがある場合、またはnameが番地情報を含まない場合のみ施設名として扱う
             let facilityName: String? = {
                 if let areas = placemark.areasOfInterest, !areas.isEmpty {
