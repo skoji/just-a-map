@@ -5,6 +5,7 @@ import Combine
 /// 地図を表示するView
 struct MapView: View {
     @StateObject private var viewModel = MapViewModel()
+    @StateObject private var compassViewModel = CompassViewModel()
     @State private var mapPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
@@ -21,6 +22,13 @@ struct MapView: View {
         static let mapRotationResponse: Double = 0.3
         static let mapRotationDamping: Double = 0.8
         static let mapRotationBlendDuration: Double = 0.1
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Update compass rotation based on camera heading
+    private func updateCompassRotation(heading: Double) {
+        compassViewModel.updateRotation(heading)
     }
     
     private var currentMapKitStyle: MapKit.MapStyle {
@@ -42,7 +50,6 @@ struct MapView: View {
             }
             .mapStyle(currentMapKitStyle)
             .mapControls {
-                MapCompass()
                 MapScaleView()
             }
             .ignoresSafeArea()
@@ -58,6 +65,9 @@ struct MapView: View {
                 
                 // 地図中心座標を更新
                 viewModel.updateMapCenter(context.region.center)
+                
+                // コンパスの回転を更新
+                updateCompassRotation(heading: camera.heading)
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 // ただし、ズームボタン操作中は無視
@@ -92,19 +102,25 @@ struct MapView: View {
                     
                     Spacer()
                     
-                    // 設定ボタン
-                    Button(action: {
-                        isShowingSettings = true
-                    }) {
-                        Image(systemName: "gear")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                            .frame(width: 44, height: 44)
-                            .background(Color(.systemBackground))
-                            .clipShape(Circle())
-                            .shadow(radius: 2)
+                    // 右側のコントロール
+                    VStack(spacing: 16) {
+                        // 設定ボタン
+                        Button(action: {
+                            isShowingSettings = true
+                        }) {
+                            Image(systemName: "gear")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                                .frame(width: 44, height: 44)
+                                .background(Color(.systemBackground))
+                                .clipShape(Circle())
+                                .shadow(radius: 2)
+                        }
+                        .accessibilityLabel("設定")
+                        
+                        // コンパスビュー
+                        CompassView(viewModel: compassViewModel)
                     }
-                    .accessibilityLabel("設定")
                     .padding(.trailing, 20)
                     .padding(.top, 10)
                 }
@@ -194,6 +210,14 @@ struct MapView: View {
             if mapStyleForDisplay == nil {
                 mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
             }
+            
+            // コンパスの初期設定
+            let initialHeading = currentMapCamera?.heading ?? 0
+            compassViewModel.syncOrientation(isNorthUp: viewModel.mapControlsViewModel.isNorthUp, 
+                                            currentHeading: initialHeading)
+            compassViewModel.onToggle = { isNorthUp in
+                viewModel.mapControlsViewModel.isNorthUp = isNorthUp
+            }
         }
         .onDisappear {
             viewModel.stopLocationTracking()
@@ -204,13 +228,16 @@ struct MapView: View {
             if viewModel.isFollowingUser, let location = newLocation {
                 // より滑らかなアニメーションを実現
                 withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
+                    let mapHeading = viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
                         distance: viewModel.mapControlsViewModel.currentAltitude,
-                        heading: viewModel.mapControlsViewModel.isNorthUp ? 0 : location.course,
+                        heading: mapHeading,
                         pitch: 0
                     )
                     mapPosition = .camera(camera)
+                    // コンパスの回転を更新
+                    updateCompassRotation(heading: mapHeading)
                 }
             }
         }
@@ -227,17 +254,20 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { isNorthUp in
             viewModel.saveSettings()
+            // コンパスの状態を同期（回転のリセットまたは現在のヘディングへの更新）
+            let currentHeading = currentMapCamera?.heading ?? viewModel.userLocation?.course ?? 0
+            compassViewModel.syncOrientation(isNorthUp: isNorthUp, currentHeading: currentHeading)
             // 地図の向きが切り替わったら即座にアニメーション付きで回転
             if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
                 CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
             }) {
                 withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
-                    let heading = viewModel.calculateMapHeading(for: location)
+                    let calculatedHeading = viewModel.calculateMapHeading(for: location)
                     
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
                         distance: currentMapCamera?.distance ?? viewModel.mapControlsViewModel.currentAltitude,
-                        heading: heading,
+                        heading: calculatedHeading,
                         pitch: 0
                     )
                     mapPosition = .camera(camera)
