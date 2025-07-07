@@ -35,40 +35,29 @@ jobs:
     - name: List available simulators
       run: xcrun simctl list devices
     
-    - name: Prepare and run tests
+    - name: Run tests
       run: |
-        # Show available simulators for debugging
-        echo "Available simulators:"
-        xcrun simctl list devices
+        # Show available destinations for debugging
+        echo "Available destinations:"
+        xcodebuild -scheme JustAMapTests -showdestinations | grep "platform:iOS"
         
-        # Find first available iPhone simulator ID from the list
-        SIMULATOR_ID=$(xcrun simctl list devices available | grep -E "iPhone (16|15|14|13)" | grep -v "unavailable" | head -1 | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}' || echo "")
-        
-        if [ -n "$SIMULATOR_ID" ]; then
-          echo "Found simulator ID: $SIMULATOR_ID"
-          # Boot the simulator if needed
-          xcrun simctl boot "$SIMULATOR_ID" || true
-          
-          # Run tests with the specific simulator ID
-          xcodebuild test \
-            -scheme JustAMapTests \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -resultBundlePath TestResults \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            | bundle exec xcpretty --report junit --output test_results.xml
-        else
-          echo "No simulator ID found, trying with name-based destination"
-          # Fallback to name-based destination
-          xcodebuild test \
-            -scheme JustAMapTests \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
-            -resultBundlePath TestResults \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            | bundle exec xcpretty --report junit --output test_results.xml
-        fi
-      continue-on-error: true
+        # Use the simplest approach - let xcodebuild choose an appropriate simulator
+        # First, try with a specific iOS version
+        echo "Running tests..."
+        xcodebuild test \
+          -scheme JustAMapTests \
+          -destination "platform=iOS Simulator,OS=latest" \
+          -resultBundlePath TestResults \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          | bundle exec xcpretty --report junit --output test_results.xml || \
+        xcodebuild test \
+          -scheme JustAMapTests \
+          -destination "platform=iOS Simulator,name=iPhone 15" \
+          -resultBundlePath TestResults \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          | bundle exec xcpretty --report junit --output test_results.xml
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
