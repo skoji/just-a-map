@@ -28,52 +28,67 @@ jobs:
     
     - name: Select Xcode version
       run: |
-        # Use latest stable Xcode
-        sudo xcode-select -s /Applications/Xcode.app
+        # List available Xcode installations
+        echo "Available Xcode installations:"
+        ls -la /Applications/ | grep Xcode || true
+        
+        # Try to use a specific working version
+        if [ -d "/Applications/Xcode_16.0.app" ]; then
+          sudo xcode-select -s /Applications/Xcode_16.0.app
+        elif [ -d "/Applications/Xcode_16.1.app" ]; then
+          sudo xcode-select -s /Applications/Xcode_16.1.app
+        else
+          # Use whatever is at Xcode.app
+          sudo xcode-select -s /Applications/Xcode.app
+        fi
+        
+        echo "Selected Xcode version:"
         xcodebuild -version
-    
+        
     - name: Setup iOS Simulator
       run: |
-        # Download iOS runtime if needed (based on StackOverflow solution)
-        echo "Installing iOS Simulator runtime..."
+        echo "Checking available simulators and runtimes..."
         
         # List available runtimes
-        echo "Available runtimes before:"
+        echo "Available runtimes:"
         xcrun simctl list runtimes
         
-        # Download and install iOS 17.0 runtime (adjust version as needed)
-        sudo xcrun simctl runtime add "iOS 17.0" --download || true
-        
-        # List runtimes again
-        echo "Available runtimes after:"
-        xcrun simctl list runtimes
+        # List available devices
+        echo "Available devices:"
+        xcrun simctl list devices
         
         # List available device types
         echo "Available device types:"
         xcrun simctl list devicetypes
         
-        # Create iPhone 15 simulator
-        RUNTIME=$(xcrun simctl list runtimes | grep iOS | tail -1 | awk '{print $NF}')
-        echo "Using runtime: $RUNTIME"
+        # Try to find an existing iOS simulator
+        EXISTING_DEVICE=$(xcrun simctl list devices | grep -E "iPhone (16|15|14)" | grep -v "unavailable" | head -1 | awk -F'[()]' '{print $2}')
         
-        # Create simulator
-        DEVICE_ID=$(xcrun simctl create "iPhone 15 Test" "iPhone 15" "$RUNTIME" || \
-                    xcrun simctl create "iPhone 14 Test" "iPhone 14" "$RUNTIME" || \
-                    echo "")
+        if [ -n "$EXISTING_DEVICE" ]; then
+          echo "Found existing device: $EXISTING_DEVICE"
+          DEVICE_ID=$EXISTING_DEVICE
+        else
+          echo "No existing iPhone found, trying to create one..."
+          
+          # Get the runtime identifier
+          RUNTIME=$(xcrun simctl list runtimes | grep "iOS" | grep -v "unavailable" | tail -1 | awk '{print $NF}')
+          echo "Using runtime: $RUNTIME"
+          
+          # Try to create a simulator with available device types
+          DEVICE_ID=$(xcrun simctl create "Test iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-15" "$RUNTIME" 2>/dev/null || \
+                      xcrun simctl create "Test iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-14" "$RUNTIME" 2>/dev/null || \
+                      echo "")
+        fi
         
         if [ -n "$DEVICE_ID" ]; then
-          echo "Created simulator with ID: $DEVICE_ID"
+          echo "Using device ID: $DEVICE_ID"
           # Boot the simulator
           xcrun simctl boot "$DEVICE_ID" || true
           echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
         else
-          echo "Failed to create simulator"
+          echo "No simulator available"
           echo "DEVICE_ID=none" >> $GITHUB_ENV
         fi
-        
-        # List all devices
-        echo "All devices:"
-        xcrun simctl list devices
     
     - name: Run tests
       run: |
