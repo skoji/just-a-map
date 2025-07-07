@@ -36,10 +36,16 @@ class CompassViewModel: ObservableObject {
     
     /// Sync orientation state from external source (e.g., MapViewModel)
     /// This ensures rotation is reset properly when switching to North Up
-    func syncOrientation(isNorthUp: Bool) {
+    /// - Parameters:
+    ///   - isNorthUp: The new orientation state
+    ///   - currentHeading: The current map heading (used when switching to Heading Up mode)
+    func syncOrientation(isNorthUp: Bool, currentHeading: Double = 0) {
         self.isNorthUp = isNorthUp
         if isNorthUp {
             rotation = 0
+        } else {
+            // When switching to Heading Up, update rotation to current heading
+            updateRotation(currentHeading)
         }
     }
 }

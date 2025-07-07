@@ -44,15 +44,23 @@ final class CompassIntegrationTests: XCTestCase {
         compassViewModel.rotation = 45.0
         mapViewModel.mapControlsViewModel.isNorthUp = false
         
-        // When
+        // When switching to North Up
         mapViewModel.mapControlsViewModel.isNorthUp = true
-        // Manually sync (in real app this happens via onReceive)
         compassViewModel.syncOrientation(isNorthUp: true)
         
         // Then
         XCTAssertTrue(compassViewModel.isNorthUp, "Compass should reflect map orientation change")
         XCTAssertEqual(compassViewModel.rotation, 0.0, accuracy: 0.01, 
                       "Rotation should be reset when switching to North Up")
+        
+        // When switching back to Heading Up
+        mapViewModel.mapControlsViewModel.isNorthUp = false
+        compassViewModel.syncOrientation(isNorthUp: false, currentHeading: 135.0)
+        
+        // Then
+        XCTAssertFalse(compassViewModel.isNorthUp, "Compass should be in Heading Up mode")
+        XCTAssertEqual(compassViewModel.rotation, 135.0, accuracy: 0.01,
+                      "Rotation should be updated to current heading when switching to Heading Up")
     }
     
     func testCompassRotationInHeadingUpMode() {

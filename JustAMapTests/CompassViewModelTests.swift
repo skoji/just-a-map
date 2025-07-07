@@ -83,12 +83,22 @@ final class CompassViewModelTests: XCTestCase {
     }
     
     func testSyncOrientationToHeadingUp() {
+        viewModel.rotation = 0
+        viewModel.isNorthUp = true
+        
+        viewModel.syncOrientation(isNorthUp: false, currentHeading: 90.0)
+        
+        XCTAssertFalse(viewModel.isNorthUp, "Should be in Heading Up mode")
+        XCTAssertEqual(viewModel.rotation, 90.0, accuracy: 0.01, "Rotation should be updated to current heading when syncing to Heading Up")
+    }
+    
+    func testSyncOrientationToHeadingUpWithDefaultHeading() {
         viewModel.rotation = 45.0
         viewModel.isNorthUp = true
         
         viewModel.syncOrientation(isNorthUp: false)
         
         XCTAssertFalse(viewModel.isNorthUp, "Should be in Heading Up mode")
-        XCTAssertEqual(viewModel.rotation, 45.0, accuracy: 0.01, "Rotation should remain unchanged when syncing to Heading Up")
+        XCTAssertEqual(viewModel.rotation, 0, accuracy: 0.01, "Rotation should be 0 when no heading is provided")
     }
 }

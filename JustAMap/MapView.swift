@@ -212,7 +212,9 @@ struct MapView: View {
             }
             
             // コンパスの初期設定
-            compassViewModel.syncOrientation(isNorthUp: viewModel.mapControlsViewModel.isNorthUp)
+            let initialHeading = currentMapCamera?.heading ?? 0
+            compassViewModel.syncOrientation(isNorthUp: viewModel.mapControlsViewModel.isNorthUp, 
+                                            currentHeading: initialHeading)
             compassViewModel.onToggle = { isNorthUp in
                 viewModel.mapControlsViewModel.isNorthUp = isNorthUp
             }
@@ -252,8 +254,9 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { isNorthUp in
             viewModel.saveSettings()
-            // コンパスの状態を同期（回転のリセットも含む）
-            compassViewModel.syncOrientation(isNorthUp: isNorthUp)
+            // コンパスの状態を同期（回転のリセットまたは現在のヘディングへの更新）
+            let currentHeading = currentMapCamera?.heading ?? viewModel.userLocation?.course ?? 0
+            compassViewModel.syncOrientation(isNorthUp: isNorthUp, currentHeading: currentHeading)
             // 地図の向きが切り替わったら即座にアニメーション付きで回転
             if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
                 CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
