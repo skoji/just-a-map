@@ -62,6 +62,26 @@ class LocationManager: NSObject, LocationManagerProtocol {
         locationManager.stopUpdatingLocation()
         locationManager.stopUpdatingHeading()
     }
+    
+    func adjustUpdateFrequency(forSpeed speed: Double, zoomDistance: Double) {
+        // 速度とズームレベルに基づいてdistanceFilterを計算
+        // 高速 + 近いズーム = 頻繁な更新（小さいdistanceFilter）
+        // 低速 + 遠いズーム = 少ない更新（大きいdistanceFilter）
+        
+        let speedFactor = min(max(speed / 60.0, 0.1), 1.0) // 0.1 ~ 1.0 に正規化
+        let zoomFactor = min(max(zoomDistance / 5000.0, 0.1), 1.0) // 0.1 ~ 1.0 に正規化
+        
+        // 逆相関：速度が速くズームが近いほど小さい値
+        let combinedFactor = 1.0 - (speedFactor * (1.0 - zoomFactor))
+        
+        // 5m ~ 50m の範囲で調整
+        let newDistanceFilter = 5.0 + (combinedFactor * 45.0)
+        
+        // 変化が大きい場合のみ更新（頻繁な更新を避ける）
+        if abs(locationManager.distanceFilter - newDistanceFilter) > 2.0 {
+            locationManager.distanceFilter = newDistanceFilter
+        }
+    }
 }
 
 // MARK: - CLLocationManagerDelegate

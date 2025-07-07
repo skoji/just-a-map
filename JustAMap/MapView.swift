@@ -134,7 +134,7 @@ struct MapView: View {
                         isZoomingByButton = true
                         viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
-                            withAnimation {
+                            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
                                 // centerOnUserLocationでデフォルトズームが適用されるので、
                                 // ここでもcurrentAltitudeを使用（既に更新されている）
                                 let camera = MapCamera(
@@ -195,7 +195,8 @@ struct MapView: View {
         .onReceive(viewModel.$userLocation) { newLocation in
             // 追従モードの場合は地図を更新
             if viewModel.isFollowingUser, let location = newLocation {
-                withAnimation {
+                // より滑らかなアニメーションを実現
+                withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
                         distance: viewModel.mapControlsViewModel.currentAltitude,
