@@ -31,4 +31,13 @@ class CompassViewModel: ObservableObject {
             rotation = 0
         }
     }
+    
+    /// Sync orientation state from external source (e.g., MapViewModel)
+    /// This ensures rotation is reset properly when switching to North Up
+    func syncOrientation(isNorthUp: Bool) {
+        self.isNorthUp = isNorthUp
+        if isNorthUp {
+            rotation = 0
+        }
+    }
 }

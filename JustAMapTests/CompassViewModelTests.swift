@@ -71,4 +71,24 @@ final class CompassViewModelTests: XCTestCase {
         viewModel.updateRotation(720)
         XCTAssertEqual(viewModel.rotation, 0, accuracy: 0.01, "Multiple full rotations should be normalized to 0 degrees")
     }
+    
+    func testSyncOrientationToNorthUp() {
+        viewModel.rotation = 45.0
+        viewModel.isNorthUp = false
+        
+        viewModel.syncOrientation(isNorthUp: true)
+        
+        XCTAssertTrue(viewModel.isNorthUp, "Should be in North Up mode")
+        XCTAssertEqual(viewModel.rotation, 0, accuracy: 0.01, "Rotation should be reset to 0 when syncing to North Up")
+    }
+    
+    func testSyncOrientationToHeadingUp() {
+        viewModel.rotation = 45.0
+        viewModel.isNorthUp = true
+        
+        viewModel.syncOrientation(isNorthUp: false)
+        
+        XCTAssertFalse(viewModel.isNorthUp, "Should be in Heading Up mode")
+        XCTAssertEqual(viewModel.rotation, 45.0, accuracy: 0.01, "Rotation should remain unchanged when syncing to Heading Up")
+    }
 }
