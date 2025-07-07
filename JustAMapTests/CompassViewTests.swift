@@ -2,17 +2,18 @@ import XCTest
 import SwiftUI
 @testable import JustAMap
 
+@MainActor
 final class CompassViewTests: XCTestCase {
     var viewModel: CompassViewModel!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         viewModel = CompassViewModel()
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     func testCompassViewInitialization() {
