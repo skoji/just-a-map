@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   test:
     name: Test on iOS Simulator
@@ -30,27 +35,42 @@ jobs:
     - name: List available simulators
       run: xcrun simctl list devices
     
-    - name: Prepare for testing
+    - name: Prepare and run tests
       run: |
         # Show available simulators for debugging
         echo "Available simulators:"
         xcrun simctl list devices available
         
-        # We'll use the generic "Any iOS Simulator Device" destination
-        # This allows xcodebuild to automatically select an appropriate simulator
-        echo "Will use generic iOS Simulator destination"
-    
-    - name: Build and test
-      run: |
-        # Use generic iOS Simulator destination
-        # This allows xcodebuild to automatically select an appropriate simulator
-        xcodebuild test \
-          -scheme JustAMapTests \
-          -destination "generic/platform=iOS Simulator" \
-          -resultBundlePath TestResults \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          | bundle exec xcpretty --report junit --output test_results.xml
+        # Find the first available iOS Simulator
+        SIMULATOR=$(xcodebuild -showdestinations -scheme JustAMapTests | grep "platform:iOS Simulator" | head -1 | sed 's/.*id:\([^,]*\).*/\1/')
+        
+        if [ -z "$SIMULATOR" ]; then
+          echo "No iOS Simulator found, using name-based fallback"
+          # Try to use a simulator by name
+          xcodebuild test \
+            -scheme JustAMapTests \
+            -destination "platform=iOS Simulator,name=iPhone 15" \
+            -resultBundlePath TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | bundle exec xcpretty --report junit --output test_results.xml || \
+          xcodebuild test \
+            -scheme JustAMapTests \
+            -destination "platform=iOS Simulator,OS=latest,name=iPhone 14" \
+            -resultBundlePath TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | bundle exec xcpretty --report junit --output test_results.xml
+        else
+          echo "Using simulator: $SIMULATOR"
+          xcodebuild test \
+            -scheme JustAMapTests \
+            -destination "platform=iOS Simulator,id=$SIMULATOR" \
+            -resultBundlePath TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | bundle exec xcpretty --report junit --output test_results.xml
+        fi
       continue-on-error: true
     
     - name: Upload test results
