@@ -16,6 +16,13 @@ struct MapView: View {
     @State private var isShowingSettings = false
     @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
+    // アニメーションパラメータ定数
+    private enum AnimationConstants {
+        static let mapRotationResponse: Double = 0.3
+        static let mapRotationDamping: Double = 0.8
+        static let mapRotationBlendDuration: Double = 0.1
+    }
+    
     private var currentMapKitStyle: MapKit.MapStyle {
         switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
@@ -134,7 +141,7 @@ struct MapView: View {
                         isZoomingByButton = true
                         viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
-                            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
+                            withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
                                 // centerOnUserLocationでデフォルトズームが適用されるので、
                                 // ここでもcurrentAltitudeを使用（既に更新されている）
                                 let camera = MapCamera(
@@ -224,15 +231,8 @@ struct MapView: View {
             if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
                 CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
             }) {
-                withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
-                    let heading: Double
-                    if isNorthUp {
-                        heading = 0 // North Up
-                    } else if let userLocation = viewModel.userLocation, userLocation.course >= 0 {
-                        heading = userLocation.course // Heading Up with valid course
-                    } else {
-                        heading = 0 // デフォルト
-                    }
+                withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
+                    let heading = viewModel.calculateMapHeading(for: location)
                     
                     let camera = MapCamera(
                         centerCoordinate: location.coordinate,
