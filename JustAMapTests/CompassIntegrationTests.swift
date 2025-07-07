@@ -12,6 +12,9 @@ final class CompassIntegrationTests: XCTestCase {
         mapViewModel = MapViewModel()
         compassViewModel = CompassViewModel()
         
+        // Ensure both view models start with the same state
+        compassViewModel.isNorthUp = mapViewModel.mapControlsViewModel.isNorthUp
+        
         // Set up the connection between compass and map view models
         compassViewModel.onToggle = { isNorthUp in
             self.mapViewModel.mapControlsViewModel.isNorthUp = isNorthUp

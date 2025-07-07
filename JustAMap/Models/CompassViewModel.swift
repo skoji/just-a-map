@@ -4,7 +4,7 @@ import SwiftUI
 @MainActor
 class CompassViewModel: ObservableObject {
     @Published var rotation: Double = 0
-    @Published var isNorthUp: Bool = false
+    @Published var isNorthUp: Bool = true  // MapControlsViewModelと同じ初期値
     
     /// Closure called when the compass orientation is toggled
     /// - Parameter isNorthUp: The new orientation state (true for North Up, false for Heading Up)

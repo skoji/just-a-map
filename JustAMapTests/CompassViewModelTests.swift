@@ -17,7 +17,7 @@ final class CompassViewModelTests: XCTestCase {
     
     func testInitialState() {
         XCTAssertEqual(viewModel.rotation, 0, "Initial rotation should be 0")
-        XCTAssertFalse(viewModel.isNorthUp, "Initial state should be Heading Up (isNorthUp = false)")
+        XCTAssertTrue(viewModel.isNorthUp, "Initial state should be North Up (isNorthUp = true)")
     }
     
     func testUpdateRotationInHeadingUpMode() {

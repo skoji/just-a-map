@@ -20,7 +20,7 @@ final class CompassViewTests: XCTestCase {
         let compassView = CompassView(viewModel: viewModel)
         XCTAssertNotNil(compassView)
         XCTAssertEqual(compassView.viewModel.rotation, 0)
-        XCTAssertFalse(compassView.viewModel.isNorthUp)
+        XCTAssertTrue(compassView.viewModel.isNorthUp)
     }
     
     func testCompassViewWithRotation() {
