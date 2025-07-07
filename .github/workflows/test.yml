@@ -1,0 +1,103 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test on iOS Simulator
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_16.2.app
+    
+    - name: Show Xcode version
+      run: xcodebuild -version
+    
+    - name: List available simulators
+      run: xcrun simctl list devices
+    
+    - name: Create and boot iPhone 16 simulator
+      run: |
+        # Find or create iPhone 16 simulator for iOS 18.2
+        DEVICE_TYPE="iPhone 16"
+        RUNTIME="iOS 18.2"
+        
+        # Check if the device already exists
+        EXISTING_DEVICE=$(xcrun simctl list devices | grep "$DEVICE_TYPE" | grep -E "iOS 18\.[0-9]" | head -1 | awk -F'[()]' '{print $2}')
+        
+        if [ -n "$EXISTING_DEVICE" ]; then
+          echo "Using existing device: $EXISTING_DEVICE"
+          DEVICE_ID=$EXISTING_DEVICE
+        else
+          # Create new device if it doesn't exist
+          DEVICE_ID=$(xcrun simctl create "iPhone 16 Test" "com.apple.CoreSimulator.SimDeviceType.iPhone-16" "com.apple.CoreSimulator.SimRuntime.iOS-18-2")
+          echo "Created new device: $DEVICE_ID"
+        fi
+        
+        # Boot the device
+        xcrun simctl boot $DEVICE_ID || true
+        
+        # Wait for device to be ready
+        xcrun simctl bootstatus $DEVICE_ID
+        
+        # Save device ID for later use
+        echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+    
+    - name: Build and test
+      run: |
+        xcodebuild test \
+          -scheme JustAMapTests \
+          -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+          -resultBundlePath TestResults \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          | bundle exec xcpretty --report junit --output test_results.xml
+      continue-on-error: true
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          test_results.xml
+          TestResults/
+    
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action/macos@v2
+      if: always()
+      with:
+        files: test_results.xml
+        check_name: iOS Test Results
+    
+    - name: Check test status
+      run: |
+        if [ -f test_results.xml ]; then
+          # Parse test results to check for failures
+          FAILURES=$(grep -o 'failures="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1)
+          ERRORS=$(grep -o 'errors="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1)
+          
+          if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+            echo "Tests failed: $FAILURES failures, $ERRORS errors"
+            exit 1
+          else
+            echo "All tests passed!"
+          fi
+        else
+          echo "Test results file not found"
+          exit 1
+        fi
