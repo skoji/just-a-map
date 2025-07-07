@@ -24,6 +24,13 @@ struct MapView: View {
         static let mapRotationBlendDuration: Double = 0.1
     }
     
+    // MARK: - Helper Methods
+    
+    /// Update compass rotation based on camera heading
+    private func updateCompassRotation(heading: Double) {
+        compassViewModel.updateRotation(heading)
+    }
+    
     private var currentMapKitStyle: MapKit.MapStyle {
         switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
@@ -60,7 +67,7 @@ struct MapView: View {
                 viewModel.updateMapCenter(context.region.center)
                 
                 // コンパスの回転を更新
-                compassViewModel.updateRotation(camera.heading)
+                updateCompassRotation(heading: camera.heading)
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 // ただし、ズームボタン操作中は無視
@@ -228,7 +235,7 @@ struct MapView: View {
                     )
                     mapPosition = .camera(camera)
                     // コンパスの回転を更新
-                    compassViewModel.updateRotation(mapHeading)
+                    updateCompassRotation(heading: mapHeading)
                 }
             }
         }

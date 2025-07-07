@@ -16,6 +16,7 @@ class MockLocationManager: LocationManagerProtocol {
         static let high: Double = 60.0
         static let low: Double = 10.0
         static let medium: Double = 30.0
+        static let tolerance: Double = 1.0  // Tolerance for medium speed comparison
     }
     
     // Zoom distance thresholds (meters)
@@ -23,6 +24,7 @@ class MockLocationManager: LocationManagerProtocol {
         static let close: Double = 500.0
         static let far: Double = 5000.0
         static let medium: Double = 1000.0
+        static let tolerance: Double = 50.0  // Tolerance for medium zoom comparison
     }
     
     // Distance filter values (meters)
@@ -63,7 +65,8 @@ class MockLocationManager: LocationManagerProtocol {
         } else if speed <= SpeedThreshold.low && zoomDistance >= ZoomThreshold.far {
             // 低速 + 遠いズーム
             distanceFilter = DistanceFilterValue.low
-        } else if abs(speed - SpeedThreshold.medium) < 0.0001 && abs(zoomDistance - ZoomThreshold.medium) < 0.0001 {
+        } else if abs(speed - SpeedThreshold.medium) < SpeedThreshold.tolerance && 
+                  abs(zoomDistance - ZoomThreshold.medium) < ZoomThreshold.tolerance {
             // 中速 + 中間ズーム
             distanceFilter = DistanceFilterValue.medium
         } else {
