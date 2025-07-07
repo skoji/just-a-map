@@ -47,6 +47,9 @@ extension CLGeocoder: GeocoderProtocol {}
 class GeocodeService: GeocodeServiceProtocol {
     private let geocoder: GeocoderProtocol
     
+    // 地理的な大区分（施設名として扱わない）
+    private static let geographicTerms = ["本州", "四国", "九州", "北海道", "沖縄"]
+    
     init(geocoder: GeocoderProtocol = CLGeocoder()) {
         self.geocoder = geocoder
     }
@@ -67,8 +70,7 @@ class GeocodeService: GeocodeServiceProtocol {
                 if let areas = placemark.areasOfInterest, !areas.isEmpty {
                     let area = areas.first!
                     // 地理的な大区分（島、大陸など）は施設名として扱わない
-                    let geographicTerms = ["本州", "四国", "九州", "北海道", "沖縄"]
-                    if geographicTerms.contains(area) {
+                    if GeocodeService.geographicTerms.contains(area) {
                         return nil
                     }
                     return area

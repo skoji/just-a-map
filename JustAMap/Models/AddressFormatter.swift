@@ -145,19 +145,21 @@ class AddressFormatter {
             components.append(locality)
         }
         
-        // fullAddressから上記のコンポーネントを除外した残りの部分を取得
+        // fullAddressが存在し、コンポーネントで構築した住所より詳細な情報を含む場合
         if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
-            var remainingAddress = fullAddress
+            // コンポーネントで構築した住所
+            let builtAddress = components.joined(separator: "")
             
-            // 既に追加したコンポーネントを削除
-            for component in components {
-                remainingAddress = remainingAddress.replacingOccurrences(of: component, with: "")
-            }
-            
-            // 残りの住所部分（番地など）をトリムして追加
-            let trimmed = remainingAddress.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty {
-                components.append(trimmed)
+            // fullAddressがbuiltAddressで始まる場合、残りの部分（番地など）を取得
+            if fullAddress.hasPrefix(builtAddress) {
+                let remainingPart = String(fullAddress.dropFirst(builtAddress.count))
+                let trimmed = remainingPart.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    components.append(trimmed)
+                }
+            } else {
+                // fullAddressの構造が予期したものと異なる場合は、fullAddressをそのまま使用
+                return fullAddress
             }
         }
         
