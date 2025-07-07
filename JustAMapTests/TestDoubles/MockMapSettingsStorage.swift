@@ -12,8 +12,12 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var addressFormat: AddressFormat = .standard
     
     private var firstLaunch = true
+    var isFirstLaunchReturnValue: Bool?
     
     func isFirstLaunch() -> Bool {
+        if let returnValue = isFirstLaunchReturnValue {
+            return returnValue
+        }
         let isFirst = firstLaunch
         firstLaunch = false
         return isFirst

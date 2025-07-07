@@ -11,18 +11,24 @@ class MapRotationAnimationTests: XCTestCase {
     private var mapControlsViewModel: MapControlsViewModel!
     private var mapViewModel: MapViewModel!
     private var mockLocationManager: MockLocationManager!
+    private var mockSettingsStorage: MockMapSettingsStorage!
     
     override func setUp() {
         super.setUp()
         mockLocationManager = MockLocationManager()
         mapControlsViewModel = MapControlsViewModel()
-        mapViewModel = MapViewModel(locationManager: mockLocationManager, mapControlsViewModel: mapControlsViewModel)
+        mockSettingsStorage = MockMapSettingsStorage()
+        // テストケースでは初回起動を想定し、デフォルト値を使用
+        mockSettingsStorage.isFirstLaunchReturnValue = true
+        mockSettingsStorage.defaultIsNorthUp = true
+        mapViewModel = MapViewModel(locationManager: mockLocationManager, mapControlsViewModel: mapControlsViewModel, settingsStorage: mockSettingsStorage)
     }
     
     override func tearDown() {
         mapControlsViewModel = nil
         mapViewModel = nil
         mockLocationManager = nil
+        mockSettingsStorage = nil
         super.tearDown()
     }
     
