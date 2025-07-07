@@ -90,11 +90,17 @@ jobs:
       run: |
         if [ -f test_results.xml ]; then
           # Parse test results to check for failures
-          FAILURES=$(grep -o 'failures="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1)
-          ERRORS=$(grep -o 'errors="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1)
+          FAILURES=$(grep -o 'failures="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1 || echo "0")
+          ERRORS=$(grep -o 'errors="[0-9]*"' test_results.xml | grep -o '[0-9]*' | head -1 || echo "0")
+          
+          # Set default values if empty
+          FAILURES="${FAILURES:-0}"
+          ERRORS="${ERRORS:-0}"
+          
+          echo "Test results: $FAILURES failures, $ERRORS errors"
           
           if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
-            echo "Tests failed: $FAILURES failures, $ERRORS errors"
+            echo "Tests failed!"
             exit 1
           else
             echo "All tests passed!"
