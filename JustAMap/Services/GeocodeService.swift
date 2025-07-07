@@ -62,6 +62,13 @@ class GeocodeService: GeocodeServiceProtocol {
             // 住所を構築
             let fullAddress = buildFullAddress(from: placemark)
             
+            // デバッグ用
+            print("Debug - GeocodeService placemark:")
+            print("  name: \(placemark.name ?? "nil")")
+            print("  administrativeArea: \(placemark.administrativeArea ?? "nil")")
+            print("  subAdministrativeArea: \(placemark.subAdministrativeArea ?? "nil")")
+            print("  locality: \(placemark.locality ?? "nil")")
+            
             return Address(
                 name: placemark.name,
                 fullAddress: fullAddress,
