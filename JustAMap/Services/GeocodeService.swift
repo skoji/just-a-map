@@ -22,7 +22,7 @@ enum GeocodeError: Error, Equatable {
 /// 住所情報を表す構造体
 struct Address: Equatable {
     let name: String?
-    let fullAddress: String
+    let fullAddress: String?
     let postalCode: String?
     let locality: String?         // 市区町村
     let subAdministrativeArea: String? // 郡・地区
