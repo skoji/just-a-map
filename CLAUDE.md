@@ -277,7 +277,14 @@ let testScenarios = [
 - North Upモードでのユーザー操作による回転の禁止
 - Heading Upモード時のGPSコースに基づく自動回転
 - 無効なコース情報の適切な処理
-- (実装日: 2025-01-07, PR: #未定, [Issue #1](https://github.com/skoji/just-a-map/issues/1))
+- (実装日: 2025-01-07, PR: #21, [Issue #1](https://github.com/skoji/just-a-map/issues/1))
+
+### コンパスインジケーターとNorth Up/Heading Up統合
+- 地図上に小さなコンパスを表示（地図の向きを視覚的に表示）
+- コンパス自体がNorth Up/Heading Upの切り替えボタンとして機能
+- Heading Upモード時にコンパスが回転して北の方向を示す
+- 旧North Up/Heading Upボタンの削除によるUI簡素化
+- (実装日: 2025-01-07, PR: #未定, [Issue #23](https://github.com/skoji/just-a-map/issues/23))
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
