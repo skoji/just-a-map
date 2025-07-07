@@ -5,11 +5,11 @@ struct CompassView: View {
     
     struct Constants {
         static let size: CGFloat = 44
-        static let needleLength: CGFloat = 12
+        static let needleLength: CGFloat = 10  // さらに短く
         static let needleWidth: CGFloat = 3
         static let borderWidth: CGFloat = 1.5
         static let shadowRadius: CGFloat = 3
-        static let tickLength: CGFloat = 3
+        static let tickLength: CGFloat = 2  // より内側に
         static let tickWidth: CGFloat = 1
     }
     
@@ -33,7 +33,7 @@ struct CompassView: View {
                     Rectangle()
                         .fill(Color(.systemGray2))
                         .frame(width: Constants.tickWidth, height: index % 3 == 0 ? Constants.tickLength * 1.5 : Constants.tickLength)
-                        .offset(y: -Constants.size / 2 + Constants.tickLength + 1)
+                        .offset(y: -Constants.size / 2 + Constants.tickLength + 3)  // さらに内側に
                         .rotationEffect(.degrees(Double(index) * 30))
                 }
                 
