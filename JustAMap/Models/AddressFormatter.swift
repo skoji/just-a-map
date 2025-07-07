@@ -57,13 +57,27 @@ class AddressFormatter {
     }
     
     private func determinePrimaryText(from address: Address) -> String {
-        // 優先順位: 1. 場所の名前, 2. 市区町村, 3. デフォルト
+        // 優先順位: 1. 場所の名前, 2. 都道府県+市区町村/郡など, 3. デフォルト
         if let name = address.name, !name.isEmpty {
             return name
         }
         
-        if let locality = address.locality, !locality.isEmpty {
-            return locality
+        var components: [String] = []
+        
+        // 都道府県を追加
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 市区町村/郡を追加（subAdministrativeAreaがあればそれを、なければlocalityを使用）
+        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+            components.append(subAdministrativeArea)
+        } else if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        if !components.isEmpty {
+            return components.joined(separator: " ")
         }
         
         return "現在地"
