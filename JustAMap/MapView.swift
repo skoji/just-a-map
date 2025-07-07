@@ -16,6 +16,13 @@ struct MapView: View {
     @State private var isShowingSettings = false
     @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
+    // アニメーションパラメータ定数
+    private enum AnimationConstants {
+        static let mapRotationResponse: Double = 0.3
+        static let mapRotationDamping: Double = 0.8
+        static let mapRotationBlendDuration: Double = 0.1
+    }
+    
     private var currentMapKitStyle: MapKit.MapStyle {
         switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
@@ -30,7 +37,7 @@ struct MapView: View {
     var body: some View {
         ZStack {
             // 地図
-            Map(position: $mapPosition) {
+            Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isNorthUp ? [.pan, .zoom] : .all) {
                 UserAnnotation()
             }
             .mapStyle(currentMapKitStyle)
@@ -134,7 +141,7 @@ struct MapView: View {
                         isZoomingByButton = true
                         viewModel.centerOnUserLocation()
                         if let location = viewModel.userLocation {
-                            withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
+                            withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
                                 // centerOnUserLocationでデフォルトズームが適用されるので、
                                 // ここでもcurrentAltitudeを使用（既に更新されている）
                                 let camera = MapCamera(
@@ -218,8 +225,27 @@ struct MapView: View {
             // State変数を更新してSwiftUIの再描画を促す
             mapStyleForDisplay = newStyle
         }
-        .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { _ in
+        .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { isNorthUp in
             viewModel.saveSettings()
+            // 地図の向きが切り替わったら即座にアニメーション付きで回転
+            if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
+                CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
+            }) {
+                withAnimation(.interactiveSpring(response: AnimationConstants.mapRotationResponse, dampingFraction: AnimationConstants.mapRotationDamping, blendDuration: AnimationConstants.mapRotationBlendDuration)) {
+                    let heading = viewModel.calculateMapHeading(for: location)
+                    
+                    let camera = MapCamera(
+                        centerCoordinate: location.coordinate,
+                        distance: currentMapCamera?.distance ?? viewModel.mapControlsViewModel.currentAltitude,
+                        heading: heading,
+                        pitch: 0
+                    )
+                    mapPosition = .camera(camera)
+                }
+                
+                // テスト用のコールバックを呼び出し
+                viewModel.onOrientationToggle?()
+            }
         }
         .onReceive(viewModel.mapControlsViewModel.$currentZoomIndex) { _ in
             viewModel.saveSettings()

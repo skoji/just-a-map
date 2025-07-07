@@ -36,6 +36,9 @@ class MapViewModel: ObservableObject {
     private var mapCenterGeocodingTask: Task<Void, Never>?
     private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
     
+    // 地図の向き切り替え時のコールバック（テスト用）
+    var onOrientationToggle: (() -> Void)?
+    
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
          addressFormatter: AddressFormatter? = nil,
@@ -280,5 +283,23 @@ extension MapViewModel: LocationManagerDelegate {
                 break
             }
         }
+    }
+    
+    // MARK: - Map Rotation Support
+    
+    /// 位置情報に基づいて地図の方向を計算
+    func calculateMapHeading(for location: CLLocation) -> Double {
+        if mapControlsViewModel.isNorthUp {
+            return 0 // North Up: 常に北が上
+        } else {
+            // Heading Up: コース情報が有効な場合は使用、無効な場合は0
+            return location.course >= 0 ? location.course : 0
+        }
+    }
+    
+    /// ユーザーによる地図の回転が許可されているか
+    var isUserRotationEnabled: Bool {
+        // North Upモードでは回転を禁止
+        return !mapControlsViewModel.isNorthUp
     }
 }

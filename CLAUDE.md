@@ -240,9 +240,6 @@ let testScenarios = [
 
 > **メンテナンス指示**: 各機能が実装されIssueがCloseされた際は、該当項目を「実装済み機能」セクションに移動し、実装日とPR番号を記録してください。
 
-### North Up / Heading Up
-- North Up / Heading Up 切り替え時の回転 ([Issue #1](https://github.com/skoji/just-a-map/issues/1))
-
 ### 多言語化
 - 日本語に加えて、英語 ([Issue #2](https://github.com/skoji/just-a-map/issues/2))
 
@@ -274,6 +271,13 @@ let testScenarios = [
 - 現在位置/地図中心の住所表示切り替え
 - 現在位置ボタンの視覚的フィードバック（パルスアニメーション）
 - (実装日: 2025-01-06, PR: #未定, [Issue #8](https://github.com/skoji/just-a-map/issues/8))
+
+### North Up / Heading Up 切り替え時の回転アニメーション
+- 切り替え時の即座の滑らかな回転アニメーション
+- North Upモードでのユーザー操作による回転の禁止
+- Heading Upモード時のGPSコースに基づく自動回転
+- 無効なコース情報の適切な処理
+- (実装日: 2025-01-07, PR: #未定, [Issue #1](https://github.com/skoji/just-a-map/issues/1))
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
