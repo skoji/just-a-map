@@ -39,33 +39,30 @@ jobs:
       run: |
         # Show available simulators for debugging
         echo "Available simulators:"
-        xcrun simctl list devices available
+        xcrun simctl list devices
         
-        # Find the first available iOS Simulator
-        SIMULATOR=$(xcodebuild -showdestinations -scheme JustAMapTests | grep "platform:iOS Simulator" | head -1 | sed 's/.*id:\([^,]*\).*/\1/')
+        # Find first available iPhone simulator ID from the list
+        SIMULATOR_ID=$(xcrun simctl list devices available | grep -E "iPhone (16|15|14|13)" | grep -v "unavailable" | head -1 | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}' || echo "")
         
-        if [ -z "$SIMULATOR" ]; then
-          echo "No iOS Simulator found, using name-based fallback"
-          # Try to use a simulator by name
+        if [ -n "$SIMULATOR_ID" ]; then
+          echo "Found simulator ID: $SIMULATOR_ID"
+          # Boot the simulator if needed
+          xcrun simctl boot "$SIMULATOR_ID" || true
+          
+          # Run tests with the specific simulator ID
           xcodebuild test \
             -scheme JustAMapTests \
-            -destination "platform=iOS Simulator,name=iPhone 15" \
-            -resultBundlePath TestResults \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            | bundle exec xcpretty --report junit --output test_results.xml || \
-          xcodebuild test \
-            -scheme JustAMapTests \
-            -destination "platform=iOS Simulator,OS=latest,name=iPhone 14" \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             | bundle exec xcpretty --report junit --output test_results.xml
         else
-          echo "Using simulator: $SIMULATOR"
+          echo "No simulator ID found, trying with name-based destination"
+          # Fallback to name-based destination
           xcodebuild test \
             -scheme JustAMapTests \
-            -destination "platform=iOS Simulator,id=$SIMULATOR" \
+            -destination "platform=iOS Simulator,name=iPhone 15" \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
