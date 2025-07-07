@@ -68,9 +68,23 @@ class GeocodeService: GeocodeServiceProtocol {
             print("  administrativeArea: \(placemark.administrativeArea ?? "nil")")
             print("  subAdministrativeArea: \(placemark.subAdministrativeArea ?? "nil")")
             print("  locality: \(placemark.locality ?? "nil")")
+            print("  areasOfInterest: \(placemark.areasOfInterest ?? [])")
+            
+            // 施設名の判定: areasOfInterestがある場合、またはnameが番地情報を含まない場合のみ施設名として扱う
+            let facilityName: String? = {
+                if let areas = placemark.areasOfInterest, !areas.isEmpty {
+                    return areas.first
+                } else if let name = placemark.name {
+                    // 番地や丁目を含む場合は施設名ではなく住所として扱う
+                    let addressPatterns = ["丁目", "番地", "番", "号", "-"]
+                    let isAddress = addressPatterns.contains { name.contains($0) }
+                    return isAddress ? nil : name
+                }
+                return nil
+            }()
             
             return Address(
-                name: placemark.name,
+                name: facilityName,
                 fullAddress: fullAddress,
                 postalCode: placemark.postalCode,
                 locality: placemark.locality,
