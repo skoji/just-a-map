@@ -5,7 +5,6 @@ import Combine
 /// 地図を表示するView
 struct MapView: View {
     @StateObject private var viewModel = MapViewModel()
-    @StateObject private var compassViewModel = CompassViewModel()
     @State private var mapPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
@@ -43,6 +42,8 @@ struct MapView: View {
             }
             .mapStyle(currentMapKitStyle)
             .mapControls {
+                MapCompass()
+                    .mapControlVisibility(.visible)
                 MapScaleView()
             }
             .ignoresSafeArea()
@@ -58,9 +59,6 @@ struct MapView: View {
                 
                 // 地図中心座標を更新
                 viewModel.updateMapCenter(context.region.center)
-                
-                // コンパスの回転を更新
-                compassViewModel.updateRotation(camera.heading)
                 
                 // ユーザーが地図を手動で動かした場合、追従モードを解除
                 // ただし、ズームボタン操作中は無視
@@ -111,8 +109,14 @@ struct MapView: View {
                         }
                         .accessibilityLabel("設定")
                         
-                        // コンパスビュー
-                        CompassView(viewModel: compassViewModel)
+                        // コンパス切り替えボタン（透明）
+                        Button(action: {
+                            viewModel.mapControlsViewModel.toggleMapOrientation()
+                        }) {
+                            Color.clear
+                                .frame(width: 50, height: 50)
+                        }
+                        .accessibilityLabel("Compass. Tap to toggle map orientation")
                     }
                     .padding(.trailing, 20)
                     .padding(.top, 10)
@@ -203,12 +207,6 @@ struct MapView: View {
             if mapStyleForDisplay == nil {
                 mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
             }
-            
-            // コンパスの初期設定
-            compassViewModel.isNorthUp = viewModel.mapControlsViewModel.isNorthUp
-            compassViewModel.onToggle = { isNorthUp in
-                viewModel.mapControlsViewModel.isNorthUp = isNorthUp
-            }
         }
         .onDisappear {
             viewModel.stopLocationTracking()
@@ -227,8 +225,6 @@ struct MapView: View {
                         pitch: 0
                     )
                     mapPosition = .camera(camera)
-                    // コンパスの回転を更新
-                    compassViewModel.updateRotation(heading)
                 }
             }
         }
@@ -245,8 +241,6 @@ struct MapView: View {
         }
         .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { isNorthUp in
             viewModel.saveSettings()
-            // コンパスの状態を同期
-            compassViewModel.isNorthUp = isNorthUp
             // 地図の向きが切り替わったら即座にアニメーション付きで回転
             if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
                 CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
