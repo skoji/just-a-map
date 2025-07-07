@@ -43,7 +43,6 @@ struct MapView: View {
             }
             .mapStyle(currentMapKitStyle)
             .mapControls {
-                MapCompass()
                 MapScaleView()
             }
             .ignoresSafeArea()
