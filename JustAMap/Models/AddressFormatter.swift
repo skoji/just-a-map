@@ -163,7 +163,7 @@ class AddressFormatter {
         
         // コンポーネントが空の場合はfullAddressをそのまま返す
         if components.isEmpty {
-            return address.fullAddress
+            return address.fullAddress ?? ""
         }
         
         return components.joined(separator: "")
