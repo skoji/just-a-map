@@ -30,73 +30,23 @@ jobs:
     - name: List available simulators
       run: xcrun simctl list devices
     
-    - name: Create and boot iPhone simulator
+    - name: Prepare for testing
       run: |
-        # Try to find iPhone 16 first, fall back to other iPhone models
-        echo "Searching for available iPhone simulators..."
+        # Show available simulators for debugging
+        echo "Available simulators:"
+        xcrun simctl list devices available
         
-        # List available runtimes
-        echo "Available runtimes:"
-        xcrun simctl list runtimes
-        
-        # Try different iPhone models in order of preference
-        for DEVICE_TYPE in "iPhone 16" "iPhone 15" "iPhone 14" "iPhone 13"; do
-          echo "Checking for $DEVICE_TYPE..."
-          EXISTING_DEVICE=$(xcrun simctl list devices | grep "$DEVICE_TYPE" | grep -E "iOS 1[78]\." | head -1 | awk -F'[()]' '{print $2}')
-          
-          if [ -n "$EXISTING_DEVICE" ]; then
-            echo "Found existing device: $DEVICE_TYPE with ID: $EXISTING_DEVICE"
-            DEVICE_ID=$EXISTING_DEVICE
-            break
-          fi
-        done
-        
-        # If no device found, try to create one
-        if [ -z "$DEVICE_ID" ]; then
-          echo "No existing device found, attempting to create one..."
-          
-          # Get the latest iOS runtime
-          RUNTIME=$(xcrun simctl list runtimes | grep "iOS" | tail -1 | awk '{print $NF}')
-          echo "Using runtime: $RUNTIME"
-          
-          # Try to create iPhone 15 (more likely to be available than iPhone 16)
-          DEVICE_ID=$(xcrun simctl create "Test iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-15" "$RUNTIME" || \
-                     xcrun simctl create "Test iPhone" "com.apple.CoreSimulator.SimDeviceType.iPhone-14" "$RUNTIME" || \
-                     echo "")
-          
-          if [ -z "$DEVICE_ID" ]; then
-            echo "Failed to create device. Using generic destination."
-            DEVICE_ID="placeholder"
-          else
-            echo "Created new device: $DEVICE_ID"
-          fi
-        fi
-        
-        # Boot the device if it's not a placeholder
-        if [ "$DEVICE_ID" != "placeholder" ]; then
-          xcrun simctl boot $DEVICE_ID || true
-          
-          # Wait for device to be ready
-          xcrun simctl bootstatus $DEVICE_ID || true
-        fi
-        
-        # Save device ID for later use
-        echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+        # We'll use the generic "Any iOS Simulator Device" destination
+        # This allows xcodebuild to automatically select an appropriate simulator
+        echo "Will use generic iOS Simulator destination"
     
     - name: Build and test
       run: |
-        # Set destination based on device availability
-        if [ "$DEVICE_ID" = "placeholder" ]; then
-          DESTINATION="platform=iOS Simulator,name=Any iOS Simulator Device"
-        else
-          DESTINATION="platform=iOS Simulator,id=$DEVICE_ID"
-        fi
-        
-        echo "Using destination: $DESTINATION"
-        
+        # Use generic iOS Simulator destination
+        # This allows xcodebuild to automatically select an appropriate simulator
         xcodebuild test \
           -scheme JustAMapTests \
-          -destination "$DESTINATION" \
+          -destination "generic/platform=iOS Simulator" \
           -resultBundlePath TestResults \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
