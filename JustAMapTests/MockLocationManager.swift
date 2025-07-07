@@ -42,7 +42,7 @@ class MockLocationManager: LocationManagerProtocol {
         } else if speed <= 10.0 && zoomDistance >= 5000.0 {
             // 低速 + 遠いズーム
             distanceFilter = 50.0
-        } else if speed == 30.0 && zoomDistance == 1000.0 {
+        } else if abs(speed - 30.0) < 0.0001 && abs(zoomDistance - 1000.0) < 0.0001 {
             // 中速 + 中間ズーム
             distanceFilter = 10.0
         } else {
