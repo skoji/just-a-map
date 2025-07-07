@@ -82,9 +82,12 @@ class GeocodeService: GeocodeServiceProtocol {
     private func buildFullAddress(from placemark: CLPlacemark) -> String {
         var components: [String] = []
         
-        // 日本の住所フォーマット: 都道府県 > 市区町村 > 番地
+        // 日本の住所フォーマット: 都道府県 > 郡・市 > 区市町村 > 番地
         if let administrativeArea = placemark.administrativeArea {
             components.append(administrativeArea)
+        }
+        if let subAdministrativeArea = placemark.subAdministrativeArea {
+            components.append(subAdministrativeArea)
         }
         if let locality = placemark.locality {
             components.append(locality)

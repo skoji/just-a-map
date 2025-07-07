@@ -22,7 +22,7 @@ class AddressFormatter {
         switch format {
         case .standard:
             let primaryText = determinePrimaryText(from: address)
-            let secondaryText = address.fullAddress
+            let secondaryText = buildFullAddressFromComponents(from: address)
             let formattedPostalCode = formatPostalCode(address.postalCode)
             
             return FormattedAddress(
@@ -33,7 +33,7 @@ class AddressFormatter {
             
         case .detailed:
             // 詳細フォーマット：常に完全な住所を表示
-            let primaryText = address.fullAddress
+            let primaryText = buildFullAddressFromComponents(from: address)
             let secondaryText = buildDetailedSecondaryText(from: address)
             let formattedPostalCode = formatPostalCode(address.postalCode)
             
@@ -125,5 +125,47 @@ class AddressFormatter {
         }
         
         return components.joined(separator: " / ")
+    }
+    
+    private func buildFullAddressFromComponents(from address: Address) -> String {
+        var components: [String] = []
+        
+        // 都道府県
+        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+            components.append(administrativeArea)
+        }
+        
+        // 市区町村/郡
+        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+            components.append(subAdministrativeArea)
+        }
+        
+        // 区市町村
+        if let locality = address.locality, !locality.isEmpty {
+            components.append(locality)
+        }
+        
+        // fullAddressから上記のコンポーネントを除外した残りの部分を取得
+        if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
+            var remainingAddress = fullAddress
+            
+            // 既に追加したコンポーネントを削除
+            for component in components {
+                remainingAddress = remainingAddress.replacingOccurrences(of: component, with: "")
+            }
+            
+            // 残りの住所部分（番地など）をトリムして追加
+            let trimmed = remainingAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                components.append(trimmed)
+            }
+        }
+        
+        // コンポーネントが空の場合はfullAddressをそのまま返す
+        if components.isEmpty {
+            return address.fullAddress
+        }
+        
+        return components.joined(separator: "")
     }
 }
