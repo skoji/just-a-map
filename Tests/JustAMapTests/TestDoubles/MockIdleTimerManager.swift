@@ -1,5 +1,5 @@
 import Foundation
-@testable import JustAMapCore
+@testable import JustAMap
 
 class MockIdleTimerManager: IdleTimerManagerProtocol {
     var isIdleTimerDisabled = false

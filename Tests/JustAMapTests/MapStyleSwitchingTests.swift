@@ -1,5 +1,5 @@
 import XCTest
-@testable import JustAMapCore
+@testable import JustAMap
 
 /// 地図スタイル切り替え時の挙動をテストするクラス
 @MainActor

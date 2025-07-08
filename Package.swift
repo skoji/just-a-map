@@ -11,35 +11,25 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "JustAMapCore",
-            targets: ["JustAMapCore"]
-        ),
-        .executable(
-            name: "JustAMapApp",
-            targets: ["JustAMapApp"]
+            name: "JustAMap",
+            targets: ["JustAMap"]
         )
     ],
     dependencies: [],
     targets: [
-        // Core library without @main
+        // Main target with all app code
         .target(
-            name: "JustAMapCore",
+            name: "JustAMap",
             dependencies: [],
-            path: "Sources/JustAMapCore",
+            path: "Sources/JustAMap",
             resources: [
                 .process("Resources")
             ]
         ),
-        // App executable with @main
-        .executableTarget(
-            name: "JustAMapApp",
-            dependencies: ["JustAMapCore"],
-            path: "Sources/JustAMapApp"
-        ),
         // Test target
         .testTarget(
             name: "JustAMapTests",
-            dependencies: ["JustAMapCore"],
+            dependencies: ["JustAMap"],
             path: "Tests/JustAMapTests"
         )
     ]

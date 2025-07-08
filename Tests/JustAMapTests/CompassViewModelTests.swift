@@ -1,5 +1,5 @@
 import XCTest
-@testable import JustAMapCore
+@testable import JustAMap
 
 @MainActor
 final class CompassViewModelTests: XCTestCase {

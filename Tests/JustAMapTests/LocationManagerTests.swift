@@ -1,6 +1,6 @@
 import XCTest
 import CoreLocation
-@testable import JustAMapCore
+@testable import JustAMap
 
 final class LocationManagerTests: XCTestCase {
     var sut: LocationManagerProtocol!
