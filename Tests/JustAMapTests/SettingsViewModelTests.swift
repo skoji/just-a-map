@@ -1,6 +1,6 @@
 import XCTest
 import MapKit
-@testable import JustAMap
+@testable import JustAMapCore
 
 final class SettingsViewModelTests: XCTestCase {
     var sut: SettingsViewModel!

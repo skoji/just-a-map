@@ -149,18 +149,18 @@ Xcodeの下部にあるデバッグエリアでログを確認できます。ズ
 
 ### ユニットテストの実行
 
-#### xtoolを使用する場合
+#### Xcodeを使用する場合（推奨）
 ```bash
-xtool test
+open Package.swift
+# Xcode内で ⌘+U
 ```
 
-#### Xcodeを使用する場合
-Xcode内で ⌘+U
-
-#### 従来のxcodebuildを使用する場合
+#### xcodebuildを使用する場合
 ```bash
-xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
+
+**注意**: iOS専用アプリのため、`swift test`コマンドは使用できません。
 
 ### 現在のテストカバレッジ
 - LocationManagerのプロトコル準拠

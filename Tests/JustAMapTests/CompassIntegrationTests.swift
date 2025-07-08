@@ -1,6 +1,6 @@
 import XCTest
 import SwiftUI
-@testable import JustAMap
+@testable import JustAMapCore
 
 @MainActor
 final class CompassIntegrationTests: XCTestCase {

@@ -57,16 +57,21 @@ xtool run build
 
 ### テスト実行
 
+現在、iOSアプリのテストはSwiftPMでは直接実行できません。以下の方法を使用します：
+
+**方法1: Xcodeを使用（推奨）**
 ```bash
-# 全テストを実行
-xtool test
-
-# または、設定済みスクリプトを使用
-xtool run test
-
-# 特定のテストだけを実行
-xtool test --filter JustAMapKitTests.LocationManagerTests
+# Xcodeで開く
+open Package.swift
+# Cmd+U でテスト実行
 ```
+
+**方法2: xcodebuildを使用**
+```bash
+xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+**注意**: `swift test`コマンドはmacOS向けビルドを試みるため、iOS専用アプリでは使用できません。
 
 ### その他のコマンド
 

@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-@testable import JustAMap
+@testable import JustAMapCore
 
 class MockGeocodeService: GeocodeServiceProtocol {
     var reverseGeocodeResult: Result<Address, Error> = .success(Address(

@@ -1,5 +1,5 @@
 import XCTest
-@testable import JustAMap
+@testable import JustAMapCore
 
 final class IdleTimerManagerTests: XCTestCase {
     var sut: IdleTimerManagerProtocol!

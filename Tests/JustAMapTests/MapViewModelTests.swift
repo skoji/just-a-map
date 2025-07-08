@@ -1,6 +1,6 @@
 import XCTest
 import CoreLocation
-@testable import JustAMap
+@testable import JustAMapCore
 
 @MainActor
 final class MapViewModelTests: XCTestCase {

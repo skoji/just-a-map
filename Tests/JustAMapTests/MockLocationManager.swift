@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-@testable import JustAMap
+@testable import JustAMapCore
 
 /// テスト用のLocationManagerモック
 class MockLocationManager: LocationManagerProtocol {
