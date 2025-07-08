@@ -52,9 +52,11 @@
 
 ## 開発環境
 
-- Xcode 16.0以上
-- macOS 14.0以上
+- Xcode 16.0以上（オプション）
+- Swift 5.9以上
+- macOS 14.0以上 / Linux / WSL
 - iOS Simulator（iOS 18.5推奨）
+- xtool（クロスプラットフォームビルドツール）
 
 ## セットアップ
 
@@ -62,13 +64,30 @@
 ```bash
 git clone <repository-url>
 cd just-a-map
-open JustAMap.xcodeproj
 ```
 
 ### 2. ビルドと実行
-1. Xcodeでプロジェクトが開いたら、スキームが「JustAMap」になっていることを確認
-2. シミュレータデバイスを選択（iPhone 16推奨）
-3. ⌘+R でビルド&実行
+
+#### xtoolを使用する場合（推奨）
+```bash
+# xtoolのインストール
+brew install xtool  # macOS
+# または https://github.com/xtool-org/xtool を参照
+
+# ビルド
+xtool build
+
+# テスト実行
+xtool test
+```
+
+#### Xcodeを使用する場合
+```bash
+# SwiftPMプロジェクトとして開く
+open Package.swift
+```
+
+詳細は[xtool移行ガイド](doc/xtool-migration-guide.md)を参照してください。
 
 ### 3. 位置情報の権限設定
 アプリ起動時に位置情報の許可ダイアログが表示されるので、「Allow While Using App」を選択
@@ -129,11 +148,19 @@ Xcodeの下部にあるデバッグエリアでログを確認できます。ズ
 ## テスト
 
 ### ユニットテストの実行
+
+#### xtoolを使用する場合
+```bash
+xtool test
+```
+
+#### Xcodeを使用する場合
+Xcode内で ⌘+U
+
+#### 従来のxcodebuildを使用する場合
 ```bash
 xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
-
-または、Xcode内で ⌘+U
 
 ### 現在のテストカバレッジ
 - LocationManagerのプロトコル準拠
