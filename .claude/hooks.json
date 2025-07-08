@@ -1,0 +1,9 @@
+{
+  "hooks": [
+    {
+      "trigger": "before_tool_use",
+      "tools": ["Bash"],
+      "script": "#!/bin/bash\n# Check if this is a git commit command\nif echo \"$TOOL_PARAMS\" | grep -q '\"command\".*git commit'; then\n  echo '🧪 Running tests before commit...'\n  xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16' -quiet 2>&1 | grep -E '(Test Suite|error:|failed|passed)' || true\n  test_result=$?\n  if [ $test_result -ne 0 ]; then\n    echo '❌ Tests failed! Blocking commit. Please fix the failing tests first.'\n    exit 1\n  fi\n  echo '✅ All tests passed! Proceeding with commit...'\nfi"
+    }
+  ]
+}
