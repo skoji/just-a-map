@@ -34,12 +34,18 @@
   - 地図スタイル
   - 地図の向き設定
 
+### その他実装済み機能
+
+- ✅ North Up / Heading Upの切り替え・回転
+- ✅ コンパス
+
+
 ## 技術仕様
 
 - **iOS**: 17.0以上
 - **フレームワーク**: SwiftUI, MapKit, CoreLocation
 - **位置情報精度**: 最高精度（kCLLocationAccuracyBest）
-- **更新頻度**: 10m移動ごと
+- **更新頻度**: 速度とズームに応じて変化
 - **住所取得**: CLGeocoder（逆ジオコーディング）
 - **スリープ防止**: UIApplication.shared.isIdleTimerDisabled
 - **ズーム実装**: MKMapCamera.distance（高度）ベース
