@@ -1,6 +1,6 @@
 import XCTest
 import MapKit
-@testable import JustAMapKit
+@testable import JustAMap
 
 final class MapSettingsStorageTests: XCTestCase {
     var sut: MapSettingsStorageProtocol!

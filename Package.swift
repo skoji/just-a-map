@@ -11,36 +11,26 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "JustAMapKit",
-            targets: ["JustAMapKit"]
-        ),
-        .executable(
-            name: "JustAMapApp",
-            targets: ["JustAMapApp"]
+            name: "JustAMap",
+            targets: ["JustAMap"]
         )
     ],
     dependencies: [],
     targets: [
-        // Library target containing the core functionality
+        // Main app target
         .target(
-            name: "JustAMapKit",
+            name: "JustAMap",
             dependencies: [],
-            path: "Sources/JustAMapKit",
+            path: "Sources/JustAMap",
             resources: [
                 .process("Resources")
             ]
         ),
-        // Executable target for the iOS app
-        .executableTarget(
-            name: "JustAMapApp",
-            dependencies: ["JustAMapKit"],
-            path: "Sources/JustAMapApp"
-        ),
         // Test target
         .testTarget(
-            name: "JustAMapKitTests",
-            dependencies: ["JustAMapKit"],
-            path: "Tests/JustAMapKitTests"
+            name: "JustAMapTests",
+            dependencies: ["JustAMap"],
+            path: "Tests/JustAMapTests"
         )
     ]
 )

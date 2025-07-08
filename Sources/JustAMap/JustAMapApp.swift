@@ -1,5 +1,4 @@
 import SwiftUI
-import JustAMapKit
 
 @main
 struct JustAMapApp: App {

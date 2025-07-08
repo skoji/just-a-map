@@ -2,7 +2,7 @@ import XCTest
 import SwiftUI
 import MapKit
 import CoreLocation
-@testable import JustAMapKit
+@testable import JustAMap
 
 /// 地図の回転アニメーションに関するテスト
 @MainActor

@@ -1,6 +1,6 @@
 import Foundation
 import MapKit
-@testable import JustAMapKit
+@testable import JustAMap
 
 class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var mapStyle: MapStyle = .standard

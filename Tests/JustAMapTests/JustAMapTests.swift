@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import JustAMapKit
+@testable import JustAMap
 
 final class JustAMapTests: XCTestCase {
 

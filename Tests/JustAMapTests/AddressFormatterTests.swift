@@ -1,5 +1,5 @@
 import XCTest
-@testable import JustAMapKit
+@testable import JustAMap
 
 final class AddressFormatterTests: XCTestCase {
     var sut: AddressFormatter!
