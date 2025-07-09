@@ -9,6 +9,10 @@ class SettingsViewModel: ObservableObject {
     static let minZoomIndex = ZoomConstants.minIndex
     static let maxZoomIndex = ZoomConstants.maxIndex
     
+    // Bundle info dictionary keys
+    private static let appVersionKey = "CFBundleShortVersionString"
+    private static let buildNumberKey = "CFBundleVersion"
+    
     @Published var defaultZoomIndex: Int {
         didSet {
             settingsStorage.defaultZoomIndex = defaultZoomIndex
@@ -56,15 +60,15 @@ class SettingsViewModel: ObservableObject {
     }
     
     var appVersion: String {
-        guard let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
-            return "Unknown"
+        guard let version = bundle.object(forInfoDictionaryKey: Self.appVersionKey) as? String else {
+            return "app_info.unknown".localized
         }
         return version
     }
     
     var buildNumber: String {
-        guard let buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String else {
-            return "Unknown"
+        guard let buildNumber = bundle.object(forInfoDictionaryKey: Self.buildNumberKey) as? String else {
+            return "app_info.unknown".localized
         }
         return buildNumber
     }

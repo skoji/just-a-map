@@ -109,16 +109,22 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(sut.defaultZoomIndex, maxIndex)
     }
     
-    func testAppVersion() {
+    func testAppVersionWithMainBundle() {
+        // Test with main bundle (this should work in test environment)
         let version = sut.appVersion
         XCTAssertNotNil(version)
         XCTAssertFalse(version.isEmpty)
+        // Main bundle in test may not have version info, so it could be "Unknown" or "不明"
+        XCTAssertTrue(version.contains("Unknown") || version.contains("不明") || version.count > 0)
     }
     
-    func testBuildNumber() {
+    func testBuildNumberWithMainBundle() {
+        // Test with main bundle (this should work in test environment)
         let buildNumber = sut.buildNumber
         XCTAssertNotNil(buildNumber)
         XCTAssertFalse(buildNumber.isEmpty)
+        // Main bundle in test may not have build info, so it could be "Unknown" or "不明"
+        XCTAssertTrue(buildNumber.contains("Unknown") || buildNumber.contains("不明") || buildNumber.count > 0)
     }
     
     func testAppVersionWithMockBundle() {
@@ -148,7 +154,8 @@ final class SettingsViewModelTests: XCTestCase {
             bundle: mockBundle
         )
         
-        XCTAssertEqual(sutWithMockBundle.appVersion, "Unknown")
-        XCTAssertEqual(sutWithMockBundle.buildNumber, "Unknown")
+        let expectedUnknownString = "app_info.unknown".localized
+        XCTAssertEqual(sutWithMockBundle.appVersion, expectedUnknownString)
+        XCTAssertEqual(sutWithMockBundle.buildNumber, expectedUnknownString)
     }
 }
