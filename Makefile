@@ -29,7 +29,7 @@ test:
 	@echo "Running tests..."
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
-			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty --test; \
+			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty --test; \
 		else \
 			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'; \
 		fi \
