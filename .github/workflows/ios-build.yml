@@ -8,9 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14        # Apple Silicon
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - name: Install xtool
-        run: brew install xtool     # または curl で AppImage を DL
-      - run: make build             # ← xtool dev build
+        run: brew install xtool-org/tap/xtool
+      - run: make build 
