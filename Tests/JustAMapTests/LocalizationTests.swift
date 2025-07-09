@@ -59,11 +59,11 @@ final class LocalizationTests: XCTestCase {
         let address = Address(
             name: nil,
             fullAddress: nil,
+            postalCode: nil,
             locality: nil,
             subAdministrativeArea: nil,
             administrativeArea: nil,
-            country: nil,
-            postalCode: nil
+            country: nil
         )
         
         let formatted = formatter.formatForDisplay(address)
