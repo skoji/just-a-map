@@ -9,7 +9,9 @@ final class AddressFormatterTests: XCTestCase {
         super.setUp()
         mockSettingsStorage = MockMapSettingsStorage()
         mockSettingsStorage.addressFormat = .standard // テストはstandardフォーマットを期待
-        sut = AddressFormatter(settingsStorage: mockSettingsStorage)
+        // テストでは常に日本語ロケールを使用
+        let japaneseLocale = Locale(identifier: "ja_JP")
+        sut = AddressFormatter(settingsStorage: mockSettingsStorage, locale: japaneseLocale)
     }
     
     override func tearDown() {

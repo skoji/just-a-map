@@ -10,9 +10,11 @@ struct FormattedAddress {
 /// 住所を表示用にフォーマットするクラス
 class AddressFormatter {
     private let settingsStorage: MapSettingsStorageProtocol
+    private let locale: Locale
     
-    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
+    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), locale: Locale = .current) {
         self.settingsStorage = settingsStorage
+        self.locale = locale
     }
     
     /// 住所を表示用にフォーマット
@@ -94,7 +96,7 @@ class AddressFormatter {
         }
         
         // 日本語環境かどうかで郵便番号の形式を決定
-        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
+        let currentLanguage = locale.language.languageCode?.identifier ?? "en"
         if currentLanguage == "ja" {
             return "〒\(postalCode)"
         } else {
@@ -134,7 +136,7 @@ class AddressFormatter {
     }
     
     private func buildFullAddressFromComponents(from address: Address) -> String {
-        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
+        let currentLanguage = locale.language.languageCode?.identifier ?? "en"
         var components: [String] = []
         
         if currentLanguage == "ja" {
