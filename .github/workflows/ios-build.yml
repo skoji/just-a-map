@@ -1,0 +1,16 @@
+# .github/workflows/ios-build.yml
+name: iOS build on macOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-14        # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install xtool
+        run: brew install xtool     # または curl で AppImage を DL
+      - run: make build             # ← xtool dev build
