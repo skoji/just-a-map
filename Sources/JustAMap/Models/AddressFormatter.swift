@@ -17,6 +17,17 @@ class AddressFormatter {
         locale.language.languageCode?.identifier ?? "en"
     }
     
+    /// ローカライズされた「現在地」文字列を取得
+    private var currentLocationText: String {
+        // テストやロケール注入時は言語コードに基づいて固定値を返す
+        switch languageCode {
+        case "ja":
+            return "現在地"
+        default:
+            return "Current Location"
+        }
+    }
+    
     /// イニシャライザ
     /// - Parameters:
     ///   - settingsStorage: 設定ストレージ（デフォルト: MapSettingsStorage）
@@ -56,7 +67,7 @@ class AddressFormatter {
             
         case .simple:
             // シンプルフォーマット：市区町村のみ
-            let primaryText = address.locality ?? "address.current_location".localized
+            let primaryText = address.locality ?? currentLocationText
             let secondaryText = ""
             
             return FormattedAddress(
@@ -91,7 +102,7 @@ class AddressFormatter {
             return components.joined(separator: " ")
         }
         
-        return "address.current_location".localized
+        return currentLocationText
     }
     
     private func formatPostalCode(_ postalCode: String?) -> String? {
