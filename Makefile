@@ -27,7 +27,16 @@ build:
 # Test the app
 test:
 	@echo "Running tests..."
-	swift test
+	@if command -v xcodebuild >/dev/null 2>&1; then \
+		if command -v xcpretty >/dev/null 2>&1; then \
+			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty --test; \
+		else \
+			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'; \
+		fi \
+	else \
+		echo "Error: xcodebuild not found. Tests can only be run on macOS with Xcode installed."; \
+		exit 1; \
+	fi
 
 # Clean build artifacts
 clean:
