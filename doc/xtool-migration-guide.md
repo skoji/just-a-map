@@ -229,8 +229,8 @@ jobs:
 ### テストエラー
 
 1. **テストが見つからない場合**
-   - テストファイルが`Tests/JustAMapKitTests/`に配置されているか確認
-   - import文が`@testable import JustAMapKit`になっているか確認
+   - テストファイルが`Tests/JustAMapTests/`に配置されているか確認
+   - import文が`@testable import JustAMap`になっているか確認
 
 ## 移行の利点
 
