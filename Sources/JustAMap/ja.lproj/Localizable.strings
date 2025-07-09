@@ -13,6 +13,9 @@
 "settings.default_north_up" = "デフォルトでNorth Up";
 "settings.display_settings" = "表示設定";
 "settings.address_format" = "住所表示フォーマット";
+"settings.app_info" = "アプリ情報";
+"settings.app_version" = "バージョン";
+"settings.build_number" = "ビルド番号";
 
 /* AddressFormat */
 "address_format.standard" = "標準";

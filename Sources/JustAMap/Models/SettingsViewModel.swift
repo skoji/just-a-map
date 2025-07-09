@@ -3,6 +3,7 @@ import SwiftUI
 
 class SettingsViewModel: ObservableObject {
     private var settingsStorage: MapSettingsStorageProtocol
+    private var bundle: BundleProtocol
     
     // ズームインデックスの範囲
     static let minZoomIndex = ZoomConstants.minIndex
@@ -32,8 +33,9 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
-    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
+    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), bundle: BundleProtocol = Bundle.main) {
         self.settingsStorage = settingsStorage
+        self.bundle = bundle
         self.defaultZoomIndex = settingsStorage.defaultZoomIndex
         self.defaultMapStyle = settingsStorage.defaultMapStyle
         self.defaultIsNorthUp = settingsStorage.defaultIsNorthUp
@@ -51,5 +53,19 @@ class SettingsViewModel: ObservableObject {
         }
         
         return zoomLevels[defaultZoomIndex]
+    }
+    
+    var appVersion: String {
+        guard let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+            return "Unknown"
+        }
+        return version
+    }
+    
+    var buildNumber: String {
+        guard let buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String else {
+            return "Unknown"
+        }
+        return buildNumber
     }
 }

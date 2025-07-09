@@ -13,6 +13,9 @@
 "settings.default_north_up" = "Default to North Up";
 "settings.display_settings" = "Display Settings";
 "settings.address_format" = "Address Display Format";
+"settings.app_info" = "App Information";
+"settings.app_version" = "Version";
+"settings.build_number" = "Build Number";
 
 /* AddressFormat */
 "address_format.standard" = "Standard";
