@@ -1,16 +1,18 @@
 # .github/workflows/ios-build.yml
 name: iOS build on macOS
 
-on:
-  push:
-    branches: [main]
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Swift 6
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.1'
       - name: Install xtool
         run: brew install xtool-org/tap/xtool
-      - run: make build 
+      - name: Build
+        run: make build
