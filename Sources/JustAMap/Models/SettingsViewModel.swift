@@ -12,6 +12,7 @@ class SettingsViewModel: ObservableObject {
     // Bundle info dictionary keys
     private static let appVersionKey = "CFBundleShortVersionString"
     private static let buildNumberKey = "CFBundleVersion"
+    private static let unknownAppInfoLocalized = "app_info.unknown".localized
     
     @Published var defaultZoomIndex: Int {
         didSet {
@@ -61,14 +62,14 @@ class SettingsViewModel: ObservableObject {
     
     var appVersion: String {
         guard let version = bundle.object(forInfoDictionaryKey: Self.appVersionKey) as? String else {
-            return "app_info.unknown".localized
+            return Self.unknownAppInfoLocalized
         }
         return version
     }
     
     var buildNumber: String {
         guard let buildNumber = bundle.object(forInfoDictionaryKey: Self.buildNumberKey) as? String else {
-            return "app_info.unknown".localized
+            return Self.unknownAppInfoLocalized
         }
         return buildNumber
     }
