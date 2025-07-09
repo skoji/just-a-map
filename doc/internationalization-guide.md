@@ -174,6 +174,40 @@ Localizable.stringsファイルでセクションコメントを使用：
 - シミュレータの言語設定を変更してテスト
 - 実機での動作確認も重要
 
+## iOSアプリ言語設定
+
+### CFBundleLocalizations設定
+
+Info.plistに以下の設定により、iOSの「設定」→「アプリ」→「JustAMap」に「優先する言語」オプションが表示されます：
+
+```xml
+<key>CFBundleLocalizations</key>
+<array>
+    <string>ja</string>
+    <string>en</string>
+</array>
+<key>CFBundleDevelopmentRegion</key>
+<string>en</string>
+```
+
+### InfoPlist.stringsによる権限説明の国際化
+
+位置情報アクセス許可の説明文も国際化対応：
+
+- `Resources/Localization/en.lproj/InfoPlist.strings`
+- `Resources/Localization/ja.lproj/InfoPlist.strings`
+
+```
+/* Location Permission Descriptions */
+"NSLocationWhenInUseUsageDescription" = "We use location to display your current position on the map and show your address.";
+```
+
+### ユーザー体験
+
+1. **システム言語追従**: デフォルトではiOSのシステム言語設定に従う
+2. **アプリ個別設定**: 「設定」→「アプリ」→「JustAMap」→「優先する言語」でアプリ単体の言語を変更可能
+3. **即座反映**: 言語変更は次回アプリ起動時に反映
+
 ## 今後の改善点
 
 1. **複数形対応**: NSStringLocalizedStringWithDefaultValue を使用した複数形対応
