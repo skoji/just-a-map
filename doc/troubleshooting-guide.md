@@ -238,12 +238,12 @@ Unable to find a device matching the provided destination specifier
 **解決方法：**
 利用可能なデバイスを確認：
 ```bash
-xcodebuild -showdestinations -scheme JustAMapTests
+xcodebuild -showdestinations -scheme JustAMap
 ```
 
 正しいデバイスを指定：
 ```bash
-xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ## デバッグのコツ

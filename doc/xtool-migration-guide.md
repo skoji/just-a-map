@@ -9,21 +9,22 @@ JustAMapプロジェクトは、XcodeプロジェクトからxtoolベースのSw
 ```
 just-a-map/
 ├── Package.swift           # SwiftPMマニフェスト
-├── xtool.yaml             # xtool設定ファイル
+├── xtool.yml              # xtool設定ファイル
 ├── Sources/
-│   ├── JustAMapKit/       # ライブラリターゲット
-│   │   ├── ContentView.swift
-│   │   ├── MapView.swift
-│   │   ├── Models/
-│   │   ├── Services/
-│   │   ├── Views/
-│   │   ├── Extensions/
-│   │   └── Resources/
-│   │       └── Assets.xcassets
-│   └── JustAMapApp/       # 実行可能ターゲット
-│       └── JustAMapApp.swift
-└── Tests/
-    └── JustAMapKitTests/  # テストターゲット
+│   └── JustAMap/          # メインターゲット
+│       ├── JustAMapApp.swift  # @mainエントリポイント
+│       ├── ContentView.swift
+│       ├── MapView.swift
+│       ├── Models/
+│       ├── Services/
+│       ├── Views/
+│       ├── Extensions/
+│       └── Resources/
+│           └── Assets.xcassets
+├── Tests/
+│   └── JustAMapTests/     # テストターゲット
+└── xtool/                 # ビルド成果物（.gitignoreに追加）
+    └── JustAMap.app/      # 生成されたアプリ
 ```
 
 ## ビルド方法
@@ -42,17 +43,21 @@ chmod +x /usr/local/bin/xtool
 
 2. Swift 5.9以上のインストール
 
-### ビルドコマンド
+### ビルドと実行
 
 ```bash
-# デバッグビルド
-xtool build
+# シミュレータでビルドと実行
+xtool dev run --simulator
 
-# リリースビルド
-xtool build --configuration release
+# 実機でビルドと実行（デバイスのUDIDが必要）
+xtool dev run --udid <device-udid>
 
-# または、設定済みスクリプトを使用
-xtool run build
+# デバッグ/リリース設定
+xtool dev run --simulator --configuration debug    # デフォルト
+xtool dev run --simulator --configuration release
+
+# ビルド成果物
+# xtool/JustAMap.app/ に生成されます
 ```
 
 ### テスト実行
@@ -76,13 +81,17 @@ xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhon
 ### その他のコマンド
 
 ```bash
-# クリーン
-xtool clean
-# または
-xtool run clean
+# クリーンアップ
+rm -rf xtool/ .build/
 
-# コードフォーマット
-xtool run format
+# デバイスリスト確認
+xtool devices
+
+# アプリのインストール（.ipaファイル）
+xtool install <path-to-ipa>
+
+# アプリの起動
+xtool launch --bundle-id com.example.JustAMap
 ```
 
 ## Xcode での開発
@@ -128,26 +137,39 @@ jobs:
         fi
         chmod +x /usr/local/bin/xtool
     
-    - name: Build
-      run: xtool build --configuration release
+    - name: Setup xtool (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        # Note: Requires Xcode.xip to be provided
+        # See xtool documentation for setup instructions
     
-    - name: Test
-      run: xtool test
+    - name: Build
+      run: xtool dev run --simulator --configuration release
+    
+    - name: Test (macOS only)
+      if: runner.os == 'macOS'
+      run: xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ## トラブルシューティング
 
 ### ビルドエラー
 
-1. **モジュールが見つからない場合**
+1. **ビルドエラー: "No devices are booted"**
    ```bash
-   xtool clean
-   rm -rf .build
-   xtool build
+   # シミュレータを起動
+   xcrun simctl boot "iPhone 16"
+   # 再度実行
+   xtool dev run --simulator
    ```
 
 2. **リソースが見つからない場合**
-   - `Sources/JustAMapKit/Resources/`にリソースが正しく配置されているか確認
+   - `Sources/JustAMap/Resources/`にリソースが正しく配置されているか確認
+   - Package.swiftでリソースが`.process("Resources")`として定義されているか確認
+
+3. **xtool.ymlエラー**
+   - ファイル名が`xtool.yml`（`.yaml`ではない）であることを確認
+   - 最小構成: `version: 1`と`bundleID: com.example.JustAMap`
    - Package.swiftでリソースが正しく定義されているか確認
 
 ### テストエラー

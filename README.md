@@ -72,13 +72,16 @@ cd just-a-map
 ```bash
 # xtoolのインストール
 brew install xtool  # macOS
-# または https://github.com/xtool-org/xtool を参照
+# Linux/WSLの場合は https://github.com/xtool-org/xtool を参照
 
-# ビルド
-xtool build
+# ビルドと実行（シミュレータ）
+xtool dev run --simulator
 
-# テスト実行
-xtool test
+# 実機での実行
+xtool dev run --udid <device-udid>
+
+# ビルド成果物の場所
+# xtool/JustAMap.app/ に生成されます
 ```
 
 #### Xcodeを使用する場合
