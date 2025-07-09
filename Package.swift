@@ -23,7 +23,7 @@ let package = Package(
             dependencies: [],
             path: "Sources/JustAMap",
             resources: [
-                .process("../../Resources/Localization")
+                .process("Localization")
             ]
         ),
         // Test target
