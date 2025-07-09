@@ -18,6 +18,13 @@ APP_BUNDLE := xtool/JustAMap.app
 # Example: make install DEVICE_ID=00008140-000C7D8E362A801C
 DEVICE_ID ?= 
 
+# Host architecture for simulator selection
+HOST_ARCH := $(shell uname -m)
+
+# Dynamically select an available iOS simulator for testing
+# This is done via a helper script to avoid complex Makefile escaping.
+SIMULATOR_ID := $(shell ./scripts/find-simulator.sh)
+
 # Build the app with xtool
 build:
 	@echo "Building app with xtool..."
@@ -27,11 +34,12 @@ build:
 # Test the app
 test:
 	@echo "Running tests..."
+	@echo "Selected simulator ID: $(SIMULATOR_ID) (arch: $(HOST_ARCH))"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
-			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty --test; \
+			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID),arch=$(HOST_ARCH)' | xcpretty --test; \
 		else \
-			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'; \
+			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID),arch=$(HOST_ARCH)'; \
 		fi \
 	else \
 		echo "Error: xcodebuild not found. Tests can only be run on macOS with Xcode installed."; \
@@ -115,6 +123,13 @@ devices:
 	@echo "Available devices:"
 	@xtool devices
 
+# Show selected simulator for testing
+show-simulator:
+	@echo "Selected simulator for testing: $(SIMULATOR_ID)"
+	@echo ""
+	@echo "Available iOS simulators:"
+	@xcrun simctl list devices available | grep "iPhone"
+
 # Lint Swift code
 lint:
 	@if command -v swiftlint >/dev/null 2>&1; then \
@@ -148,6 +163,7 @@ help:
 	@echo "  make compile-assets - Compile assets (macOS only)"
 	@echo "  make fix-assets    - Fix assets in app bundle"
 	@echo "  make devices       - List available devices"
+	@echo "  make show-simulator - Show selected simulator for testing"
 	@echo "  make lint          - Run SwiftLint"
 	@echo "  make format        - Format Swift code"
 	@echo "  make help          - Show this help"
