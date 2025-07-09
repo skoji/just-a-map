@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-VERSION_INFO_PLIST_PATH="${PROJECT_ROOT}/Resources/VersionInfo.plist"
+VERSION_INFO_PLIST_PATH="${PROJECT_ROOT}/Resources/built/VersionInfo.plist"
 GENERATE_VERSION_SCRIPT="${SCRIPT_DIR}/generate-version.sh"
 
 # Colors for output

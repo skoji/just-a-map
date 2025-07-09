@@ -17,8 +17,8 @@ just-a-map/
 │   │   └── Assets.xcassets
 │   ├── built/            # コンパイル済みアセット
 │   │   ├── Assets.car
-│   │   └── *.png
-│   └── VersionInfo.plist  # ビルド時生成（.gitignore）
+│   │   ├── *.png
+│   │   └── VersionInfo.plist  # ビルド時生成（.gitignore）
 ├── Sources/
 │   └── JustAMap/          # メインターゲット
 │       ├── JustAMapApp.swift  # @mainエントリポイント
