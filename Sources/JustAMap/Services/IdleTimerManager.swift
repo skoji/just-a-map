@@ -1,5 +1,4 @@
 import UIKit
-import SwiftUI
 
 /// UIApplicationのプロトコル（テスト用）
 protocol UIApplicationProtocol {
