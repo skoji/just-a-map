@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP="xtool/JustAMap.app"
 RESOURCE_ROOT="Resources/built"
-VERSION_INFO="Resources/VersionInfo.plist"
+VERSION_INFO="Resources/built/VersionInfo.plist"
 
 cp -R "$RESOURCE_ROOT"/*.png "$RESOURCE_ROOT/Assets.car" "$APP/"
 
