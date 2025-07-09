@@ -158,4 +158,85 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(sutWithMockBundle.appVersion, expectedUnknownString)
         XCTAssertEqual(sutWithMockBundle.buildNumber, expectedUnknownString)
     }
+    
+    // MARK: - Git-based versioning tests
+    
+    func testAppVersionWithGitVersioning() {
+        // Test with mock Git version provider
+        let mockGitProvider = MockGitVersionInfoProvider()
+        mockGitProvider.mockVersionString = "1.0.0+abc123"
+        mockGitProvider.mockBuildNumber = "42"
+        
+        let sutWithGitProvider = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            gitVersionProvider: mockGitProvider
+        )
+        
+        XCTAssertEqual(sutWithGitProvider.appVersion, "1.0.0+abc123")
+        XCTAssertEqual(sutWithGitProvider.buildNumber, "42")
+    }
+    
+    func testAppVersionFallbackToBundleWhenGitFails() {
+        // Test fallback to bundle when Git version is unavailable
+        let mockGitProvider = MockGitVersionInfoProvider()
+        mockGitProvider.mockVersionString = "1.0.0+unknown"
+        mockGitProvider.mockBuildNumber = "1"
+        
+        let mockBundle = MockBundle()
+        mockBundle.infoDictionary = [
+            "CFBundleShortVersionString": "2.0.0",
+            "CFBundleVersion": "456"
+        ]
+        
+        let sutWithFallback = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            bundle: mockBundle,
+            gitVersionProvider: mockGitProvider
+        )
+        
+        XCTAssertEqual(sutWithFallback.appVersion, "2.0.0")
+        XCTAssertEqual(sutWithFallback.buildNumber, "456")
+    }
+    
+    func testAppVersionFallbackToUnknownWhenAllFail() {
+        // Test fallback to unknown when both Git and bundle fail
+        let mockGitProvider = MockGitVersionInfoProvider()
+        mockGitProvider.mockVersionString = "1.0.0+unknown"
+        mockGitProvider.mockBuildNumber = "1"
+        
+        let mockBundle = MockBundle()
+        mockBundle.infoDictionary = [:]
+        
+        let sutWithAllFallback = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            bundle: mockBundle,
+            gitVersionProvider: mockGitProvider
+        )
+        
+        let expectedUnknownString = "app_info.unknown".localized
+        XCTAssertEqual(sutWithAllFallback.appVersion, expectedUnknownString)
+        XCTAssertEqual(sutWithAllFallback.buildNumber, expectedUnknownString)
+    }
+    
+    func testGitVersioningPreferredOverBundle() {
+        // Test that Git versioning takes precedence over bundle
+        let mockGitProvider = MockGitVersionInfoProvider()
+        mockGitProvider.mockVersionString = "1.0.0+git123"
+        mockGitProvider.mockBuildNumber = "99"
+        
+        let mockBundle = MockBundle()
+        mockBundle.infoDictionary = [
+            "CFBundleShortVersionString": "1.0.0",
+            "CFBundleVersion": "1"
+        ]
+        
+        let sutWithGitPrecedence = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            bundle: mockBundle,
+            gitVersionProvider: mockGitProvider
+        )
+        
+        XCTAssertEqual(sutWithGitPrecedence.appVersion, "1.0.0+git123")
+        XCTAssertEqual(sutWithGitPrecedence.buildNumber, "99")
+    }
 }
