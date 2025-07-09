@@ -47,7 +47,7 @@ SIMULATOR_NAME := $(shell \
 		echo "iPhone 16"; \
 	else \
 		echo "$$simulator"; \
-	fi \
+	fi
 )
 
 # Build the app with xtool
