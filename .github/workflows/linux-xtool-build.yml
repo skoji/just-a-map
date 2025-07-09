@@ -1,0 +1,39 @@
+# .github/workflows/linux-xtool-build.yml
+name: Linux xtool build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 'latest'
+      - name: Install libfuse2
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
+      - name: Install xtool
+        run: |
+          curl -L \
+            "https://github.com/xtool-org/xtool/releases/latest/download/xtool-$(uname -m).AppImage" \
+            -o xtool
+          chmod +x xtool
+          sudo mv xtool /usr/local/bin/xtool
+          xtool --version
+      - name: Cache Swift build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/.cache/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: ${{ runner.os }}-spm-
+      - name: Build with Make
+        run: make build
