@@ -1,6 +1,5 @@
 import SwiftUI
 import MapKit
-import Combine
 #if canImport(UIKit)
 import UIKit
 #endif
