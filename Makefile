@@ -28,14 +28,14 @@ SIMULATOR_ID := $(shell ./scripts/find-simulator.sh)
 # Build the app with xtool
 build:
 	@echo "Building app with xtool..."
-	@$(MAKE) update-version-info
+	@$(MAKE) sync-version-info
 	xtool dev build
 	@$(MAKE) fix-assets
 
 # Test the app
 test:
 	@echo "Running tests..."
-	@$(MAKE) update-version-info
+	@$(MAKE) sync-version-info
 	@echo "Selected simulator ID: $(SIMULATOR_ID) (arch: $(HOST_ARCH))"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
@@ -97,10 +97,10 @@ fix-assets:
 		exit 1; \
 	fi
 
-# Update version info with Git-based versioning
-update-version-info:
-	@echo "Updating version info with Git-based versioning..."
-	@./scripts/update-version-info.sh
+# Sync version info from Git
+sync-version-info:
+	@echo "Syncing version info from Git..."
+	@./scripts/sync-version-info.sh
 
 # Show current version info
 show-version:
@@ -181,7 +181,7 @@ help:
 	@echo "  make check-assets  - Check if assets need recompilation"
 	@echo "  make compile-assets - Compile assets (macOS only)"
 	@echo "  make fix-assets    - Fix assets in app bundle"
-	@echo "  make update-version-info - Update version info with Git-based versioning"
+	@echo "  make sync-version-info - Sync version info from Git to VersionInfo.plist"
 	@echo "  make show-version  - Show current Git-based version information"
 	@echo "  make devices       - List available devices"
 	@echo "  make show-simulator - Show selected simulator for testing"

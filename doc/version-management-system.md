@@ -13,10 +13,10 @@ JustAMapプロジェクトでは、Gitベースの自動バージョン管理シ
    - バージョン文字列とビルド番号を生成
    - コマンドライン引数で特定の情報を返す
 
-2. **scripts/update-version-info.sh**
+2. **scripts/sync-version-info.sh**
    - ビルド時に実行される
    - `Resources/VersionInfo.plist`を生成
-   - バージョン情報をplist形式で保存
+   - Git情報をplist形式に同期
 
 3. **Resources/VersionInfo.plist**
    - ビルド時に生成される
@@ -48,7 +48,7 @@ JustAMapプロジェクトでは、Gitベースの自動バージョン管理シ
 ## ビルドプロセス
 
 1. `make build`または`make test`実行時
-2. `update-version-info.sh`が呼ばれる
+2. `sync-version-info.sh`が呼ばれる
 3. `generate-version.sh`でGit情報を取得
 4. `Resources/VersionInfo.plist`を生成
 5. `fix-assets.sh`でアプリバンドルにコピー

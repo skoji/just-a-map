@@ -34,7 +34,7 @@ just-a-map/
 │   ├── compile-assets.sh  # アセットコンパイル
 │   ├── fix-assets.sh      # アセット配置
 │   ├── generate-version.sh # バージョン情報生成
-│   └── update-version-info.sh # VersionInfo.plist更新
+│   └── sync-version-info.sh # VersionInfo.plist同期
 └── xtool/                 # ビルド成果物（.gitignoreに追加）
     └── JustAMap.app/      # 生成されたアプリ
 ```

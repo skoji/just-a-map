@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Update version info in Info.plist with Git-based versioning
-# This script updates the Info.plist file with version information from Git
+# Sync version info from Git to VersionInfo.plist
+# This script generates VersionInfo.plist with current Git version information
 
 set -euo pipefail
 
@@ -169,7 +169,7 @@ main() {
 case "${1:-}" in
     "--help"|"-h")
         echo "Usage: $0 [--help]"
-        echo "Creates VersionInfo.plist with Git-based version information"
+        echo "Syncs Git version information to VersionInfo.plist"
         echo ""
         echo "Options:"
         echo "  --help, -h    Show this help message"
