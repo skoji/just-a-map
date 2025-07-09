@@ -4,12 +4,19 @@ import SwiftUI
 
 /// 地図の表示スタイル
 enum MapStyle: String, CaseIterable {
-    case standard = "標準"
-    case hybrid = "航空写真+地図"
-    case imagery = "航空写真"
+    case standard = "standard"
+    case hybrid = "hybrid"
+    case imagery = "imagery"
     
     var displayName: String {
-        return self.rawValue
+        switch self {
+        case .standard:
+            return "map_style.standard".localized
+        case .hybrid:
+            return "map_style.hybrid".localized
+        case .imagery:
+            return "map_style.imagery".localized
+        }
     }
 }
 

@@ -7,10 +7,10 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("デフォルト設定") {
+                Section("settings.default_settings".localized) {
                     // ズームレベル
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("デフォルトズームレベル")
+                        Text("settings.default_zoom_level".localized)
                             .font(.headline)
                         HStack {
                             Button {
@@ -45,20 +45,20 @@ struct SettingsView: View {
                     .padding(.vertical, 8)
                     
                     // 地図の種類
-                    Picker("地図の種類", selection: $viewModel.defaultMapStyle) {
+                    Picker("settings.map_type".localized, selection: $viewModel.defaultMapStyle) {
                         ForEach(MapStyle.allCases, id: \.self) { style in
                             Text(style.displayName).tag(style)
                         }
                     }
                     
                     // 地図の向き
-                    Toggle("デフォルトでNorth Up", isOn: $viewModel.defaultIsNorthUp)
+                    Toggle("settings.default_north_up".localized, isOn: $viewModel.defaultIsNorthUp)
                 }
                 
-                Section("表示設定") {
+                Section("settings.display_settings".localized) {
                     // 住所表示フォーマット
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("住所表示フォーマット")
+                        Text("settings.address_format".localized)
                             .font(.headline)
                         
                         ForEach(AddressFormat.allCases, id: \.self) { format in
@@ -85,11 +85,11 @@ struct SettingsView: View {
                     }
                 }
             }
-            .navigationTitle("設定")
+            .navigationTitle("settings.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("閉じる") {
+                    Button("settings.close".localized) {
                         dismiss()
                     }
                 }

@@ -1,0 +1,3 @@
+/* Location Permission Descriptions */
+"NSLocationWhenInUseUsageDescription" = "現在地を地図上に表示し、住所を表示するために位置情報を使用します。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "現在地を地図上に表示し、住所を表示するために位置情報を使用します。";

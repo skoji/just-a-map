@@ -47,11 +47,11 @@ enum LocationError: Error, Equatable {
     var localizedDescription: String {
         switch self {
         case .authorizationDenied:
-            return "位置情報の使用が許可されていません"
+            return "location.error.authorization_denied".localized
         case .locationServicesDisabled:
-            return "位置情報サービスが無効になっています"
+            return "location.error.services_disabled".localized
         case .locationUpdateFailed(let reason):
-            return "位置情報の取得に失敗しました: \(reason)"
+            return "location.error.update_failed".localized(with: reason)
         }
     }
 }

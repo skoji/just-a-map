@@ -103,10 +103,17 @@ JustAMap/
 │   ├── MapControlsView.swift
 │   └── SettingsView.swift
 ├── Extensions/
-│   └── (現在は空)
+│   └── String+Localization.swift
 └── Assets.xcassets/
     ├── AppIcon.appiconset/
     └── AccentColor.colorset/
+
+Resources/
+└── Localization/
+    ├── ja.lproj/
+    │   └── Localizable.strings
+    └── en.lproj/
+        └── Localizable.strings
 
 JustAMapTests/
 ├── JustAMapTests.swift
@@ -116,6 +123,7 @@ JustAMapTests/
 ├── MapControlsViewModelTests.swift
 ├── MapSettingsStorageTests.swift
 ├── SettingsViewModelTests.swift
+├── LocalizationTests.swift
 └── TestDoubles/
     └── MockLocationManager.swift
 
@@ -240,9 +248,6 @@ let testScenarios = [
 
 > **メンテナンス指示**: 各機能が実装されIssueがCloseされた際は、該当項目を「実装済み機能」セクションに移動し、実装日とPR番号を記録してください。
 
-### 多言語化
-- 日本語に加えて、英語 ([Issue #2](https://github.com/skoji/just-a-map/issues/2))
-
 ### 音声操作
 - 「ズームイン/アウト」
 - 「ノースアップ/ヘディングアップ」
@@ -285,6 +290,15 @@ let testScenarios = [
 - Heading Upモード時にコンパスが回転して北の方向を示す
 - 旧North Up/Heading Upボタンの削除によるUI簡素化
 - (実装日: 2025-01-07, PR: #未定, [Issue #23](https://github.com/skoji/just-a-map/issues/23))
+
+### 多言語化対応（英語）
+- 日本語と英語の完全な国際化対応
+- Localizable.stringsファイルによる文字列の外部化
+- システム言語設定に基づく自動UI言語切り替え
+- 国際化対応住所フォーマット（日本形式/国際形式の自動切り替え）
+- 全UIテキスト、エラーメッセージ、設定項目の多言語化
+- ロケール対応郵便番号表示（日本：〒付き、海外：プレーン）
+- (実装日: 2025-01-09, PR: #未定, [Issue #2](https://github.com/skoji/just-a-map/issues/2))
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)

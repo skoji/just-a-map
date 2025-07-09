@@ -1,0 +1,3 @@
+/* Location Permission Descriptions */
+"NSLocationWhenInUseUsageDescription" = "We use location to display your current position on the map and show your address.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "We use location to display your current position on the map and show your address.";
