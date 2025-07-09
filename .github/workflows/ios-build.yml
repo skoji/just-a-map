@@ -1,4 +1,4 @@
-name: iOS build (macOS)
+name: iOS build and test (macOS)
 
 on: [push, pull_request]
 
@@ -24,12 +24,13 @@ jobs:
       - name: Run tests
         run: |
           export SDKROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
-          make test
+          make test || exit 1
 
       - name: Build app
         run: |
+          set -e
           export SDKROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
-          make build
+          make build || exit 1
 
       - name: Verify build artifacts
         run: |
