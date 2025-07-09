@@ -45,7 +45,7 @@ class AddressFormatter {
             
         case .simple:
             // シンプルフォーマット：市区町村のみ
-            let primaryText = address.locality ?? "現在地"
+            let primaryText = address.locality ?? "address.current_location".localized
             let secondaryText = ""
             
             return FormattedAddress(
@@ -80,7 +80,7 @@ class AddressFormatter {
             return components.joined(separator: " ")
         }
         
-        return "現在地"
+        return "address.current_location".localized
     }
     
     private func formatPostalCode(_ postalCode: String?) -> String? {
@@ -93,7 +93,13 @@ class AddressFormatter {
             return postalCode
         }
         
-        return "〒\(postalCode)"
+        // 日本語環境かどうかで郵便番号の形式を決定
+        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
+        if currentLanguage == "ja" {
+            return "〒\(postalCode)"
+        } else {
+            return postalCode
+        }
     }
     
     private func buildDetailedSecondaryText(from address: Address) -> String {
@@ -128,27 +134,46 @@ class AddressFormatter {
     }
     
     private func buildFullAddressFromComponents(from address: Address) -> String {
+        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
         var components: [String] = []
         
-        // 都道府県
-        if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
-            components.append(administrativeArea)
-        }
-        
-        // 市区町村/郡
-        if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
-            components.append(subAdministrativeArea)
-        }
-        
-        // 区市町村
-        if let locality = address.locality, !locality.isEmpty {
-            components.append(locality)
+        if currentLanguage == "ja" {
+            // 日本語：都道府県 → 市区町村/郡 → 区市町村の順
+            if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+                components.append(administrativeArea)
+            }
+            
+            if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+                components.append(subAdministrativeArea)
+            }
+            
+            if let locality = address.locality, !locality.isEmpty {
+                components.append(locality)
+            }
+        } else {
+            // 英語/国際：市区町村 → 州/県 → 国の順
+            if let locality = address.locality, !locality.isEmpty {
+                components.append(locality)
+            }
+            
+            if let subAdministrativeArea = address.subAdministrativeArea, !subAdministrativeArea.isEmpty {
+                components.append(subAdministrativeArea)
+            }
+            
+            if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
+                components.append(administrativeArea)
+            }
+            
+            if let country = address.country, !country.isEmpty {
+                components.append(country)
+            }
         }
         
         // fullAddressが存在し、コンポーネントで構築した住所より詳細な情報を含む場合
         if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
             // コンポーネントで構築した住所
-            let builtAddress = components.joined(separator: "")
+            let separator = currentLanguage == "ja" ? "" : ", "
+            let builtAddress = components.joined(separator: separator)
             
             // fullAddressがbuiltAddressで始まる場合、残りの部分（番地など）を取得
             if fullAddress.hasPrefix(builtAddress) {
@@ -168,6 +193,7 @@ class AddressFormatter {
             return address.fullAddress ?? ""
         }
         
-        return components.joined(separator: "")
+        let separator = currentLanguage == "ja" ? "" : ", "
+        return components.joined(separator: separator)
     }
 }

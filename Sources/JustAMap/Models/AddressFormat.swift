@@ -8,22 +8,22 @@ enum AddressFormat: String, CaseIterable {
     var displayName: String {
         switch self {
         case .standard:
-            return "標準"
+            return "address_format.standard".localized
         case .detailed:
-            return "詳細"
+            return "address_format.detailed".localized
         case .simple:
-            return "シンプル"
+            return "address_format.simple".localized
         }
     }
     
     var description: String {
         switch self {
         case .standard:
-            return "場所名または市区町村を表示"
+            return "address_format.standard_description".localized
         case .detailed:
-            return "完全な住所を常に表示"
+            return "address_format.detailed_description".localized
         case .simple:
-            return "市区町村のみを表示"
+            return "address_format.simple_description".localized
         }
     }
 }

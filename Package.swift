@@ -21,7 +21,10 @@ let package = Package(
         .target(
             name: "JustAMap",
             dependencies: [],
-            path: "Sources/JustAMap"
+            path: "Sources/JustAMap",
+            resources: [
+                .process("../../Resources/Localization")
+            ]
         ),
         // Test target
         .testTarget(

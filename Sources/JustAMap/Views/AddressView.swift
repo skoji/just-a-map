@@ -12,7 +12,7 @@ struct AddressView: View {
                 HStack {
                     ProgressView()
                         .scaleEffect(0.8)
-                    Text("住所を取得中...")
+                    Text("address.loading".localized)
                         .font(.headline)
                         .foregroundColor(.primary)
                 }
