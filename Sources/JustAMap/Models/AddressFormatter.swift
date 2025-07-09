@@ -10,9 +10,31 @@ struct FormattedAddress {
 /// 住所を表示用にフォーマットするクラス
 class AddressFormatter {
     private let settingsStorage: MapSettingsStorageProtocol
+    private let locale: Locale
     
-    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
+    /// 言語コードを取得（デフォルト: "en"）
+    private var languageCode: String {
+        locale.language.languageCode?.identifier ?? "en"
+    }
+    
+    /// ローカライズされた「現在地」文字列を取得
+    private var currentLocationText: String {
+        // テストやロケール注入時は言語コードに基づいて固定値を返す
+        switch languageCode {
+        case "ja":
+            return "現在地"
+        default:
+            return "Current Location"
+        }
+    }
+    
+    /// イニシャライザ
+    /// - Parameters:
+    ///   - settingsStorage: 設定ストレージ（デフォルト: MapSettingsStorage）
+    ///   - locale: 使用するロケール（デフォルト: .current）。テスト時に特定のロケールを注入可能
+    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), locale: Locale = .current) {
         self.settingsStorage = settingsStorage
+        self.locale = locale
     }
     
     /// 住所を表示用にフォーマット
@@ -45,7 +67,7 @@ class AddressFormatter {
             
         case .simple:
             // シンプルフォーマット：市区町村のみ
-            let primaryText = address.locality ?? "address.current_location".localized
+            let primaryText = address.locality ?? currentLocationText
             let secondaryText = ""
             
             return FormattedAddress(
@@ -80,7 +102,7 @@ class AddressFormatter {
             return components.joined(separator: " ")
         }
         
-        return "address.current_location".localized
+        return currentLocationText
     }
     
     private func formatPostalCode(_ postalCode: String?) -> String? {
@@ -94,8 +116,7 @@ class AddressFormatter {
         }
         
         // 日本語環境かどうかで郵便番号の形式を決定
-        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
-        if currentLanguage == "ja" {
+        if languageCode == "ja" {
             return "〒\(postalCode)"
         } else {
             return postalCode
@@ -134,10 +155,9 @@ class AddressFormatter {
     }
     
     private func buildFullAddressFromComponents(from address: Address) -> String {
-        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
         var components: [String] = []
         
-        if currentLanguage == "ja" {
+        if languageCode == "ja" {
             // 日本語：都道府県 → 市区町村/郡 → 区市町村の順
             if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
                 components.append(administrativeArea)
@@ -172,7 +192,7 @@ class AddressFormatter {
         // fullAddressが存在し、コンポーネントで構築した住所より詳細な情報を含む場合
         if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
             // コンポーネントで構築した住所
-            let separator = currentLanguage == "ja" ? "" : ", "
+            let separator = languageCode == "ja" ? "" : ", "
             let builtAddress = components.joined(separator: separator)
             
             // fullAddressがbuiltAddressで始まる場合、残りの部分（番地など）を取得
@@ -193,7 +213,7 @@ class AddressFormatter {
             return address.fullAddress ?? ""
         }
         
-        let separator = currentLanguage == "ja" ? "" : ", "
+        let separator = languageCode == "ja" ? "" : ", "
         return components.joined(separator: separator)
     }
 }

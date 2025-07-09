@@ -5,11 +5,15 @@ final class AddressFormatterTests: XCTestCase {
     var sut: AddressFormatter!
     var mockSettingsStorage: MockMapSettingsStorage!
     
+    // テスト用の日本語ロケール定数
+    private static let japaneseLocale = Locale(identifier: "ja_JP")
+    
     override func setUp() {
         super.setUp()
         mockSettingsStorage = MockMapSettingsStorage()
         mockSettingsStorage.addressFormat = .standard // テストはstandardフォーマットを期待
-        sut = AddressFormatter(settingsStorage: mockSettingsStorage)
+        // テストでは常に日本語ロケールを使用
+        sut = AddressFormatter(settingsStorage: mockSettingsStorage, locale: Self.japaneseLocale)
     }
     
     override func tearDown() {
