@@ -4,6 +4,7 @@ import SwiftUI
 class SettingsViewModel: ObservableObject {
     private var settingsStorage: MapSettingsStorageProtocol
     private var bundle: BundleProtocol
+    private var versionInfo: [String: Any]?
     
     // ズームインデックスの範囲
     static let minZoomIndex = ZoomConstants.minIndex
@@ -45,6 +46,13 @@ class SettingsViewModel: ObservableObject {
         self.defaultMapStyle = settingsStorage.defaultMapStyle
         self.defaultIsNorthUp = settingsStorage.defaultIsNorthUp
         self.addressFormat = settingsStorage.addressFormat
+        
+        // Load version info from VersionInfo.plist if available
+        if let versionInfoURL = bundle.url(forResource: "VersionInfo", withExtension: "plist"),
+           let data = try? Data(contentsOf: versionInfoURL),
+           let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
+            self.versionInfo = plist
+        }
     }
     
     var zoomLevelDisplayText: String {
@@ -61,6 +69,13 @@ class SettingsViewModel: ObservableObject {
     }
     
     var appVersion: String {
+        // First try to get from VersionInfo.plist
+        if let versionInfo = versionInfo,
+           let version = versionInfo[Self.appVersionKey] as? String {
+            return version
+        }
+        
+        // Fallback to bundle info
         guard let version = bundle.object(forInfoDictionaryKey: Self.appVersionKey) as? String else {
             return Self.unknownAppInfoLocalized
         }
@@ -68,6 +83,13 @@ class SettingsViewModel: ObservableObject {
     }
     
     var buildNumber: String {
+        // First try to get from VersionInfo.plist
+        if let versionInfo = versionInfo,
+           let buildNumber = versionInfo[Self.buildNumberKey] as? String {
+            return buildNumber
+        }
+        
+        // Fallback to bundle info
         guard let buildNumber = bundle.object(forInfoDictionaryKey: Self.buildNumberKey) as? String else {
             return Self.unknownAppInfoLocalized
         }

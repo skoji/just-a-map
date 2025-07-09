@@ -100,14 +100,11 @@ fix-assets:
 # Update version info with Git-based versioning
 update-version-info:
 	@echo "Updating version info with Git-based versioning..."
-	@chmod +x scripts/update-version-info.sh
-	@chmod +x scripts/generate-version.sh
 	@./scripts/update-version-info.sh
 
 # Show current version info
 show-version:
 	@echo "Current Git-based version information:"
-	@chmod +x scripts/generate-version.sh
 	@echo "  Version: $$(./scripts/generate-version.sh version-string)"
 	@echo "  Build Number: $$(./scripts/generate-version.sh build-number)"
 	@echo "  Commit Hash: $$(./scripts/generate-version.sh commit-hash)"

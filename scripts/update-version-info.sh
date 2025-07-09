@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 INFO_PLIST_PATH="${PROJECT_ROOT}/Info.plist"
+VERSION_INFO_PLIST_PATH="${PROJECT_ROOT}/Resources/VersionInfo.plist"
 GENERATE_VERSION_SCRIPT="${SCRIPT_DIR}/generate-version.sh"
 
 # Colors for output
@@ -50,26 +51,9 @@ check_dependencies() {
     return 0
 }
 
-# Function to backup Info.plist
-backup_info_plist() {
-    local backup_path="${INFO_PLIST_PATH}.backup"
-    if [[ -f "$INFO_PLIST_PATH" ]]; then
-        cp "$INFO_PLIST_PATH" "$backup_path"
-        print_info "Backed up Info.plist to $backup_path"
-    fi
-}
 
-# Function to restore Info.plist from backup
-restore_info_plist() {
-    local backup_path="${INFO_PLIST_PATH}.backup"
-    if [[ -f "$backup_path" ]]; then
-        cp "$backup_path" "$INFO_PLIST_PATH"
-        print_info "Restored Info.plist from backup"
-    fi
-}
-
-# Function to update Info.plist with Git version info
-update_info_plist() {
+# Function to update VersionInfo.plist with Git version info
+update_version_info_plist() {
     local build_number
     local version_string
     
@@ -88,28 +72,37 @@ update_info_plist() {
         return 1
     fi
     
-    print_info "Updating Info.plist with Git version information:"
+    print_info "Creating VersionInfo.plist with Git version information:"
     print_info "  Version: $version_string"
     print_info "  Build Number: $build_number"
     
-    # Update Info.plist using plutil
-    if [[ -f "$INFO_PLIST_PATH" ]]; then
-        plutil -replace CFBundleShortVersionString -string "$version_string" "$INFO_PLIST_PATH"
-        plutil -replace CFBundleVersion -string "$build_number" "$INFO_PLIST_PATH"
-        print_info "Successfully updated Info.plist with Git version information"
-    else
-        print_error "Info.plist not found at $INFO_PLIST_PATH"
-        return 1
-    fi
+    # Create Resources directory if it doesn't exist
+    mkdir -p "$(dirname "$VERSION_INFO_PLIST_PATH")"
+    
+    # Create VersionInfo.plist
+    cat > "$VERSION_INFO_PLIST_PATH" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleShortVersionString</key>
+	<string>$version_string</string>
+	<key>CFBundleVersion</key>
+	<string>$build_number</string>
+</dict>
+</plist>
+EOF
+    
+    print_info "Successfully created VersionInfo.plist with Git version information"
 }
 
-# Function to verify Info.plist is valid
-verify_info_plist() {
-    if plutil -lint "$INFO_PLIST_PATH" > /dev/null 2>&1; then
-        print_info "Info.plist is valid"
+# Function to verify VersionInfo.plist is valid
+verify_version_info_plist() {
+    if plutil -lint "$VERSION_INFO_PLIST_PATH" > /dev/null 2>&1; then
+        print_info "VersionInfo.plist is valid"
         return 0
     else
-        print_error "Info.plist is invalid"
+        print_error "VersionInfo.plist is invalid"
         return 1
     fi
 }
@@ -118,12 +111,16 @@ verify_info_plist() {
 display_version_info() {
     local version build_number
     
-    version=$(plutil -extract CFBundleShortVersionString raw "$INFO_PLIST_PATH" 2>/dev/null || echo "Not set")
-    build_number=$(plutil -extract CFBundleVersion raw "$INFO_PLIST_PATH" 2>/dev/null || echo "Not set")
-    
-    print_info "Current version info in Info.plist:"
-    print_info "  Version: $version"
-    print_info "  Build Number: $build_number"
+    if [[ -f "$VERSION_INFO_PLIST_PATH" ]]; then
+        version=$(plutil -extract CFBundleShortVersionString raw "$VERSION_INFO_PLIST_PATH" 2>/dev/null || echo "Not set")
+        build_number=$(plutil -extract CFBundleVersion raw "$VERSION_INFO_PLIST_PATH" 2>/dev/null || echo "Not set")
+        
+        print_info "Current version info in VersionInfo.plist:"
+        print_info "  Version: $version"
+        print_info "  Build Number: $build_number"
+    else
+        print_info "VersionInfo.plist not found (will be created during build)"
+    fi
 }
 
 # Main function
@@ -150,29 +147,20 @@ main() {
     fi
     
     # Display current version info
-    if [[ -f "$INFO_PLIST_PATH" ]]; then
-        display_version_info
-    else
-        print_warning "Info.plist not found, will be updated during build"
-    fi
+    display_version_info
     
-    # Backup current Info.plist
-    backup_info_plist
-    
-    # Update Info.plist with Git version info
-    if update_info_plist; then
-        # Verify the updated Info.plist is valid
-        if verify_info_plist; then
+    # Update VersionInfo.plist with Git version info
+    if update_version_info_plist; then
+        # Verify the updated VersionInfo.plist is valid
+        if verify_version_info_plist; then
             print_info "Version update completed successfully"
             display_version_info
         else
-            print_error "Info.plist validation failed, restoring backup"
-            restore_info_plist
+            print_error "VersionInfo.plist validation failed"
             exit 1
         fi
     else
         print_error "Failed to update version info"
-        restore_info_plist
         exit 1
     fi
 }
@@ -181,7 +169,7 @@ main() {
 case "${1:-}" in
     "--help"|"-h")
         echo "Usage: $0 [--help]"
-        echo "Updates Info.plist with Git-based version information"
+        echo "Creates VersionInfo.plist with Git-based version information"
         echo ""
         echo "Options:"
         echo "  --help, -h    Show this help message"
