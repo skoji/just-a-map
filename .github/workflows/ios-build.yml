@@ -6,28 +6,13 @@ jobs:
   build:
     runs-on: macos-15
     env:
-      TOOLCHAINS: swift
       XT_SIGNING: off
     steps:
       - uses: actions/checkout@v4
 
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.1"
-
       - run: brew update
       - run: brew install xtool-org/tap/xtool
 
-      - uses: actions/cache@v4
-        id: sdk-cache
-        with:
-          path: ~/.swiftpm/swift-sdks
-          key: darwin-sdk-${{ runner.os }}-${{ hashFiles('/Applications/Xcode.app/Contents/version.plist') }}
-
-      - run: |
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          if [ "${{ steps.sdk-cache.outputs.cache-hit }}" != 'true' ]; then
-            xtool sdk install "/Applications/Xcode.app"
-          fi
+      - run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
       - run: make build
