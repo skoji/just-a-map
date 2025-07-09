@@ -1,4 +1,4 @@
-.PHONY: all build test clean distclean install dev run check-assets compile-assets fix-assets devices lint format help
+.PHONY: all build test clean distclean install dev install-to-simulator run check-assets compile-assets fix-assets devices lint format help
 
 # Default target
 all: build
@@ -113,10 +113,15 @@ dev: check-assets
 	@echo "Note: After making changes, you may need to run 'make fix-assets' manually"
 	xtool dev
 
-# Build and run in simulator
-run: build
-	@echo "Running in simulator..."
+# Build and install in simulator
+install-to-simulator: build
+	@echo "installing in simulator..."
 	xtool dev run --simulator
+
+# run the app in simulator
+run: install-to-simulator
+	@echo "Running app in simulator..."
+	xcrun simctl launch --console-pty booted jp.skoji.JustAMap
 
 # List available devices
 devices:
@@ -158,7 +163,7 @@ help:
 	@echo "  make distclean     - Clean everything including compiled assets"
 	@echo "  make install       - Install to device (requires DEVICE_ID)"
 	@echo "  make dev           - Start development mode"
-	@echo "  make run           - Build and run in simulator"
+	@echo "  make run           - Build and run in simulator; console-pty enabled"
 	@echo "  make check-assets  - Check if assets need recompilation"
 	@echo "  make compile-assets - Compile assets (macOS only)"
 	@echo "  make fix-assets    - Fix assets in app bundle"
