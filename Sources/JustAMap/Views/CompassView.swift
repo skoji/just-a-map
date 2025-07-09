@@ -11,7 +11,7 @@ struct CompassView: View {
         static let shadowRadius: CGFloat = 3
         static let tickLength: CGFloat = 2
         static let tickWidth: CGFloat = 1
-        static let tickCount: Int = 12  // 目盛りの数（30度ごと）
+        // tickCount は ForEach のwarning回避のため直接12を使用
     }
     
     var body: some View {
@@ -30,12 +30,12 @@ struct CompassView: View {
                     .frame(width: Constants.size, height: Constants.size)
                 
                 // Compass dial with ticks
-                ForEach(0..<Constants.tickCount) { index in
+                ForEach(0..<12) { index in
                     Rectangle()
                         .fill(Color(.systemGray))  // より濃い目盛り
                         .frame(width: Constants.tickWidth, height: index % 3 == 0 ? Constants.tickLength * 1.5 : Constants.tickLength)
                         .offset(y: -Constants.size / 2 + Constants.tickLength + 3)
-                        .rotationEffect(.degrees(Double(index) * (360.0 / Double(Constants.tickCount))))
+                        .rotationEffect(.degrees(Double(index) * 30.0))
                 }
                 
                 // Compass needle container with fixed frame

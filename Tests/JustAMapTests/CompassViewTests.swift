@@ -56,6 +56,5 @@ final class CompassViewTests: XCTestCase {
         XCTAssertEqual(CompassView.Constants.shadowRadius, 3)
         XCTAssertEqual(CompassView.Constants.tickLength, 2)
         XCTAssertEqual(CompassView.Constants.tickWidth, 1)
-        XCTAssertEqual(CompassView.Constants.tickCount, 12)
     }
 }
