@@ -24,8 +24,8 @@ This directory contains files that are automatically generated during the build 
 
 ## Important Notes
 
-- These files are included in `.gitignore` and should not be committed to version control
-- If you need to modify version information, update the scripts or Git tags instead
+- VersionInfo.plist is included in `.gitignore` and should not be committed to version control
+- If you need to modify version information, update the scripts.
 - Asset changes should be made in `Resources/source/Assets.xcassets`
 - The build process will automatically regenerate these files as needed
 
