@@ -1,25 +1,32 @@
-# .github/workflows/ios-build.yml
-name: iOS build (macOS trunk)
+name: iOS build (macOS)
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: macos-15
-
     env:
       TOOLCHAINS: swift
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Swift trunk
-        uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.1"
-      - name: Install xtool
-        run: |
-          brew update
-          brew install xtool-org/tap/xtool
 
-      - name: Build with xtool
-        run: make build
+      - run: brew update
+      - run: brew install xtool-org/tap/xtool
+
+      - uses: actions/cache@v4
+        id: sdk-cache
+        with:
+          path: ~/.swiftpm/swift-sdks
+          key: darwin-sdk-${{ runner.os }}-${{ hashFiles('/Applications/Xcode.app/Contents/version.plist') }}
+
+      - run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          if [ "${{ steps.sdk-cache.outputs.cache-hit }}" != 'true' ]; then
+            xtool sdk install macos --xcode "/Applications/Xcode.app" --noninteractive
+          fi
+
+      - run: make build
