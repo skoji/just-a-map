@@ -12,6 +12,15 @@ class AddressFormatter {
     private let settingsStorage: MapSettingsStorageProtocol
     private let locale: Locale
     
+    /// 言語コードを取得（デフォルト: "en"）
+    private var languageCode: String {
+        locale.language.languageCode?.identifier ?? "en"
+    }
+    
+    /// イニシャライザ
+    /// - Parameters:
+    ///   - settingsStorage: 設定ストレージ（デフォルト: MapSettingsStorage）
+    ///   - locale: 使用するロケール（デフォルト: .current）。テスト時に特定のロケールを注入可能
     init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), locale: Locale = .current) {
         self.settingsStorage = settingsStorage
         self.locale = locale
@@ -96,8 +105,7 @@ class AddressFormatter {
         }
         
         // 日本語環境かどうかで郵便番号の形式を決定
-        let currentLanguage = locale.language.languageCode?.identifier ?? "en"
-        if currentLanguage == "ja" {
+        if languageCode == "ja" {
             return "〒\(postalCode)"
         } else {
             return postalCode
@@ -136,10 +144,9 @@ class AddressFormatter {
     }
     
     private func buildFullAddressFromComponents(from address: Address) -> String {
-        let currentLanguage = locale.language.languageCode?.identifier ?? "en"
         var components: [String] = []
         
-        if currentLanguage == "ja" {
+        if languageCode == "ja" {
             // 日本語：都道府県 → 市区町村/郡 → 区市町村の順
             if let administrativeArea = address.administrativeArea, !administrativeArea.isEmpty {
                 components.append(administrativeArea)
@@ -174,7 +181,7 @@ class AddressFormatter {
         // fullAddressが存在し、コンポーネントで構築した住所より詳細な情報を含む場合
         if let fullAddress = address.fullAddress, !fullAddress.isEmpty {
             // コンポーネントで構築した住所
-            let separator = currentLanguage == "ja" ? "" : ", "
+            let separator = languageCode == "ja" ? "" : ", "
             let builtAddress = components.joined(separator: separator)
             
             // fullAddressがbuiltAddressで始まる場合、残りの部分（番地など）を取得
@@ -195,7 +202,7 @@ class AddressFormatter {
             return address.fullAddress ?? ""
         }
         
-        let separator = currentLanguage == "ja" ? "" : ", "
+        let separator = languageCode == "ja" ? "" : ", "
         return components.joined(separator: separator)
     }
 }
