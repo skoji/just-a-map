@@ -1,4 +1,4 @@
-.PHONY: all build test clean install dev run check-assets compile-assets fix-assets help
+.PHONY: all build test clean distclean install dev run check-assets compile-assets fix-assets devices lint format help
 
 # Default target
 all: build
