@@ -18,6 +18,9 @@ APP_BUNDLE := xtool/JustAMap.app
 # Example: make install DEVICE_ID=00008140-000C7D8E362A801C
 DEVICE_ID ?= 
 
+# Host architecture for simulator selection
+HOST_ARCH := $(shell uname -m)
+
 # Dynamically select an available iOS simulator for testing
 # This is done via a helper script to avoid complex Makefile escaping.
 SIMULATOR_ID := $(shell ./scripts/find-simulator.sh)
@@ -31,12 +34,12 @@ build:
 # Test the app
 test:
 	@echo "Running tests..."
-	@echo "Selected simulator ID: $(SIMULATOR_ID)"
+	@echo "Selected simulator ID: $(SIMULATOR_ID) (arch: $(HOST_ARCH))"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
-			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID)' | xcpretty --test; \
+			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID),arch=$(HOST_ARCH)' | xcpretty --test; \
 		else \
-			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID)'; \
+			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID),arch=$(HOST_ARCH)'; \
 		fi \
 	else \
 		echo "Error: xcodebuild not found. Tests can only be run on macOS with Xcode installed."; \
