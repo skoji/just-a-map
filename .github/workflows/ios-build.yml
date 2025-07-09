@@ -1,4 +1,4 @@
-name: iOS build (macOS, no-sign)
+name: iOS build (macOS)
 
 on: [push, pull_request]
 
@@ -27,7 +27,7 @@ jobs:
       - run: |
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           if [ "${{ steps.sdk-cache.outputs.cache-hit }}" != 'true' ]; then
-            yes "" | xtool setup
+            xtool sdk install "/Applications/Xcode.app"
           fi
 
       - run: make build
