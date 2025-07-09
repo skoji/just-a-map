@@ -26,7 +26,7 @@ jobs:
       - run: |
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           if [ "${{ steps.sdk-cache.outputs.cache-hit }}" != 'true' ]; then
-            xtool sdk install macos --xcode "/Applications/Xcode.app" --noninteractive
+            xtool sdk install macos "/Applications/Xcode.app" --noninteractive
           fi
 
       - run: make build
