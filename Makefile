@@ -28,12 +28,14 @@ SIMULATOR_ID := $(shell ./scripts/find-simulator.sh)
 # Build the app with xtool
 build:
 	@echo "Building app with xtool..."
+	@$(MAKE) sync-version-info
 	xtool dev build
 	@$(MAKE) fix-assets
 
 # Test the app
 test:
 	@echo "Running tests..."
+	@$(MAKE) sync-version-info
 	@echo "Selected simulator ID: $(SIMULATOR_ID) (arch: $(HOST_ARCH))"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
@@ -94,6 +96,18 @@ fix-assets:
 		echo "Run 'make build' first."; \
 		exit 1; \
 	fi
+
+# Sync version info from Git
+sync-version-info:
+	@echo "Syncing version info from Git..."
+	@./scripts/sync-version-info.sh
+
+# Show current version info
+show-version:
+	@echo "Current Git-based version information:"
+	@echo "  Version: $$(./scripts/generate-version.sh version-string)"
+	@echo "  Build Number: $$(./scripts/generate-version.sh build-number)"
+	@echo "  Commit Hash: $$(./scripts/generate-version.sh commit-hash)"
 
 # Install to device
 install: build
@@ -167,6 +181,8 @@ help:
 	@echo "  make check-assets  - Check if assets need recompilation"
 	@echo "  make compile-assets - Compile assets (macOS only)"
 	@echo "  make fix-assets    - Fix assets in app bundle"
+	@echo "  make sync-version-info - Sync version info from Git to VersionInfo.plist"
+	@echo "  make show-version  - Show current Git-based version information"
 	@echo "  make devices       - List available devices"
 	@echo "  make show-simulator - Show selected simulator for testing"
 	@echo "  make lint          - Run SwiftLint"

@@ -119,3 +119,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 xtool/
+
+# Build-time generated version info
+Resources/VersionInfo.plist

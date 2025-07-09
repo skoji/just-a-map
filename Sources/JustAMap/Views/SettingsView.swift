@@ -84,6 +84,22 @@ struct SettingsView: View {
                         }
                     }
                 }
+                
+                Section("settings.app_info".localized) {
+                    HStack {
+                        Text("settings.app_version".localized)
+                        Spacer()
+                        Text(viewModel.appVersion)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("settings.build_number".localized)
+                        Spacer()
+                        Text(viewModel.buildNumber)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             .navigationTitle("settings.title".localized)
             .navigationBarTitleDisplayMode(.inline)

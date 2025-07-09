@@ -15,9 +15,10 @@ just-a-map/
 ├── Resources/             # リソースファイル
 │   ├── source/           # ソースアセット
 │   │   └── Assets.xcassets
-│   └── built/            # コンパイル済みアセット
-│       ├── Assets.car
-│       └── *.png
+│   ├── built/            # コンパイル済みアセット
+│   │   ├── Assets.car
+│   │   └── *.png
+│   └── VersionInfo.plist  # ビルド時生成（.gitignore）
 ├── Sources/
 │   └── JustAMap/          # メインターゲット
 │       ├── JustAMapApp.swift  # @mainエントリポイント
@@ -31,7 +32,9 @@ just-a-map/
 │   └── JustAMapTests/     # テストターゲット
 ├── scripts/               # ビルドスクリプト
 │   ├── compile-assets.sh  # アセットコンパイル
-│   └── fix-assets.sh      # アセット配置
+│   ├── fix-assets.sh      # アセット配置
+│   ├── generate-version.sh # バージョン情報生成
+│   └── sync-version-info.sh # VersionInfo.plist同期
 └── xtool/                 # ビルド成果物（.gitignoreに追加）
     └── JustAMap.app/      # 生成されたアプリ
 ```
@@ -238,6 +241,7 @@ jobs:
 2. **CI/CD簡素化**: Xcodeなしでビルド・テスト可能
 3. **依存関係管理**: SwiftPMによる統一的な依存関係管理
 4. **開発環境の一貫性**: xtoolによる統一的なビルド設定
+5. **バージョン管理**: Gitベースの自動バージョン管理システム（詳細は[version-management-system.md](version-management-system.md)を参照）
 
 ## 既知の制限事項
 

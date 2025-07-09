@@ -108,4 +108,55 @@ final class SettingsViewModelTests: XCTestCase {
         }
         XCTAssertEqual(sut.defaultZoomIndex, maxIndex)
     }
+    
+    func testAppVersionWithMainBundle() {
+        // Test with main bundle (this should work in test environment)
+        let version = sut.appVersion
+        XCTAssertNotNil(version)
+        XCTAssertFalse(version.isEmpty)
+        // Main bundle in test may not have version info, so it could be "Unknown" or "不明"
+        XCTAssertTrue(version.contains("Unknown") || version.contains("不明") || version.count > 0)
+    }
+    
+    func testBuildNumberWithMainBundle() {
+        // Test with main bundle (this should work in test environment)
+        let buildNumber = sut.buildNumber
+        XCTAssertNotNil(buildNumber)
+        XCTAssertFalse(buildNumber.isEmpty)
+        // Main bundle in test may not have build info, so it could be "Unknown" or "不明"
+        XCTAssertTrue(buildNumber.contains("Unknown") || buildNumber.contains("不明") || buildNumber.count > 0)
+    }
+    
+    func testAppVersionWithMockBundle() {
+        // Test with mock bundle that returns specific values
+        let mockBundle = MockBundle()
+        mockBundle.infoDictionary = [
+            "CFBundleShortVersionString": "1.0.0",
+            "CFBundleVersion": "123"
+        ]
+        
+        let sutWithMockBundle = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            bundle: mockBundle
+        )
+        
+        XCTAssertEqual(sutWithMockBundle.appVersion, "1.0.0")
+        XCTAssertEqual(sutWithMockBundle.buildNumber, "123")
+    }
+    
+    func testAppVersionWithMissingInfoPlist() {
+        // Test with mock bundle that returns nil
+        let mockBundle = MockBundle()
+        mockBundle.infoDictionary = [:]
+        
+        let sutWithMockBundle = SettingsViewModel(
+            settingsStorage: mockSettingsStorage,
+            bundle: mockBundle
+        )
+        
+        let expectedUnknownString = "app_info.unknown".localized
+        XCTAssertEqual(sutWithMockBundle.appVersion, expectedUnknownString)
+        XCTAssertEqual(sutWithMockBundle.buildNumber, expectedUnknownString)
+    }
+    
 }
