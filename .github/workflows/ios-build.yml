@@ -15,8 +15,7 @@ jobs:
       - name: Set up Swift trunk
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: development
-
+          swift-version: "6.1"
       - name: Install xtool
         run: |
           brew update
