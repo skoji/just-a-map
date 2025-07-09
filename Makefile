@@ -35,6 +35,7 @@ build:
 # Test the app
 test:
 	@echo "Running tests..."
+	@$(MAKE) update-version-info
 	@echo "Selected simulator ID: $(SIMULATOR_ID) (arch: $(HOST_ARCH))"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \

@@ -4,7 +4,6 @@ import SwiftUI
 class SettingsViewModel: ObservableObject {
     private var settingsStorage: MapSettingsStorageProtocol
     private var bundle: BundleProtocol
-    private var gitVersionProvider: GitVersionInfoProvider
     
     // ズームインデックスの範囲
     static let minZoomIndex = ZoomConstants.minIndex
@@ -39,10 +38,9 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
-    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), bundle: BundleProtocol = Bundle.main, gitVersionProvider: GitVersionInfoProvider? = nil) {
+    init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), bundle: BundleProtocol = Bundle.main) {
         self.settingsStorage = settingsStorage
         self.bundle = bundle
-        self.gitVersionProvider = gitVersionProvider ?? GitVersionInfoProvider()
         self.defaultZoomIndex = settingsStorage.defaultZoomIndex
         self.defaultMapStyle = settingsStorage.defaultMapStyle
         self.defaultIsNorthUp = settingsStorage.defaultIsNorthUp
@@ -63,13 +61,6 @@ class SettingsViewModel: ObservableObject {
     }
     
     var appVersion: String {
-        // Try Git-based versioning first
-        let gitVersion = gitVersionProvider.versionString
-        if !gitVersion.isEmpty && gitVersion != "1.0.0+unknown" {
-            return gitVersion
-        }
-        
-        // Fall back to bundle version
         guard let version = bundle.object(forInfoDictionaryKey: Self.appVersionKey) as? String else {
             return Self.unknownAppInfoLocalized
         }
@@ -77,13 +68,6 @@ class SettingsViewModel: ObservableObject {
     }
     
     var buildNumber: String {
-        // Try Git-based versioning first
-        let gitBuildNumber = gitVersionProvider.buildNumber
-        if !gitBuildNumber.isEmpty && gitBuildNumber != "1" {
-            return gitBuildNumber
-        }
-        
-        // Fall back to bundle build number
         guard let buildNumber = bundle.object(forInfoDictionaryKey: Self.buildNumberKey) as? String else {
             return Self.unknownAppInfoLocalized
         }
