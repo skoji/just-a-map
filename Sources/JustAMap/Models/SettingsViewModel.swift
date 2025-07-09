@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+import SwiftUI
 
 class SettingsViewModel: ObservableObject {
     private var settingsStorage: MapSettingsStorageProtocol

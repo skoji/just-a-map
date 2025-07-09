@@ -52,9 +52,11 @@
 
 ## 開発環境
 
-- Xcode 16.0以上
-- macOS 14.0以上
+- Xcode 16.0以上（オプション）
+- Swift 5.9以上
+- macOS 14.0以上 / Linux / WSL
 - iOS Simulator（iOS 18.5推奨）
+- xtool（クロスプラットフォームビルドツール）
 
 ## セットアップ
 
@@ -62,13 +64,44 @@
 ```bash
 git clone <repository-url>
 cd just-a-map
-open JustAMap.xcodeproj
 ```
 
 ### 2. ビルドと実行
-1. Xcodeでプロジェクトが開いたら、スキームが「JustAMap」になっていることを確認
-2. シミュレータデバイスを選択（iPhone 16推奨）
-3. ⌘+R でビルド&実行
+
+#### xtoolを使用する場合（推奨）
+```bash
+# xtoolのインストール
+brew install xtool  # macOS
+# Linux/WSLの場合は https://github.com/xtool-org/xtool を参照
+
+# Makefileを使用したビルドと実行
+make build           # アプリをビルド
+make run             # シミュレータで実行
+make install DEVICE_ID=<device-id>  # 実機にインストール
+
+# デバイスIDの確認
+make devices         # 接続されているデバイス一覧を表示
+
+# その他の便利なコマンド
+make test           # テストを実行
+make clean          # ビルド成果物をクリーン
+make help           # 利用可能なコマンド一覧を表示
+```
+
+**注意**: xtoolはAssets.xcassetsをコンパイルできないため、アセットの処理には特別な手順が必要です。Makefileがこれを自動的に処理します。
+
+#### アセットの更新について
+アイコンやその他のアセットを変更した場合：
+1. macOSで `make compile-assets` を実行してアセットをコンパイル
+2. コンパイル済みアセットはGitにコミットされているため、他のプラットフォームでもビルド可能
+
+#### Xcodeを使用する場合
+```bash
+# SwiftPMプロジェクトとして開く
+open Package.swift
+```
+
+詳細は[xtool移行ガイド](doc/xtool-migration-guide.md)を参照してください。
 
 ### 3. 位置情報の権限設定
 アプリ起動時に位置情報の許可ダイアログが表示されるので、「Allow While Using App」を選択
@@ -129,11 +162,22 @@ Xcodeの下部にあるデバッグエリアでログを確認できます。ズ
 ## テスト
 
 ### ユニットテストの実行
+
+#### Makefileを使用する場合（推奨）
 ```bash
-xcodebuild test -scheme JustAMapTests -destination 'platform=iOS Simulator,name=iPhone 16'
+make test
 ```
 
-または、Xcode内で ⌘+U
+#### Xcodeを使用する場合
+```bash
+open Package.swift
+# Xcode内で ⌘+U
+```
+
+#### xcodebuildを使用する場合
+```bash
+xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
+```
 
 ### 現在のテストカバレッジ
 - LocationManagerのプロトコル準拠

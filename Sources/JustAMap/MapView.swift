@@ -1,6 +1,6 @@
 import SwiftUI
 import MapKit
-import Combine
+import UIKit
 
 /// 地図を表示するView
 struct MapView: View {
@@ -15,7 +15,7 @@ struct MapView: View {
     @State private var currentMapCamera: MapCamera?
     @State private var isZoomingByButton = false
     @State private var isShowingSettings = false
-    @State private var mapStyleForDisplay: JustAMap.MapStyle?
+    @State private var mapStyleForDisplay: MapStyle?
     
     // アニメーションパラメータ定数
     private enum AnimationConstants {
@@ -112,7 +112,7 @@ struct MapView: View {
                                 .font(.title2)
                                 .foregroundColor(.blue)
                                 .frame(width: 44, height: 44)
-                                .background(Color(.systemBackground))
+                            .background(Color(.systemBackground))
                                 .clipShape(Circle())
                                 .shadow(radius: 2)
                         }

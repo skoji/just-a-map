@@ -25,7 +25,7 @@ class MapViewModel: ObservableObject {
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
     private let addressFormatter: AddressFormatter
-    private let idleTimerManager: IdleTimerManagerProtocol
+    private let idleTimerManager: IdleTimerManagerProtocol?
     let mapControlsViewModel: MapControlsViewModel
     private let settingsStorage: MapSettingsStorageProtocol
     
@@ -42,7 +42,7 @@ class MapViewModel: ObservableObject {
     init(locationManager: LocationManagerProtocol = LocationManager(),
          geocodeService: GeocodeServiceProtocol = GeocodeService(),
          addressFormatter: AddressFormatter? = nil,
-         idleTimerManager: IdleTimerManagerProtocol = IdleTimerManager(),
+         idleTimerManager: IdleTimerManagerProtocol? = nil,
          mapControlsViewModel: MapControlsViewModel? = nil,
          settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage()) {
         self.locationManager = locationManager
@@ -50,12 +50,12 @@ class MapViewModel: ObservableObject {
         self.settingsStorage = settingsStorage
         // AddressFormatterはsettingsStorageを使用するため、ここで作成
         self.addressFormatter = addressFormatter ?? AddressFormatter(settingsStorage: settingsStorage)
-        self.idleTimerManager = idleTimerManager
+        self.idleTimerManager = idleTimerManager ?? IdleTimerManager()
         self.mapControlsViewModel = mapControlsViewModel ?? MapControlsViewModel()
         self.locationManager.delegate = self
         
         // スリープ防止を有効化
-        self.idleTimerManager.setIdleTimerDisabled(true)
+        self.idleTimerManager?.setIdleTimerDisabled(true)
         
         // 保存された設定を読み込む
         loadSettings()
@@ -110,12 +110,12 @@ class MapViewModel: ObservableObject {
     
     /// アプリがバックグラウンドに入った時
     func handleAppDidEnterBackground() {
-        idleTimerManager.handleAppDidEnterBackground()
+        idleTimerManager?.handleAppDidEnterBackground()
     }
     
     /// アプリがフォアグラウンドに戻った時
     func handleAppWillEnterForeground() {
-        idleTimerManager.handleAppWillEnterForeground()
+        idleTimerManager?.handleAppWillEnterForeground()
     }
     
     func centerOnUserLocation() {
