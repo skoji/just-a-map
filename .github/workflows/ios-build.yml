@@ -25,3 +25,19 @@ jobs:
         run: |
           export SDKROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
           make build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Checking build artifacts..."
+          if [ -d "xtool/JustAMap.app" ]; then
+            echo "✓ App bundle found at xtool/JustAMap.app"
+            echo "App bundle contents:"
+            ls -la xtool/JustAMap.app/
+            echo "App executable size:"
+            ls -lh xtool/JustAMap.app/JustAMap
+          else
+            echo "✗ App bundle not found at expected location"
+            echo "Contents of xtool directory:"
+            ls -la xtool/ || echo "xtool directory not found"
+            exit 1
+          fi
