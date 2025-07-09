@@ -19,36 +19,8 @@ APP_BUNDLE := xtool/JustAMap.app
 DEVICE_ID ?= 
 
 # Dynamically select an available iOS simulator for testing
-# Priority: iPhone Pro models > iPhone models > Any iOS simulator
-SIMULATOR_NAME := $(shell \
-	simulator=$$(xcrun simctl list devices available 2>/dev/null | \
-		grep -E "iPhone.*Pro.*\(.*\)" | \
-		head -1 | \
-		sed 's/^[[:space:]]*//' | \
-		sed 's/[[:space:]]*(.*//' | \
-		sed 's/[[:space:]]*$$//'); \
-	if [ -z "$$simulator" ]; then \
-		simulator=$$(xcrun simctl list devices available 2>/dev/null | \
-			grep -E "iPhone.*\(.*\)" | \
-			head -1 | \
-			sed 's/^[[:space:]]*//' | \
-			sed 's/[[:space:]]*(.*//' | \
-			sed 's/[[:space:]]*$$//'); \
-	fi; \
-	if [ -z "$$simulator" ]; then \
-		simulator=$$(xcrun simctl list devices available 2>/dev/null | \
-			grep -E "iOS.*\(.*\)" | \
-			head -1 | \
-			sed 's/^[[:space:]]*//' | \
-			sed 's/[[:space:]]*(.*//' | \
-			sed 's/[[:space:]]*$$//'); \
-	fi; \
-	if [ -z "$$simulator" ]; then \
-		echo "iPhone 16"; \
-	else \
-		echo "$$simulator"; \
-	fi \
-)
+# This is done via a helper script to avoid complex Makefile escaping.
+SIMULATOR_ID := $(shell ./scripts/find-simulator.sh)
 
 # Build the app with xtool
 build:
@@ -59,12 +31,12 @@ build:
 # Test the app
 test:
 	@echo "Running tests..."
-	@echo "Selected simulator: $(SIMULATOR_NAME)"
+	@echo "Selected simulator ID: $(SIMULATOR_ID)"
 	@if command -v xcodebuild >/dev/null 2>&1; then \
 		if command -v xcpretty >/dev/null 2>&1; then \
-			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=$(SIMULATOR_NAME)' | xcpretty --test; \
+			set -o pipefail && xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID)' | xcpretty --test; \
 		else \
-			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=$(SIMULATOR_NAME)'; \
+			xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,id=$(SIMULATOR_ID)'; \
 		fi \
 	else \
 		echo "Error: xcodebuild not found. Tests can only be run on macOS with Xcode installed."; \
@@ -150,10 +122,10 @@ devices:
 
 # Show selected simulator for testing
 show-simulator:
-	@echo "Selected simulator for testing: $(SIMULATOR_NAME)"
+	@echo "Selected simulator for testing: $(SIMULATOR_ID)"
 	@echo ""
 	@echo "Available iOS simulators:"
-	@xcrun simctl list devices available | grep -E "(iPhone|iOS)" | head -10
+	@xcrun simctl list devices available | grep "iPhone"
 
 # Lint Swift code
 lint:
