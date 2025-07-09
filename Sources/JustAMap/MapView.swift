@@ -1,8 +1,6 @@
 import SwiftUI
 import MapKit
-#if canImport(UIKit)
 import UIKit
-#endif
 
 /// 地図を表示するView
 struct MapView: View {
@@ -114,11 +112,7 @@ struct MapView: View {
                                 .font(.title2)
                                 .foregroundColor(.blue)
                                 .frame(width: 44, height: 44)
-                                #if os(iOS)
                             .background(Color(.systemBackground))
-                            #else
-                            .background(Color(.controlBackgroundColor))
-                            #endif
                                 .clipShape(Circle())
                                 .shadow(radius: 2)
                         }
@@ -247,14 +241,12 @@ struct MapView: View {
                 }
             }
         }
-        #if os(iOS)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             viewModel.handleAppDidEnterBackground()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             viewModel.handleAppWillEnterForeground()
         }
-        #endif
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
             viewModel.saveSettings()
             // State変数を更新してSwiftUIの再描画を促す
@@ -313,7 +305,6 @@ struct ErrorBanner: View {
             
             Spacer()
             
-            #if os(iOS)
             if error == .authorizationDenied {
                 Button("設定") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -326,7 +317,6 @@ struct ErrorBanner: View {
                 .background(Color.white.opacity(0.2))
                 .cornerRadius(8)
             }
-            #endif
         }
         .padding()
         .background(Color.red)

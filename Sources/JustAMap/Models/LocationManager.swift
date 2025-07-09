@@ -31,15 +31,9 @@ class LocationManager: NSObject, LocationManagerProtocol {
             locationManager.requestWhenInUseAuthorization()
         case .denied, .restricted:
             delegate?.locationManager(self, didFailWithError: LocationError.authorizationDenied)
-        #if os(iOS)
         case .authorizedWhenInUse, .authorizedAlways:
             // 既に許可されている
             delegate?.locationManager(self, didChangeAuthorization: locationManager.authorizationStatus)
-        #else
-        case .authorizedAlways:
-            // 既に許可されている
-            delegate?.locationManager(self, didChangeAuthorization: locationManager.authorizationStatus)
-        #endif
         @unknown default:
             break
         }
@@ -52,14 +46,9 @@ class LocationManager: NSObject, LocationManagerProtocol {
         }
         
         switch locationManager.authorizationStatus {
-        #if os(iOS)
         case .authorizedWhenInUse, .authorizedAlways:
             locationManager.startUpdatingLocation()
             locationManager.startUpdatingHeading() // Heading Up表示用
-        #else
-        case .authorizedAlways:
-            locationManager.startUpdatingLocation()
-        #endif
         case .notDetermined:
             requestLocationPermission()
         case .denied, .restricted:
@@ -71,9 +60,7 @@ class LocationManager: NSObject, LocationManagerProtocol {
     
     func stopLocationUpdates() {
         locationManager.stopUpdatingLocation()
-        #if os(iOS)
         locationManager.stopUpdatingHeading()
-        #endif
     }
     
     func adjustUpdateFrequency(forSpeed speed: Double, zoomDistance: Double) {
@@ -133,15 +120,9 @@ extension LocationManager: CLLocationManagerDelegate {
         delegate?.locationManager(self, didChangeAuthorization: manager.authorizationStatus)
         
         // 許可が得られたら自動的に位置情報更新を開始
-        #if os(iOS)
         if manager.authorizationStatus == .authorizedWhenInUse || 
            manager.authorizationStatus == .authorizedAlways {
             startLocationUpdates()
         }
-        #else
-        if manager.authorizationStatus == .authorizedAlways {
-            startLocationUpdates()
-        }
-        #endif
     }
 }

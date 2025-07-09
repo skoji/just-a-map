@@ -1,6 +1,4 @@
-#if canImport(UIKit)
 import UIKit
-#endif
 import SwiftUI
 
 /// UIApplicationのプロトコル（テスト用）
@@ -9,9 +7,7 @@ protocol UIApplicationProtocol {
 }
 
 /// UIApplicationをプロトコルに準拠させる
-#if canImport(UIKit)
 extension UIApplication: UIApplicationProtocol {}
-#endif
 
 /// スリープ防止機能を管理するプロトコル
 protocol IdleTimerManagerProtocol {
@@ -25,15 +21,9 @@ class IdleTimerManager: IdleTimerManagerProtocol {
     private var application: UIApplicationProtocol
     private var shouldKeepScreenOn = false
     
-    #if canImport(UIKit)
     init(application: UIApplicationProtocol = UIApplication.shared) {
         self.application = application
     }
-    #else
-    init(application: UIApplicationProtocol) {
-        self.application = application
-    }
-    #endif
     
     /// スリープ防止の有効/無効を設定
     func setIdleTimerDisabled(_ disabled: Bool) {

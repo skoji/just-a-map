@@ -86,23 +86,13 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("設定")
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
-                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("閉じる") {
                         dismiss()
                     }
                 }
-                #else
-                ToolbarItem(placement: .automatic) {
-                    Button("閉じる") {
-                        dismiss()
-                    }
-                }
-                #endif
             }
         }
     }

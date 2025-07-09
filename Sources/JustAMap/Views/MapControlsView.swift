@@ -129,11 +129,7 @@ struct ControlButton: View {
                 .font(.title2)
                 .foregroundColor(isEnabled ? .primary : .gray)
                 .frame(width: 60, height: 60)
-                #if os(iOS)
                 .background(Color(UIColor.systemBackground))
-                #else
-                .background(Color(.controlBackgroundColor))
-                #endif
                 .clipShape(Circle())
                 .shadow(radius: 2)
         }

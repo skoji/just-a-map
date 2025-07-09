@@ -50,11 +50,7 @@ class MapViewModel: ObservableObject {
         self.settingsStorage = settingsStorage
         // AddressFormatterはsettingsStorageを使用するため、ここで作成
         self.addressFormatter = addressFormatter ?? AddressFormatter(settingsStorage: settingsStorage)
-        #if canImport(UIKit)
         self.idleTimerManager = idleTimerManager ?? IdleTimerManager()
-        #else
-        self.idleTimerManager = idleTimerManager
-        #endif
         self.mapControlsViewModel = mapControlsViewModel ?? MapControlsViewModel()
         self.locationManager.delegate = self
         

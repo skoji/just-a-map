@@ -26,11 +26,7 @@ struct CompassView: View {
                 
                 // Border
                 Circle()
-                    #if os(iOS)
                     .stroke(Color(.systemGray2), lineWidth: Constants.borderWidth)  // より濃い境界線
-                    #else
-                    .stroke(Color.gray, lineWidth: Constants.borderWidth)  // より濃い境界線
-                    #endif
                     .frame(width: Constants.size, height: Constants.size)
                 
                 // Compass dial with ticks
