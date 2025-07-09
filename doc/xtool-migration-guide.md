@@ -10,6 +10,14 @@ JustAMapプロジェクトは、XcodeプロジェクトからxtoolベースのSw
 just-a-map/
 ├── Package.swift           # SwiftPMマニフェスト
 ├── xtool.yml              # xtool設定ファイル
+├── Info.plist             # アプリ情報（位置情報権限など）
+├── Makefile               # ビルド自動化
+├── Resources/             # リソースファイル
+│   ├── source/           # ソースアセット
+│   │   └── Assets.xcassets
+│   └── built/            # コンパイル済みアセット
+│       ├── Assets.car
+│       └── *.png
 ├── Sources/
 │   └── JustAMap/          # メインターゲット
 │       ├── JustAMapApp.swift  # @mainエントリポイント
@@ -18,11 +26,12 @@ just-a-map/
 │       ├── Models/
 │       ├── Services/
 │       ├── Views/
-│       ├── Extensions/
-│       └── Resources/
-│           └── Assets.xcassets
+│       └── Extensions/
 ├── Tests/
 │   └── JustAMapTests/     # テストターゲット
+├── scripts/               # ビルドスクリプト
+│   ├── compile-assets.sh  # アセットコンパイル
+│   └── fix-assets.sh      # アセット配置
 └── xtool/                 # ビルド成果物（.gitignoreに追加）
     └── JustAMap.app/      # 生成されたアプリ
 ```
@@ -45,38 +54,79 @@ chmod +x /usr/local/bin/xtool
 
 ### ビルドと実行
 
+#### Makefileを使用（推奨）
+
 ```bash
-# シミュレータでビルドと実行
-xtool dev run --simulator
+# アプリをビルド
+make build
 
-# 実機でビルドと実行（デバイスのUDIDが必要）
-xtool dev run --udid <device-udid>
+# シミュレータで実行
+make run
 
-# デバッグ/リリース設定
-xtool dev run --simulator --configuration debug    # デフォルト
-xtool dev run --simulator --configuration release
+# 実機にインストール
+make install DEVICE_ID=<device-udid>
 
-# ビルド成果物
-# xtool/JustAMap.app/ に生成されます
+# デバイス一覧を確認
+make devices
+
+# テストを実行
+make test
+
+# クリーンビルド
+make clean
+
+# ヘルプを表示
+make help
 ```
+
+#### 手動でのビルド
+
+xtoolの制限により、アセットのコンパイルには追加手順が必要です：
+
+```bash
+# 1. アプリをビルド
+xtool dev build
+
+# 2. アセットを修正（アイコン表示のため必須）
+./scripts/fix-assets.sh
+
+# 3. 実機にインストール
+xtool install -u <device-udid> xtool/JustAMap.app
+```
+
+### アセットの更新
+
+xtoolはAssets.xcassetsをコンパイルできないため、macOSでの事前コンパイルが必要です：
+
+```bash
+# macOSでアセットをコンパイル
+make compile-assets
+
+# または手動で実行
+./scripts/compile-assets.sh
+```
+
+コンパイル済みアセット（Resources/built/）はGitにコミットされているため、他のプラットフォームでもビルド可能です。
 
 ### テスト実行
 
-現在、iOSアプリのテストはSwiftPMでは直接実行できません。以下の方法を使用します：
-
-**方法1: Xcodeを使用（推奨）**
+**Makefileを使用（推奨）**
 ```bash
-# Xcodeで開く
+make test
+```
+
+**その他の方法**
+
+1. Xcodeを使用:
+```bash
 open Package.swift
 # Cmd+U でテスト実行
 ```
 
-**方法2: xcodebuildを使用**
+2. xcodebuildを使用:
 ```bash
 xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
-
-**注意**: `swift test`コマンドはmacOS向けビルドを試みるため、iOS専用アプリでは使用できません。
 
 ### その他のコマンド
 
@@ -160,17 +210,21 @@ jobs:
    # シミュレータを起動
    xcrun simctl boot "iPhone 16"
    # 再度実行
-   xtool dev run --simulator
+   make run
    ```
 
-2. **リソースが見つからない場合**
-   - `Sources/JustAMap/Resources/`にリソースが正しく配置されているか確認
-   - Package.swiftでリソースが`.process("Resources")`として定義されているか確認
+2. **アプリアイコンが表示されない**
+   - `make fix-assets`を実行してアセットを修正
+   - Resources/built/にAssets.carが存在することを確認
+   - macOSで`make compile-assets`を実行してアセットを再コンパイル
 
-3. **xtool.ymlエラー**
-   - ファイル名が`xtool.yml`（`.yaml`ではない）であることを確認
-   - 最小構成: `version: 1`と`bundleID: com.example.JustAMap`
+3. **リソースが見つからない場合**
+   - Resources/source/Assets.xcassetsにアセットが配置されているか確認
    - Package.swiftでリソースが正しく定義されているか確認
+
+4. **xtool.ymlエラー**
+   - ファイル名が`xtool.yml`（`.yaml`ではない）であることを確認
+   - 最小構成: `version: 1`、`bundleID: com.example.JustAMap`、`infoPath: Info.plist`
 
 ### テストエラー
 
@@ -185,8 +239,15 @@ jobs:
 3. **依存関係管理**: SwiftPMによる統一的な依存関係管理
 4. **開発環境の一貫性**: xtoolによる統一的なビルド設定
 
+## 既知の制限事項
+
+1. **アセットカタログ**: xtoolはAssets.xcassetsをコンパイルできないため、macOSでの事前コンパイルが必要
+2. **アプリアイコン**: ビルド後にfix-assetsスクリプトの実行が必要
+3. **devモード**: `xtool dev`では自動的なアセット修正は行われない
+
 ## 今後の作業
 
 - CI/CD設定の完全な移行
 - Linux/WSL環境でのテスト
 - パフォーマンス最適化
+- xtoolのアセットカタログサポートの改善待ち

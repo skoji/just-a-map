@@ -74,15 +74,26 @@ cd just-a-map
 brew install xtool  # macOS
 # Linux/WSLの場合は https://github.com/xtool-org/xtool を参照
 
-# ビルドと実行（シミュレータ）
-xtool dev run --simulator
+# Makefileを使用したビルドと実行
+make build           # アプリをビルド
+make run             # シミュレータで実行
+make install DEVICE_ID=<device-id>  # 実機にインストール
 
-# 実機での実行
-xtool dev run --udid <device-udid>
+# デバイスIDの確認
+make devices         # 接続されているデバイス一覧を表示
 
-# ビルド成果物の場所
-# xtool/JustAMap.app/ に生成されます
+# その他の便利なコマンド
+make test           # テストを実行
+make clean          # ビルド成果物をクリーン
+make help           # 利用可能なコマンド一覧を表示
 ```
+
+**注意**: xtoolはAssets.xcassetsをコンパイルできないため、アセットの処理には特別な手順が必要です。Makefileがこれを自動的に処理します。
+
+#### アセットの更新について
+アイコンやその他のアセットを変更した場合：
+1. macOSで `make compile-assets` を実行してアセットをコンパイル
+2. コンパイル済みアセットはGitにコミットされているため、他のプラットフォームでもビルド可能
 
 #### Xcodeを使用する場合
 ```bash
@@ -152,7 +163,12 @@ Xcodeの下部にあるデバッグエリアでログを確認できます。ズ
 
 ### ユニットテストの実行
 
-#### Xcodeを使用する場合（推奨）
+#### Makefileを使用する場合（推奨）
+```bash
+make test
+```
+
+#### Xcodeを使用する場合
 ```bash
 open Package.swift
 # Xcode内で ⌘+U
@@ -162,8 +178,6 @@ open Package.swift
 ```bash
 xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
-
-**注意**: iOS専用アプリのため、`swift test`コマンドは使用できません。
 
 ### 現在のテストカバレッジ
 - LocationManagerのプロトコル準拠
