@@ -115,10 +115,10 @@ dev: check-assets
 
 # Build and install in simulator
 install-to-simulator: build
-	@echo "installing in simulator..."
+	@echo "Installing in simulator..."
 	xtool dev run --simulator
 
-# run the app in simulator
+# Run the app in simulator
 run: install-to-simulator
 	@echo "Running app in simulator..."
 	xcrun simctl launch --console-pty booted jp.skoji.JustAMap
