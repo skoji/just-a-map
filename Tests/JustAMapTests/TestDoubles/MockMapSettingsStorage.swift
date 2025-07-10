@@ -10,6 +10,8 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var defaultIsNorthUp: Bool = true
     var defaultZoomIndex: Int = 5
     var addressFormat: AddressFormat = .standard
+    var isAltitudeDisplayEnabled: Bool = false
+    var altitudeUnit: AltitudeUnit = .meters
     
     private var firstLaunch = true
     var isFirstLaunchReturnValue: Bool?

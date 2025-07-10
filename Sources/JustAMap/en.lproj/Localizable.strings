@@ -13,6 +13,9 @@
 "settings.default_north_up" = "Default to North Up";
 "settings.display_settings" = "Display Settings";
 "settings.address_format" = "Address Display Format";
+"settings.altitude_display" = "Altitude Display";
+"settings.show_altitude" = "Show Altitude";
+"settings.altitude_unit" = "Altitude Unit";
 "settings.app_info" = "App Information";
 "settings.app_version" = "Version";
 "settings.build_number" = "Build Number";
@@ -37,3 +40,7 @@
 
 /* App Info */
 "app_info.unknown" = "Unknown";
+
+/* AltitudeUnit */
+"altitude_unit.meters" = "Meters";
+"altitude_unit.feet" = "Feet";

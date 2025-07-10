@@ -21,6 +21,8 @@ class MapViewModel: ObservableObject {
     @Published var mapCenterCoordinate = CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503)
     @Published var mapCenterAddress: FormattedAddress?
     @Published var isLoadingMapCenterAddress = false
+    @Published var currentAltitude: Double?
+    @Published var currentAltitudeAccuracy: Double?
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -163,6 +165,19 @@ class MapViewModel: ObservableObject {
         }
     }
     
+    private func updateAltitude(from location: CLLocation) {
+        // 垂直精度を保存（負の値は無効を示す）
+        currentAltitudeAccuracy = location.verticalAccuracy
+        
+        // 垂直精度が有効な場合のみ高度を更新
+        if location.verticalAccuracy >= 0 {
+            currentAltitude = location.altitude
+        } else {
+            // 無効な精度の場合は高度をnilにする
+            currentAltitude = nil
+        }
+    }
+    
     private func fetchAddressForMapCenter() async {
         isLoadingMapCenterAddress = true
         
@@ -253,6 +268,9 @@ extension MapViewModel: LocationManagerDelegate {
             // 住所を取得
             self.fetchAddress(for: location)
             
+            // 高度情報を更新
+            self.updateAltitude(from: location)
+            
             // 速度とズームレベルに基づいて更新頻度を調整
             let speed = max(0, location.speed * 3.6) // m/s to km/h, 負の値は0に
             let zoomDistance = self.mapControlsViewModel.currentAltitude
@@ -301,5 +319,33 @@ extension MapViewModel: LocationManagerDelegate {
     var isUserRotationEnabled: Bool {
         // North Upモードでは回転を禁止
         return !mapControlsViewModel.isNorthUp
+    }
+    
+    // MARK: - Altitude Support
+    
+    /// 高度表示が有効かどうか
+    var isAltitudeDisplayEnabled: Bool {
+        return settingsStorage.isAltitudeDisplayEnabled
+    }
+    
+    /// 高度の単位
+    var altitudeUnit: AltitudeUnit {
+        return settingsStorage.altitudeUnit
+    }
+    
+    /// 表示用の高度（設定された単位に変換済み）
+    var displayedAltitude: Double? {
+        guard let altitude = currentAltitude,
+              let accuracy = currentAltitudeAccuracy,
+              accuracy >= 0 else {
+            return nil
+        }
+        
+        switch altitudeUnit {
+        case .meters:
+            return altitude
+        case .feet:
+            return AltitudeUnit.convertToFeet(meters: altitude)
+        }
     }
 }

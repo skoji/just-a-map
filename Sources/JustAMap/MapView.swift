@@ -138,6 +138,21 @@ struct MapView: View {
             // コントロールボタン
             VStack {
                 Spacer()
+                
+                // 高度表示（有効な場合のみ）
+                if viewModel.isAltitudeDisplayEnabled {
+                    HStack {
+                        Spacer()
+                        AltitudeView(
+                            altitude: viewModel.displayedAltitude,
+                            unit: viewModel.altitudeUnit,
+                            isLoading: viewModel.isLoadingAddress && viewModel.currentAltitude == nil
+                        )
+                        Spacer()
+                    }
+                    .padding(.bottom, 16)
+                }
+                
                 HStack {
                     // 地図コントロール（左側）
                     MapControlsView(

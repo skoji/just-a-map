@@ -27,6 +27,10 @@ protocol MapSettingsStorageProtocol {
     var defaultIsNorthUp: Bool { get set }
     var addressFormat: AddressFormat { get set }
     
+    // 高度表示設定
+    var isAltitudeDisplayEnabled: Bool { get set }
+    var altitudeUnit: AltitudeUnit { get set }
+    
     // 従来のメソッド（互換性のため維持）
     func saveMapStyle(_ style: MapStyle)
     func loadMapStyle() -> MapStyle
@@ -56,6 +60,8 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         static let defaultMapStyle = "defaultMapStyle"
         static let defaultIsNorthUp = "defaultIsNorthUp"
         static let addressFormat = "addressFormat"
+        static let isAltitudeDisplayEnabled = "isAltitudeDisplayEnabled"
+        static let altitudeUnit = "altitudeUnit"
     }
     
     init(userDefaults: UserDefaultsProtocol = UserDefaults.standard) {
@@ -126,6 +132,31 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         }
         set {
             userDefaults.set(newValue.rawValue, forKey: Keys.addressFormat)
+        }
+    }
+    
+    var isAltitudeDisplayEnabled: Bool {
+        get {
+            if userDefaults.object(forKey: Keys.isAltitudeDisplayEnabled) != nil {
+                return userDefaults.bool(forKey: Keys.isAltitudeDisplayEnabled)
+            }
+            return false // デフォルトは無効
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.isAltitudeDisplayEnabled)
+        }
+    }
+    
+    var altitudeUnit: AltitudeUnit {
+        get {
+            guard let rawValue = userDefaults.string(forKey: Keys.altitudeUnit),
+                  let unit = AltitudeUnit(rawValue: rawValue) else {
+                return .meters // デフォルト
+            }
+            return unit
+        }
+        set {
+            userDefaults.set(newValue.rawValue, forKey: Keys.altitudeUnit)
         }
     }
     

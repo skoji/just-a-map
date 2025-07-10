@@ -39,6 +39,18 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
+    @Published var isAltitudeDisplayEnabled: Bool {
+        didSet {
+            settingsStorage.isAltitudeDisplayEnabled = isAltitudeDisplayEnabled
+        }
+    }
+    
+    @Published var altitudeUnit: AltitudeUnit {
+        didSet {
+            settingsStorage.altitudeUnit = altitudeUnit
+        }
+    }
+    
     init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), bundle: BundleProtocol = Bundle.main) {
         self.settingsStorage = settingsStorage
         self.bundle = bundle
@@ -46,6 +58,8 @@ class SettingsViewModel: ObservableObject {
         self.defaultMapStyle = settingsStorage.defaultMapStyle
         self.defaultIsNorthUp = settingsStorage.defaultIsNorthUp
         self.addressFormat = settingsStorage.addressFormat
+        self.isAltitudeDisplayEnabled = settingsStorage.isAltitudeDisplayEnabled
+        self.altitudeUnit = settingsStorage.altitudeUnit
         
         // Load version info from VersionInfo.plist if available
         if let versionInfoURL = bundle.url(forResource: "VersionInfo", withExtension: "plist"),

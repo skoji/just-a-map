@@ -13,6 +13,9 @@
 "settings.default_north_up" = "デフォルトでNorth Up";
 "settings.display_settings" = "表示設定";
 "settings.address_format" = "住所表示フォーマット";
+"settings.altitude_display" = "高度表示";
+"settings.show_altitude" = "高度を表示";
+"settings.altitude_unit" = "高度の単位";
 "settings.app_info" = "アプリ情報";
 "settings.app_version" = "バージョン";
 "settings.build_number" = "ビルド番号";
@@ -37,3 +40,7 @@
 
 /* App Info */
 "app_info.unknown" = "不明";
+
+/* AltitudeUnit */
+"altitude_unit.meters" = "メートル";
+"altitude_unit.feet" = "フィート";

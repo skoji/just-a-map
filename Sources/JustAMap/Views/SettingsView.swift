@@ -83,6 +83,24 @@ struct SettingsView: View {
                             .padding(.vertical, 4)
                         }
                     }
+                    
+                    // 高度表示設定
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("settings.altitude_display".localized)
+                            .font(.headline)
+                        
+                        // 高度表示ON/OFF
+                        Toggle("settings.show_altitude".localized, isOn: $viewModel.isAltitudeDisplayEnabled)
+                        
+                        // 高度の単位（高度表示が有効な場合のみ表示）
+                        if viewModel.isAltitudeDisplayEnabled {
+                            Picker("settings.altitude_unit".localized, selection: $viewModel.altitudeUnit) {
+                                ForEach(AltitudeUnit.allCases, id: \.self) { unit in
+                                    Text(unit.displayName).tag(unit)
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 Section("settings.app_info".localized) {
