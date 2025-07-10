@@ -47,3 +47,31 @@ jobs:
             ls -la xtool/ || echo "xtool directory not found"
             exit 1
           fi
+
+      - name: Comment @claude on PR failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const workflowRun = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            
+            const comment = `@claude The CI has failed on this PR. Please check the [workflow run](${workflowRun}) and help fix the issues.
+            
+            <details>
+            <summary>Failed Workflow Details</summary>
+            
+            - **Workflow**: ${context.workflow}
+            - **Run ID**: ${context.runId}
+            - **Run Number**: ${context.runNumber}
+            - **Event**: ${context.eventName}
+            - **SHA**: ${context.sha}
+            
+            </details>`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: comment
+            });
