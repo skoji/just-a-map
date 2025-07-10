@@ -52,6 +52,7 @@ struct AltitudeView: View {
                 .fill(Color(.systemBackground))
                 .shadow(radius: 2)
         )
+        .padding(.horizontal, 16)
     }
 }
 
