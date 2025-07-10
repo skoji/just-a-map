@@ -35,3 +35,8 @@
 "location.error.authorization_denied" = "Location access not permitted";
 "location.error.services_disabled" = "Location services are disabled";
 "location.error.update_failed" = "Failed to get location: %@";
+
+/* App Info */
+"settings.app_info" = "App Information";
+"settings.app_version" = "Version";
+"settings.build_number" = "Build Number";

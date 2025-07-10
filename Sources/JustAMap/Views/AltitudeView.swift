@@ -30,26 +30,26 @@ struct AltitudeView: View {
     }
     
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Image(systemName: "mountain.2.fill")
-                .font(.caption)
+                .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.secondary)
             
             if isLoading {
                 Text("---")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(size: 22, weight: .medium, design: .monospaced))
                     .foregroundColor(.secondary)
             } else {
                 Text(displayText)
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(size: 22, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
-        .shadow(radius: 1)
+        .cornerRadius(12)
+        .shadow(radius: 2)
     }
 }
 

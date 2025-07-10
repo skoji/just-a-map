@@ -35,3 +35,8 @@
 "location.error.authorization_denied" = "位置情報の使用が許可されていません";
 "location.error.services_disabled" = "位置情報サービスが無効になっています";
 "location.error.update_failed" = "位置情報の取得に失敗しました: %@";
+
+/* App Info */
+"settings.app_info" = "アプリ情報";
+"settings.app_version" = "バージョン";
+"settings.build_number" = "ビルド番号";
