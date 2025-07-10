@@ -63,7 +63,7 @@ final class AltitudeViewTests: XCTestCase {
         let unit = AltitudeUnit.meters
         
         // When
-        sut = AltitudeView(isLoading: isLoading, unit: unit)
+        sut = AltitudeView(unit: unit, isLoading: isLoading)
         
         // Then
         // The view should exist and not crash
@@ -73,7 +73,7 @@ final class AltitudeViewTests: XCTestCase {
     func testAltitudeViewFormatsMetersCorrectly() {
         // Given
         let altitude = 123.7
-        let verticalAccuracy = 5.0
+        let _ = 5.0
         let unit = AltitudeUnit.meters
         
         // When
@@ -86,7 +86,7 @@ final class AltitudeViewTests: XCTestCase {
     func testAltitudeViewFormatsFeetCorrectly() {
         // Given
         let altitude = 100.0 // meters
-        let verticalAccuracy = 5.0
+        let _ = 5.0
         let unit = AltitudeUnit.feet
         
         // When
