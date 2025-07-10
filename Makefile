@@ -14,6 +14,9 @@ ASSETS_SOURCE := Resources/source/Assets.xcassets
 ASSETS_BUILT := Resources/built
 APP_BUNDLE := xtool/JustAMap.app
 
+# Asset source files for dependency tracking
+ASSET_SOURCES := $(shell find $(ASSETS_SOURCE) -type f 2>/dev/null)
+
 # Device ID can be set via environment variable or command line
 # Example: make install DEVICE_ID=00008140-000C7D8E362A801C
 DEVICE_ID ?= 
@@ -60,17 +63,23 @@ distclean: clean
 	@echo "Cleaning everything including compiled assets..."
 	rm -rf $(ASSETS_BUILT)
 
-# Check if assets need to be recompiled
-check-assets:
-	@if [ ! -d "$(ASSETS_BUILT)" ]; then \
-		echo "Compiled assets not found. Running compile-assets..."; \
-		$(MAKE) compile-assets; \
-	elif [ -n "$$(find $(ASSETS_SOURCE) -newer $(ASSETS_BUILT)/Assets.car 2>/dev/null)" ]; then \
-		echo "Source assets have been updated. Recompiling..."; \
-		$(MAKE) compile-assets; \
-	else \
-		echo "Assets are up to date."; \
+# Assets.car dependency rule - compiles when source files change
+$(ASSETS_BUILT)/Assets.car: $(ASSET_SOURCES)
+ifdef HAS_ACTOOL
+	@echo "Compiling assets..."
+	@./scripts/compile-assets.sh
+else
+	@echo "Warning: actool is not available (not on macOS)."
+	@echo "Assets compilation requires macOS. Please compile on macOS when changing assets."
+	@if [ ! -f "$@" ]; then \
+		echo "Error: No compiled assets found and cannot compile on this platform."; \
+		exit 1; \
 	fi
+endif
+
+# Check if assets need to be recompiled
+check-assets: $(ASSETS_BUILT)/Assets.car
+	@echo "Assets are up to date."
 
 # Compile assets (macOS only)
 compile-assets:
