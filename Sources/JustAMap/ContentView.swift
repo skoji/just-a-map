@@ -1,6 +1,5 @@
 import SwiftUI
 
-broke!!()
 struct ContentView: View {
     var body: some View {
         MapView()
