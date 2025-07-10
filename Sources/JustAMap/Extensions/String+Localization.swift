@@ -4,7 +4,7 @@ import Foundation
 extension String {
     /// Returns the localized string for the current key
     var localized: String {
-        return NSLocalizedString(self, bundle: .main, comment: "")
+        return NSLocalizedString(self, bundle: Bundle.module, comment: "")
     }
     
     /// Returns the localized string with format arguments
