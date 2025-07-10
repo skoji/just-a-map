@@ -37,15 +37,15 @@ struct AltitudeView: View {
             
             if isLoading {
                 Text("---")
-                    .font(.system(size: 22, weight: .medium, design: .monospaced))
+                    .font(.system(size: 16, weight: .medium, design: .monospaced))
                     .foregroundColor(.secondary)
             } else {
                 Text(displayText)
-                    .font(.system(size: 22, weight: .medium, design: .monospaced))
+                    .font(.system(size: 16, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
         .cornerRadius(12)
