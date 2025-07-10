@@ -51,25 +51,15 @@ jobs:
             exit 1
           fi
 
-      - name: Add claude label on PR failure
+      - name: Comment @claude on PR failure
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = context.issue.number;
-            
-            // Add the 'claude' label to trigger Claude Code Action
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              labels: ['claude']
-            });
-            
-            // Also post a comment with workflow details
             const workflowRun = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             
-            const comment = `CI has failed on this PR. The 'claude' label has been added to trigger Claude Code Action.
+            const comment = `@claude The CI has failed on this PR. Please check the [workflow run](${workflowRun}) and help fix the issues.
             
             <details>
             <summary>Failed Workflow Details</summary>
@@ -79,7 +69,6 @@ jobs:
             - **Run Number**: ${context.runNumber}
             - **Event**: ${context.eventName}
             - **SHA**: ${context.sha}
-            - **[View workflow run](${workflowRun})**
             
             </details>`;
             
