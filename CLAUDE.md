@@ -298,6 +298,16 @@ let testScenarios = [
 - ロケール対応郵便番号表示（日本：〒付き、海外：プレーン）
 - (実装日: 2025-01-09, PR: #未定, [Issue #2](https://github.com/skoji/just-a-map/issues/2))
 
+### 速度表示機能
+- GPS速度情報を使用したリアルタイム速度表示
+- km/hとmphの単位選択機能
+- 設定画面での速度表示ON/OFF切り替え
+- 無効な速度値（負の値、GPS不可）の適切な処理
+- バイク走行中の視認性を考慮したUI設計
+- TDDアプローチによる包括的テストカバレッジ
+- 英語・日本語の国際化対応
+- (実装日: 2025-07-10, PR: #未定, [Issue #57](https://github.com/skoji/just-a-map/issues/57))
+
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
 - [SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)

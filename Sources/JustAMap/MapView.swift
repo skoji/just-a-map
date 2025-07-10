@@ -110,6 +110,15 @@ struct MapView: View {
                                 isLoading: viewModel.currentAltitude == nil
                             )
                         }
+                        
+                        // 速度表示（設定でONの場合のみ）
+                        if viewModel.isSpeedDisplayEnabled {
+                            SpeedView(
+                                speed: viewModel.currentSpeed,
+                                unit: viewModel.speedUnit,
+                                isLoading: viewModel.currentSpeed == nil
+                            )
+                        }
                     }
                     .padding(.leading, 20)
                     .padding(.top, 10)

@@ -12,6 +12,8 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var addressFormat: AddressFormat = .standard
     var isAltitudeDisplayEnabled: Bool = false
     var altitudeUnit: AltitudeUnit = .meters
+    var isSpeedDisplayEnabled: Bool = false
+    var speedUnit: SpeedUnit = .kmh
     
     private var firstLaunch = true
     var isFirstLaunchReturnValue: Bool?
@@ -89,5 +91,22 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     
     func loadAltitudeUnit() -> AltitudeUnit {
         return altitudeUnit
+    }
+    
+    // Speed Display methods
+    func saveSpeedDisplayEnabled(_ enabled: Bool) {
+        isSpeedDisplayEnabled = enabled
+    }
+    
+    func loadSpeedDisplayEnabled() -> Bool {
+        return isSpeedDisplayEnabled
+    }
+    
+    func saveSpeedUnit(_ unit: SpeedUnit) {
+        speedUnit = unit
+    }
+    
+    func loadSpeedUnit() -> SpeedUnit {
+        return speedUnit
     }
 }
