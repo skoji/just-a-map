@@ -38,13 +38,13 @@ enum SpeedUnit: String, CaseIterable {
     /// - Parameter kmh: km/h値
     /// - Returns: mph値
     static func convertKmhToMph(kmh: Double) -> Double {
-        return kmh * 0.621371
+        return kmh * 0.6213711922
     }
     
     /// mphをkm/hに変換
     /// - Parameter mph: mph値
     /// - Returns: km/h値
     static func convertMphToKmh(mph: Double) -> Double {
-        return mph / 0.621371
+        return mph * 1.609344
     }
 }

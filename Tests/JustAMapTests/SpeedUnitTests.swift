@@ -28,7 +28,7 @@ final class SpeedUnitTests: XCTestCase {
         XCTAssertEqual(unit.displayString(for: 50.0), "31mph") // 50 km/h ≈ 31 mph
         XCTAssertEqual(unit.displayString(for: 100.0), "62mph") // 100 km/h ≈ 62 mph
         XCTAssertEqual(unit.displayString(for: 0.0), "0mph")
-        XCTAssertEqual(unit.displayString(for: 160.9), "100mph") // 160.9 km/h ≈ 100 mph
+        XCTAssertEqual(unit.displayString(for: 160.9344), "100mph") // 160.9344 km/h ≈ 100 mph
     }
     
     func testInvalidSpeedDisplayString() {
@@ -42,7 +42,7 @@ final class SpeedUnitTests: XCTestCase {
         XCTAssertEqual(SpeedUnit.convertKmhToMph(kmh: 0.0), 0.0, accuracy: 0.01)
         XCTAssertEqual(SpeedUnit.convertKmhToMph(kmh: 100.0), 62.137, accuracy: 0.01)
         XCTAssertEqual(SpeedUnit.convertKmhToMph(kmh: 50.0), 31.069, accuracy: 0.01)
-        XCTAssertEqual(SpeedUnit.convertKmhToMph(kmh: 160.9), 100.0, accuracy: 0.01)
+        XCTAssertEqual(SpeedUnit.convertKmhToMph(kmh: 160.9344), 100.0, accuracy: 0.01)
     }
     
     func testConvertMphToKmh() {
@@ -50,7 +50,7 @@ final class SpeedUnitTests: XCTestCase {
         XCTAssertEqual(SpeedUnit.convertMphToKmh(mph: 0.0), 0.0, accuracy: 0.01)
         XCTAssertEqual(SpeedUnit.convertMphToKmh(mph: 62.137), 100.0, accuracy: 0.01)
         XCTAssertEqual(SpeedUnit.convertMphToKmh(mph: 31.069), 50.0, accuracy: 0.01)
-        XCTAssertEqual(SpeedUnit.convertMphToKmh(mph: 100.0), 160.9, accuracy: 0.01)
+        XCTAssertEqual(SpeedUnit.convertMphToKmh(mph: 100.0), 160.9344, accuracy: 0.01)
     }
     
     func testCaseIterable() {
