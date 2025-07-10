@@ -23,6 +23,7 @@ class MapViewModel: ObservableObject {
     @Published var isLoadingMapCenterAddress = false
     @Published var currentAltitude: Double?
     @Published var currentVerticalAccuracy: Double?
+    @Published var currentSpeed: Double?
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -94,6 +95,16 @@ class MapViewModel: ObservableObject {
     /// 高度の単位
     var altitudeUnit: AltitudeUnit {
         return settingsStorage.altitudeUnit
+    }
+    
+    /// 速度表示が有効かどうか
+    var isSpeedDisplayEnabled: Bool {
+        return settingsStorage.isSpeedDisplayEnabled
+    }
+    
+    /// 速度の単位
+    var speedUnit: SpeedUnit {
+        return settingsStorage.speedUnit
     }
     
     /// 高度の表示文字列を取得
@@ -272,6 +283,7 @@ extension MapViewModel: LocationManagerDelegate {
             self.userLocation = location
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
+            self.currentSpeed = location.speed
             self.updateRegionIfFollowing(location: location)
             // 位置情報が正常に取得できたらエラーをクリア
             if self.locationError != nil && self.locationError != .authorizationDenied {

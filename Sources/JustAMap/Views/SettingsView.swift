@@ -94,6 +94,17 @@ struct SettingsView: View {
                             Text("settings.altitude_unit_feet".localized).tag(AltitudeUnit.feet)
                         }
                     }
+                    
+                    // 速度表示設定
+                    Toggle("settings.speed_display".localized, isOn: $viewModel.isSpeedDisplayEnabled)
+                    
+                    // 速度単位設定（速度表示がONの場合のみ表示）
+                    if viewModel.isSpeedDisplayEnabled {
+                        Picker("settings.speed_unit".localized, selection: $viewModel.speedUnit) {
+                            Text("settings.speed_unit_kmh".localized).tag(SpeedUnit.kmh)
+                            Text("settings.speed_unit_mph".localized).tag(SpeedUnit.mph)
+                        }
+                    }
                 }
                 
                 Section("settings.app_info".localized) {
