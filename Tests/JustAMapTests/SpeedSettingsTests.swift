@@ -34,12 +34,12 @@ final class SpeedSettingsTests: XCTestCase {
         
         // Then
         XCTAssertEqual(sut.isSpeedDisplayEnabled, expectedValue)
-        XCTAssertTrue(mockUserDefaults.data["isSpeedDisplayEnabled"] as! Bool)
+        XCTAssertTrue(mockUserDefaults.storage["isSpeedDisplayEnabled"] as! Bool)
     }
     
     func testSpeedDisplayEnabledLoadFromStorage() {
         // Given
-        mockUserDefaults.data["isSpeedDisplayEnabled"] = true
+        mockUserDefaults.storage["isSpeedDisplayEnabled"] = true
         
         // When
         let isEnabled = sut.isSpeedDisplayEnabled
@@ -65,12 +65,12 @@ final class SpeedSettingsTests: XCTestCase {
         
         // Then
         XCTAssertEqual(sut.speedUnit, expectedUnit)
-        XCTAssertEqual(mockUserDefaults.data["speedUnit"] as! String, "mph")
+        XCTAssertEqual(mockUserDefaults.storage["speedUnit"] as! String, "mph")
     }
     
     func testSpeedUnitLoadFromStorage() {
         // Given
-        mockUserDefaults.data["speedUnit"] = "mph"
+        mockUserDefaults.storage["speedUnit"] = "mph"
         
         // When
         let speedUnit = sut.speedUnit
@@ -81,7 +81,7 @@ final class SpeedSettingsTests: XCTestCase {
     
     func testSpeedUnitLoadInvalidFromStorage() {
         // Given
-        mockUserDefaults.data["speedUnit"] = "invalid"
+        mockUserDefaults.storage["speedUnit"] = "invalid"
         
         // When
         let speedUnit = sut.speedUnit
@@ -99,7 +99,7 @@ final class SpeedSettingsTests: XCTestCase {
         
         // Then
         XCTAssertTrue(sut.loadSpeedDisplayEnabled())
-        XCTAssertTrue(mockUserDefaults.data["isSpeedDisplayEnabled"] as! Bool)
+        XCTAssertTrue(mockUserDefaults.storage["isSpeedDisplayEnabled"] as! Bool)
     }
     
     func testLoadSpeedDisplayEnabledWhenNotSet() {
@@ -121,7 +121,7 @@ final class SpeedSettingsTests: XCTestCase {
         
         // Then
         XCTAssertEqual(sut.loadSpeedUnit(), expectedUnit)
-        XCTAssertEqual(mockUserDefaults.data["speedUnit"] as! String, "mph")
+        XCTAssertEqual(mockUserDefaults.storage["speedUnit"] as! String, "mph")
     }
     
     func testLoadSpeedUnitWhenNotSet() {
