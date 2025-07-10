@@ -10,7 +10,7 @@ on:
   pull_request_review:
     types: [submitted]
   workflow_run:
-    workflows: ["iOS Build"]
+    workflows: ["iOS build and test (macOS)"]
     types: [completed]
 
 jobs:
