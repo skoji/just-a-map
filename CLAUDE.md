@@ -104,16 +104,14 @@ JustAMap/
 │   └── SettingsView.swift
 ├── Extensions/
 │   └── String+Localization.swift
-└── Assets.xcassets/
-    ├── AppIcon.appiconset/
-    └── AccentColor.colorset/
+├── Assets.xcassets/
+│   ├── AppIcon.appiconset/
+│   └── AccentColor.colorset/
+├── ja.lproj/
+│   └── Localizable.strings
+└── en.lproj/
+    └── Localizable.strings
 
-Resources/
-└── Localization/
-    ├── ja.lproj/
-    │   └── Localizable.strings
-    └── en.lproj/
-        └── Localizable.strings
 
 JustAMapTests/
 ├── JustAMapTests.swift
