@@ -4,4 +4,5 @@ xcrun actool Resources/source/Assets.xcassets \
       --platform iphoneos \
       --app-icon AppIcon \
       --minimum-deployment-target $MIN_OS \
-      --enable-on-demand-resources NO 
+      --enable-on-demand-resources NO \
+      --output-partial-info-plist Resources/built/AppIcon.plist 
