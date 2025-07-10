@@ -2,14 +2,14 @@ import XCTest
 import CoreLocation
 @testable import JustAMap
 
+@MainActor
 final class MapViewModelAltitudeTests: XCTestCase {
     var sut: MapViewModel!
     var mockLocationManager: MockLocationManager!
     var mockGeocodeService: MockGeocodeService!
     var mockSettingsStorage: MockMapSettingsStorage!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         mockLocationManager = MockLocationManager()
         mockGeocodeService = MockGeocodeService()
         mockSettingsStorage = MockMapSettingsStorage()
@@ -21,12 +21,11 @@ final class MapViewModelAltitudeTests: XCTestCase {
         )
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         sut = nil
         mockLocationManager = nil
         mockGeocodeService = nil
         mockSettingsStorage = nil
-        super.tearDown()
     }
     
     func testMapViewModelInitialAltitudeState() {
