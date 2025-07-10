@@ -13,6 +13,10 @@
 "settings.default_north_up" = "Default to North Up";
 "settings.display_settings" = "Display Settings";
 "settings.address_format" = "Address Display Format";
+"settings.altitude_display" = "Show Altitude";
+"settings.altitude_unit" = "Altitude Unit";
+"settings.altitude_unit_meters" = "Meters (m)";
+"settings.altitude_unit_feet" = "Feet (ft)";
 
 /* AddressFormat */
 "address_format.standard" = "Standard";

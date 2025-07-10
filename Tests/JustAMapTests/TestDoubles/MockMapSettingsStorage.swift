@@ -10,6 +10,8 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     var defaultIsNorthUp: Bool = true
     var defaultZoomIndex: Int = 5
     var addressFormat: AddressFormat = .standard
+    var isAltitudeDisplayEnabled: Bool = false
+    var altitudeUnit: AltitudeUnit = .meters
     
     private var firstLaunch = true
     var isFirstLaunchReturnValue: Bool?
@@ -70,5 +72,22 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
     
     func loadZoomIndex() -> Int? {
         return zoomIndex
+    }
+    
+    // Altitude Display methods
+    func saveAltitudeDisplayEnabled(_ enabled: Bool) {
+        isAltitudeDisplayEnabled = enabled
+    }
+    
+    func loadAltitudeDisplayEnabled() -> Bool {
+        return isAltitudeDisplayEnabled
+    }
+    
+    func saveAltitudeUnit(_ unit: AltitudeUnit) {
+        altitudeUnit = unit
+    }
+    
+    func loadAltitudeUnit() -> AltitudeUnit {
+        return altitudeUnit
     }
 }

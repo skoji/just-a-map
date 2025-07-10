@@ -27,6 +27,10 @@ protocol MapSettingsStorageProtocol {
     var defaultIsNorthUp: Bool { get set }
     var addressFormat: AddressFormat { get set }
     
+    // 高度表示設定
+    var isAltitudeDisplayEnabled: Bool { get set }
+    var altitudeUnit: AltitudeUnit { get set }
+    
     // 従来のメソッド（互換性のため維持）
     func saveMapStyle(_ style: MapStyle)
     func loadMapStyle() -> MapStyle
@@ -36,6 +40,12 @@ protocol MapSettingsStorageProtocol {
     func loadZoomLevel() -> MKCoordinateSpan?
     func saveZoomIndex(_ index: Int)
     func loadZoomIndex() -> Int?
+    
+    // 高度表示設定
+    func saveAltitudeDisplayEnabled(_ enabled: Bool)
+    func loadAltitudeDisplayEnabled() -> Bool
+    func saveAltitudeUnit(_ unit: AltitudeUnit)
+    func loadAltitudeUnit() -> AltitudeUnit
     
     // 初回起動チェック
     func isFirstLaunch() -> Bool
@@ -56,6 +66,8 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         static let defaultMapStyle = "defaultMapStyle"
         static let defaultIsNorthUp = "defaultIsNorthUp"
         static let addressFormat = "addressFormat"
+        static let isAltitudeDisplayEnabled = "isAltitudeDisplayEnabled"
+        static let altitudeUnit = "altitudeUnit"
     }
     
     init(userDefaults: UserDefaultsProtocol = UserDefaults.standard) {
@@ -129,6 +141,16 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         }
     }
     
+    var isAltitudeDisplayEnabled: Bool {
+        get { loadAltitudeDisplayEnabled() }
+        set { saveAltitudeDisplayEnabled(newValue) }
+    }
+    
+    var altitudeUnit: AltitudeUnit {
+        get { loadAltitudeUnit() }
+        set { saveAltitudeUnit(newValue) }
+    }
+    
     // MARK: - Map Style
     
     func saveMapStyle(_ style: MapStyle) {
@@ -191,6 +213,31 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
             return userDefaults.integer(forKey: Keys.zoomIndex)
         }
         return nil
+    }
+    
+    // MARK: - Altitude Display
+    
+    func saveAltitudeDisplayEnabled(_ enabled: Bool) {
+        userDefaults.set(enabled, forKey: Keys.isAltitudeDisplayEnabled)
+    }
+    
+    func loadAltitudeDisplayEnabled() -> Bool {
+        if userDefaults.object(forKey: Keys.isAltitudeDisplayEnabled) != nil {
+            return userDefaults.bool(forKey: Keys.isAltitudeDisplayEnabled)
+        }
+        return false // デフォルトはOFF
+    }
+    
+    func saveAltitudeUnit(_ unit: AltitudeUnit) {
+        userDefaults.set(unit.rawValue, forKey: Keys.altitudeUnit)
+    }
+    
+    func loadAltitudeUnit() -> AltitudeUnit {
+        guard let rawValue = userDefaults.string(forKey: Keys.altitudeUnit),
+              let unit = AltitudeUnit(rawValue: rawValue) else {
+            return .meters // デフォルトはメートル
+        }
+        return unit
     }
     
     // MARK: - First Launch Check
