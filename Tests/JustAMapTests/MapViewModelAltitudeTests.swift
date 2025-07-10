@@ -38,7 +38,7 @@ final class MapViewModelAltitudeTests: XCTestCase {
         XCTAssertNil(verticalAccuracy)
     }
     
-    func testMapViewModelUpdatesAltitudeOnLocationUpdate() {
+    func testMapViewModelUpdatesAltitudeOnLocationUpdate() async throws {
         // Given
         let expectedAltitude = 123.5
         let expectedAccuracy = 5.0
@@ -53,12 +53,15 @@ final class MapViewModelAltitudeTests: XCTestCase {
         // When
         mockLocationManager.simulateLocationUpdate(location)
         
+        // Wait for async location update to complete
+        await Task.yield()
+        
         // Then
         XCTAssertEqual(sut.currentAltitude, expectedAltitude)
         XCTAssertEqual(sut.currentVerticalAccuracy, expectedAccuracy)
     }
     
-    func testMapViewModelHandlesInvalidAltitude() {
+    func testMapViewModelHandlesInvalidAltitude() async throws {
         // Given
         let location = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
@@ -70,6 +73,9 @@ final class MapViewModelAltitudeTests: XCTestCase {
         
         // When
         mockLocationManager.simulateLocationUpdate(location)
+        
+        // Wait for async location update to complete
+        await Task.yield()
         
         // Then
         XCTAssertEqual(sut.currentAltitude, 100.0) // Altitude value is still stored

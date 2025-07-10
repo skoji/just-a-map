@@ -54,7 +54,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         XCTAssertEqual(mockSettingsStorage.altitudeUnit, .feet)
     }
     
-    func testAltitudeDataFlowFromGPSToDisplay() {
+    func testAltitudeDataFlowFromGPSToDisplay() async throws {
         // Given
         settingsViewModel.isAltitudeDisplayEnabled = true
         settingsViewModel.altitudeUnit = .meters
@@ -70,6 +70,9 @@ final class AltitudeIntegrationTests: XCTestCase {
         // When - GPS位置情報が更新される
         mockLocationManager.simulateLocationUpdate(location)
         
+        // Wait for async location update to complete
+        await Task.yield()
+        
         // Then - MapViewModelで高度データが取得される
         XCTAssertEqual(mapViewModel.currentAltitude, 100.0)
         XCTAssertEqual(mapViewModel.currentVerticalAccuracy, 3.0)
@@ -83,7 +86,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         XCTAssertEqual(displayString, "100m")
     }
     
-    func testAltitudeViewCreationWithIntegratedData() {
+    func testAltitudeViewCreationWithIntegratedData() async throws {
         // Given
         settingsViewModel.isAltitudeDisplayEnabled = true
         settingsViewModel.altitudeUnit = .feet
@@ -99,6 +102,9 @@ final class AltitudeIntegrationTests: XCTestCase {
         // When
         mockLocationManager.simulateLocationUpdate(location)
         
+        // Wait for async location update to complete
+        await Task.yield()
+        
         // Then - AltitudeViewが正しいデータで作成される
         let altitudeView = AltitudeView(
             altitude: mapViewModel.currentAltitude,
@@ -111,7 +117,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         XCTAssertEqual(mapViewModel.altitudeUnit.displayString(for: 100.0), "328ft")
     }
     
-    func testAltitudeDisabledState() {
+    func testAltitudeDisabledState() async throws {
         // Given
         settingsViewModel.isAltitudeDisplayEnabled = false
         
@@ -126,12 +132,15 @@ final class AltitudeIntegrationTests: XCTestCase {
         // When
         mockLocationManager.simulateLocationUpdate(location)
         
+        // Wait for async location update to complete
+        await Task.yield()
+        
         // Then - 高度データは取得されるが、表示は無効
         XCTAssertEqual(mapViewModel.currentAltitude, 100.0) // データは保存される
         XCTAssertFalse(mapViewModel.isAltitudeDisplayEnabled) // 表示は無効
     }
     
-    func testInvalidAltitudeHandling() {
+    func testInvalidAltitudeHandling() async throws {
         // Given
         settingsViewModel.isAltitudeDisplayEnabled = true
         
@@ -145,6 +154,9 @@ final class AltitudeIntegrationTests: XCTestCase {
         
         // When
         mockLocationManager.simulateLocationUpdate(location)
+        
+        // Wait for async location update to complete
+        await Task.yield()
         
         // Then
         let displayString = mapViewModel.getAltitudeDisplayString(
