@@ -51,7 +51,7 @@ final class MapViewModelAltitudeTests: XCTestCase {
         )
         
         // When
-        sut.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then
         XCTAssertEqual(sut.currentAltitude, expectedAltitude)
@@ -69,7 +69,7 @@ final class MapViewModelAltitudeTests: XCTestCase {
         )
         
         // When
-        sut.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then
         XCTAssertEqual(sut.currentAltitude, 100.0) // Altitude value is still stored

@@ -68,7 +68,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         )
         
         // When - GPS位置情報が更新される
-        mapViewModel.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then - MapViewModelで高度データが取得される
         XCTAssertEqual(mapViewModel.currentAltitude, 100.0)
@@ -97,7 +97,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         )
         
         // When
-        mapViewModel.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then - AltitudeViewが正しいデータで作成される
         let altitudeView = AltitudeView(
@@ -124,7 +124,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         )
         
         // When
-        mapViewModel.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then - 高度データは取得されるが、表示は無効
         XCTAssertEqual(mapViewModel.currentAltitude, 100.0) // データは保存される
@@ -144,7 +144,7 @@ final class AltitudeIntegrationTests: XCTestCase {
         )
         
         // When
-        mapViewModel.locationManager(mockLocationManager, didUpdateLocation: location)
+        mockLocationManager.simulateLocationUpdate(location)
         
         // Then
         let displayString = mapViewModel.getAltitudeDisplayString(
