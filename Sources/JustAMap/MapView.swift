@@ -95,10 +95,24 @@ struct MapView: View {
             VStack {
                 // 住所表示と設定ボタン
                 HStack(alignment: .top) {
-                    AddressView(
-                        formattedAddress: viewModel.isFollowingUser ? viewModel.formattedAddress : viewModel.mapCenterAddress,
-                        isLoading: viewModel.isFollowingUser ? viewModel.isLoadingAddress : viewModel.isLoadingMapCenterAddress
-                    )
+                    VStack(alignment: .leading, spacing: 8) {
+                        AddressView(
+                            formattedAddress: viewModel.isFollowingUser ? viewModel.formattedAddress : viewModel.mapCenterAddress,
+                            isLoading: viewModel.isFollowingUser ? viewModel.isLoadingAddress : viewModel.isLoadingMapCenterAddress
+                        )
+                        
+                        // 高度表示（設定でONの場合のみ）
+                        if viewModel.isAltitudeDisplayEnabled {
+                            AltitudeView(
+                                altitude: viewModel.currentAltitude,
+                                verticalAccuracy: viewModel.currentVerticalAccuracy,
+                                unit: viewModel.altitudeUnit,
+                                isLoading: viewModel.currentAltitude == nil
+                            )
+                        }
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 10)
                     
                     Spacer()
                     

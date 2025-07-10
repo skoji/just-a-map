@@ -83,6 +83,17 @@ struct SettingsView: View {
                             .padding(.vertical, 4)
                         }
                     }
+                    
+                    // 高度表示設定
+                    Toggle("settings.altitude_display".localized, isOn: $viewModel.isAltitudeDisplayEnabled)
+                    
+                    // 高度単位設定（高度表示がONの場合のみ表示）
+                    if viewModel.isAltitudeDisplayEnabled {
+                        Picker("settings.altitude_unit".localized, selection: $viewModel.altitudeUnit) {
+                            Text("settings.altitude_unit_meters".localized).tag(AltitudeUnit.meters)
+                            Text("settings.altitude_unit_feet".localized).tag(AltitudeUnit.feet)
+                        }
+                    }
                 }
                 
                 Section("settings.app_info".localized) {

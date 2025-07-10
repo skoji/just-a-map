@@ -21,6 +21,8 @@ class MapViewModel: ObservableObject {
     @Published var mapCenterCoordinate = CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503)
     @Published var mapCenterAddress: FormattedAddress?
     @Published var isLoadingMapCenterAddress = false
+    @Published var currentAltitude: Double?
+    @Published var currentVerticalAccuracy: Double?
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -82,6 +84,29 @@ class MapViewModel: ObservableObject {
         settingsStorage.saveMapStyle(mapControlsViewModel.currentMapStyle)
         settingsStorage.saveMapOrientation(isNorthUp: mapControlsViewModel.isNorthUp)
         settingsStorage.saveZoomIndex(mapControlsViewModel.currentZoomIndex)
+    }
+    
+    /// 高度表示が有効かどうか
+    var isAltitudeDisplayEnabled: Bool {
+        return settingsStorage.isAltitudeDisplayEnabled
+    }
+    
+    /// 高度の単位
+    var altitudeUnit: AltitudeUnit {
+        return settingsStorage.altitudeUnit
+    }
+    
+    /// 高度の表示文字列を取得
+    /// - Parameters:
+    ///   - altitude: 高度（メートル）
+    ///   - verticalAccuracy: 垂直精度
+    ///   - unit: 表示単位
+    /// - Returns: 表示用文字列
+    func getAltitudeDisplayString(altitude: Double, verticalAccuracy: Double, unit: AltitudeUnit) -> String {
+        guard verticalAccuracy >= 0 else {
+            return "---" // 無効な精度の場合
+        }
+        return unit.displayString(for: altitude)
     }
     
     /// 設定変更時に呼び出される（住所の再フォーマットが必要な場合）
@@ -245,6 +270,8 @@ extension MapViewModel: LocationManagerDelegate {
     nonisolated func locationManager(_ manager: LocationManagerProtocol, didUpdateLocation location: CLLocation) {
         Task { @MainActor in
             self.userLocation = location
+            self.currentAltitude = location.altitude
+            self.currentVerticalAccuracy = location.verticalAccuracy
             self.updateRegionIfFollowing(location: location)
             // 位置情報が正常に取得できたらエラーをクリア
             if self.locationError != nil && self.locationError != .authorizationDenied {
