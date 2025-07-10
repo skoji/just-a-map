@@ -4,7 +4,12 @@ import Foundation
 extension String {
     /// Returns the localized string for the current key
     var localized: String {
-        return NSLocalizedString(self, bundle: Bundle.module, comment: "")
+        // Try Bundle.module first (for Swift Package Manager), then fallback to Bundle.main (for iOS apps)
+        let moduleString = NSLocalizedString(self, bundle: Bundle.module, comment: "")
+        if moduleString != self {
+            return moduleString
+        }
+        return NSLocalizedString(self, bundle: Bundle.main, comment: "")
     }
     
     /// Returns the localized string with format arguments
