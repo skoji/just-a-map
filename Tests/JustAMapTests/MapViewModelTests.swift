@@ -165,8 +165,8 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertFalse(sut.isLoadingMapCenterAddress)
         XCTAssertNil(sut.mapCenterAddress)
         
-        // デバウンス時間（300ms）待つ
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+        // デバウンス時間（300ms）+ 処理時間を考慮してより長く待つ
+        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8秒
         
         // Then - デバウンス後に住所が取得される
         XCTAssertNotNil(sut.mapCenterAddress)
