@@ -303,6 +303,9 @@ final class MapViewModelTests: XCTestCase {
         // When - 位置情報を更新して速度を設定
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
         
+        // Wait for async operation to complete
+        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        
         // Then - 速度が設定されていることを確認
         XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
         
