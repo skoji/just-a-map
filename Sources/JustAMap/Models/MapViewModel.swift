@@ -39,6 +39,10 @@ class MapViewModel: ObservableObject {
     private var mapCenterGeocodingTask: Task<Void, Never>?
     private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
     
+    // 速度リセット用のタイマー
+    private var speedResetTask: Task<Void, Never>?
+    private let speedResetDelay: UInt64 = 3_000_000_000 // 3秒
+    
     // 地図の向き切り替え時のコールバック（テスト用）
     var onOrientationToggle: (() -> Void)?
     
@@ -142,6 +146,7 @@ class MapViewModel: ObservableObject {
         locationManager.stopLocationUpdates()
         geocodingTask?.cancel()
         mapCenterGeocodingTask?.cancel()
+        speedResetTask?.cancel()
     }
     
     /// アプリがバックグラウンドに入った時
@@ -274,6 +279,23 @@ class MapViewModel: ObservableObject {
             }
         }
     }
+    
+    /// 速度リセットタイマーを開始/再開
+    private func resetSpeedTimer() {
+        // 既存のタイマーをキャンセル
+        speedResetTask?.cancel()
+        
+        // 新しいタイマーを開始
+        speedResetTask = Task {
+            // 指定時間待機
+            try? await Task.sleep(nanoseconds: speedResetDelay)
+            
+            // キャンセルされていない場合のみ速度を0にリセット
+            guard !Task.isCancelled else { return }
+            
+            self.currentSpeed = 0.0
+        }
+    }
 }
 
 // MARK: - LocationManagerDelegate
@@ -296,6 +318,9 @@ extension MapViewModel: LocationManagerDelegate {
             let speed = max(0, location.speed * 3.6) // m/s to km/h, 負の値は0に
             let zoomDistance = self.mapControlsViewModel.currentAltitude
             manager.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+            
+            // 速度リセットタイマーを再開
+            self.resetSpeedTimer()
         }
     }
     
