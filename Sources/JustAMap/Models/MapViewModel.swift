@@ -42,6 +42,7 @@ class MapViewModel: ObservableObject {
     // 速度リセット用のタイマー
     private var speedResetTask: Task<Void, Never>?
     private let speedResetDelay: UInt64 = 3_000_000_000 // 3秒
+    private let speedStopThreshold: Double = 0.5 // 0.5 m/s (1.8 km/h) 未満を停止とみなす
     
     // 地図の向き切り替え時のコールバック（テスト用）
     var onOrientationToggle: (() -> Void)?
@@ -305,7 +306,14 @@ extension MapViewModel: LocationManagerDelegate {
             self.userLocation = location
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
-            self.currentSpeed = location.speed
+            
+            // 速度が有効な場合のみ更新（無効値-1の場合は前の値を保持）
+            if location.speed >= 0 {
+                self.currentSpeed = location.speed
+                // 有効な速度値を受信した場合のみタイマーをリセット
+                self.resetSpeedTimer()
+            }
+            
             self.updateRegionIfFollowing(location: location)
             // 位置情報が正常に取得できたらエラーをクリア
             if self.locationError != nil && self.locationError != .authorizationDenied {
@@ -315,12 +323,11 @@ extension MapViewModel: LocationManagerDelegate {
             self.fetchAddress(for: location)
             
             // 速度とズームレベルに基づいて更新頻度を調整
-            let speed = max(0, location.speed * 3.6) // m/s to km/h, 負の値は0に
+            // 速度が無効な場合は、現在の速度値を使用（前回の有効な値）
+            let speedForAdjustment = location.speed >= 0 ? location.speed : (self.currentSpeed ?? 0)
+            let speed = max(0, speedForAdjustment * 3.6) // m/s to km/h, 負の値は0に
             let zoomDistance = self.mapControlsViewModel.currentAltitude
             manager.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
-            
-            // 速度リセットタイマーを再開
-            self.resetSpeedTimer()
         }
     }
     
