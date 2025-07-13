@@ -36,6 +36,12 @@ protocol LocationManagerDelegate: AnyObject {
     
     /// 認証ステータスが変更された時
     func locationManager(_ manager: LocationManagerProtocol, didChangeAuthorization status: CLAuthorizationStatus)
+    
+    /// 位置情報の更新が自動的に一時停止された時（デバイスが停止状態と判定）
+    func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol)
+    
+    /// 位置情報の更新が自動的に再開された時（デバイスが移動開始と判定）
+    func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol)
 }
 
 /// 位置情報関連のエラー

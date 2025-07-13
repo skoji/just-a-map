@@ -39,9 +39,9 @@ class MapViewModel: ObservableObject {
     private var mapCenterGeocodingTask: Task<Void, Never>?
     private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
     
-    // 速度リセット用のタイマー
+    // 速度リセット用のタイマー（バックアップ機能）
     private var speedResetTask: Task<Void, Never>?
-    private let speedResetDelay: UInt64 = 3_000_000_000 // 3秒
+    private let speedResetDelay: UInt64 = 10_000_000_000 // 10秒（一時停止検知をメインとし、タイマーはバックアップ）
     private let speedStopThreshold: Double = 0.5 // 0.5 m/s (1.8 km/h) 未満を停止とみなす
     
     // 地図の向き切り替え時のコールバック（テスト用）
@@ -310,9 +310,10 @@ extension MapViewModel: LocationManagerDelegate {
             // 速度が有効な場合のみ更新（無効値-1の場合は前の値を保持）
             if location.speed >= 0 {
                 self.currentSpeed = location.speed
-                // 有効な速度値を受信した場合のみタイマーをリセット
-                self.resetSpeedTimer()
             }
+            
+            // 任意の位置情報更新でタイマーをリセット（GPS一時的精度低下に対応）
+            self.resetSpeedTimer()
             
             self.updateRegionIfFollowing(location: location)
             // 位置情報が正常に取得できたらエラーをクリア
@@ -353,6 +354,22 @@ extension MapViewModel: LocationManagerDelegate {
             @unknown default:
                 break
             }
+        }
+    }
+    
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {
+        Task { @MainActor in
+            // デバイスが停止状態と判定された時：速度を0にリセット
+            self.currentSpeed = 0.0
+            // 速度リセットタイマーもキャンセル（不要になったため）
+            self.speedResetTask?.cancel()
+        }
+    }
+    
+    nonisolated func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {
+        Task { @MainActor in
+            // デバイスが移動開始と判定された時：特に何もしない
+            // 次の位置情報更新で自動的に速度が更新される
         }
     }
     
