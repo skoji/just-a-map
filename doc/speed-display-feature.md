@@ -253,3 +253,68 @@ if location.speed >= 0 {
 ```
 
 これにより、GPS精度が一時的に悪化しても、前の有効な速度値が表示され続けるようになりました。
+
+### Issue #73: 走行中にランダムに速度が0になる問題
+**修正日**: 2025-07-13
+**PR**: #未定
+
+**問題**:
+- Issue #71でタイマーベースの速度リセットを実装したが、走行中でも速度が0にリセットされることがある
+- 根本原因：iOSの `pausesLocationUpdatesAutomatically = true` 設定により、システムが位置情報更新を一時停止することがある
+
+**解決策**:
+- Apple の純正 Location API を使用した実装に変更
+- `locationManagerDidPauseLocationUpdates` デリゲートメソッドで停止を検知
+- `locationManagerDidResumeLocationUpdates` デリゲートメソッドで再開を検知
+- タイマーベースの実装を完全に削除
+
+**実装詳細**:
+
+1. **LocationManagerProtocol に pause/resume デリゲートを追加**:
+```swift
+protocol LocationManagerDelegate: AnyObject {
+    // 既存のデリゲート...
+    
+    /// 位置情報の更新が一時停止された時
+    func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol)
+    
+    /// 位置情報の更新が再開された時
+    func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol)
+}
+```
+
+2. **MapViewModel でのタイマー削除と pause/resume 処理**:
+```swift
+// タイマー関連のコードを削除
+// private var speedResetTask: Task<Void, Never>?
+// private let speedResetDelay: UInt64 = 10_000_000_000
+
+// pause/resume の状態管理
+private var isLocationPaused = false
+
+func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {
+    Task { @MainActor in
+        self.isLocationPaused = true
+        // 位置情報更新が一時停止したら即座に速度を0にリセット
+        self.currentSpeed = 0.0
+    }
+}
+
+func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {
+    Task { @MainActor in
+        self.isLocationPaused = false
+        // 位置情報更新が再開されたので、次の更新を待つ
+    }
+}
+```
+
+**利点**:
+- Apple の公式 API を使用することで、より正確な停止検知が可能
+- タイマーベースの実装よりもシンプルで信頼性が高い
+- バッテリー効率も向上（不要なタイマー処理がない）
+- iOS の位置情報システムと完全に同期した動作
+
+**テスト**:
+- MockLocationManager に `simulateLocationUpdatesPaused()` と `simulateLocationUpdatesResumed()` を追加
+- MapViewModelTests で pause/resume 時の速度リセット動作をテスト
+- タイマーベースのテストは削除
