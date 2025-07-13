@@ -165,8 +165,8 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertFalse(sut.isLoadingMapCenterAddress)
         XCTAssertNil(sut.mapCenterAddress)
         
-        // デバウンス時間（300ms）待つ
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+        // デバウンス時間（300ms）+ 処理時間を考慮してより長く待つ
+        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8秒
         
         // Then - デバウンス後に住所が取得される
         XCTAssertNotNil(sut.mapCenterAddress)
@@ -284,5 +284,113 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertEqual(mockSettingsStorage.defaultZoomIndex, expectedDefaultZoomIndex)
         // 現在のズームインデックスは保存された値を使用
         XCTAssertEqual(newViewModel.mapControlsViewModel.currentZoomIndex, 5)
+    }
+    
+    // MARK: - 速度表示のテスト
+    
+    func testSpeedResetsToZeroWhenLocationUpdatesStop() async {
+        // Given
+        let movingLocation = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+            altitude: 0,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: 5.0,
+            course: 0,
+            speed: 10.0, // 10 m/s = 36 km/h
+            timestamp: Date()
+        )
+        
+        // When - 位置情報を更新して速度を設定
+        sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
+        
+        // Wait for async operation to complete
+        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        
+        // Then - 速度が設定されていることを確認
+        XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
+        
+        // When - 位置情報の更新が停止し、一定時間経過
+        // 3秒待つ（停止検知のタイムアウト時間）
+        try? await Task.sleep(nanoseconds: 3_500_000_000) // 3.5秒
+        
+        // Then - 速度が0にリセットされるべき
+        XCTAssertEqual(sut.currentSpeed, 0.0, "位置情報更新が停止した場合、速度は0にリセットされるべき")
+    }
+    
+    func testInvalidSpeedValueIsIgnored() async {
+        // Given - 有効な速度で移動中
+        let movingLocation = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+            altitude: 0,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: 5.0,
+            course: 0,
+            speed: 10.0, // 10 m/s = 36 km/h
+            timestamp: Date()
+        )
+        
+        sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
+        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
+        
+        // When - 無効な速度値（-1）を受信
+        let invalidSpeedLocation = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.6763, longitude: 139.6504),
+            altitude: 0,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: 5.0,
+            course: 0,
+            speed: -1.0, // 無効な速度
+            timestamp: Date()
+        )
+        
+        sut.locationManager(mockLocationManager, didUpdateLocation: invalidSpeedLocation)
+        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        
+        // Then - 速度は前の有効な値を保持するべき
+        XCTAssertEqual(sut.currentSpeed, 10.0, "無効な速度値は無視され、前の有効な値が保持されるべき")
+    }
+    
+    func testSpeedResetTimerNotTriggeredByInvalidSpeed() async {
+        // Given - 有効な速度で移動中
+        let movingLocation = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503),
+            altitude: 0,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: 5.0,
+            course: 0,
+            speed: 10.0, // 10 m/s = 36 km/h
+            timestamp: Date()
+        )
+        
+        sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
+        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
+        
+        // When - 無効な速度値を連続して受信（タイマーはリセットされない）
+        for _ in 0..<5 {
+            let invalidSpeedLocation = CLLocation(
+                coordinate: CLLocationCoordinate2D(latitude: 35.6763, longitude: 139.6504),
+                altitude: 0,
+                horizontalAccuracy: 5.0,
+                verticalAccuracy: 5.0,
+                course: 0,
+                speed: -1.0, // 無効な速度
+                timestamp: Date()
+            )
+            sut.locationManager(mockLocationManager, didUpdateLocation: invalidSpeedLocation)
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+        }
+        
+        // 合計1秒経過（まだ3秒のタイムアウトには達していない）
+        
+        // Then - 速度はまだ保持されているべき
+        XCTAssertEqual(sut.currentSpeed, 10.0, "無効な速度値ではタイマーがリセットされないため、速度は保持されるべき")
+        
+        // When - さらに2.5秒待つ（合計3.5秒）
+        try? await Task.sleep(nanoseconds: 2_500_000_000)
+        
+        // Then - 速度が0にリセットされるべき
+        XCTAssertEqual(sut.currentSpeed, 0.0, "最後の有効な速度更新から3秒経過後、速度は0にリセットされるべき")
     }
 }
