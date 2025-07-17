@@ -130,6 +130,30 @@ final class LocationManagerTests: XCTestCase {
         // Then
         XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 10.0) // 10m for medium conditions
     }
+    
+    func testLocationManagerReportsPauseToDelegate() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        
+        // When
+        (sut as! MockLocationManager).simulateLocationUpdatesPaused()
+        
+        // Then
+        XCTAssertTrue(mockDelegate.didPauseLocationUpdates)
+    }
+    
+    func testLocationManagerReportsResumeToDelegate() {
+        // Given
+        sut = MockLocationManager()
+        sut.delegate = mockDelegate
+        
+        // When
+        (sut as! MockLocationManager).simulateLocationUpdatesResumed()
+        
+        // Then
+        XCTAssertTrue(mockDelegate.didResumeLocationUpdates)
+    }
 }
 
 // MARK: - Mock Delegate
@@ -137,6 +161,8 @@ class MockLocationManagerDelegate: LocationManagerDelegate {
     var lastReceivedLocation: CLLocation?
     var lastReceivedError: Error?
     var lastAuthorizationStatus: CLAuthorizationStatus?
+    var didPauseLocationUpdates = false
+    var didResumeLocationUpdates = false
     
     func locationManager(_ manager: LocationManagerProtocol, didUpdateLocation location: CLLocation) {
         lastReceivedLocation = location
@@ -148,5 +174,13 @@ class MockLocationManagerDelegate: LocationManagerDelegate {
     
     func locationManager(_ manager: LocationManagerProtocol, didChangeAuthorization status: CLAuthorizationStatus) {
         lastAuthorizationStatus = status
+    }
+    
+    func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {
+        didPauseLocationUpdates = true
+    }
+    
+    func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {
+        didResumeLocationUpdates = true
     }
 }

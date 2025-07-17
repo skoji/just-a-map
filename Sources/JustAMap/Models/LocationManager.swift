@@ -125,4 +125,12 @@ extension LocationManager: CLLocationManagerDelegate {
             startLocationUpdates()
         }
     }
+    
+    func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
+        delegate?.locationManagerDidPauseLocationUpdates(self)
+    }
+    
+    func locationManagerDidResumeLocationUpdates(_ manager: CLLocationManager) {
+        delegate?.locationManagerDidResumeLocationUpdates(self)
+    }
 }
