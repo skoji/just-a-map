@@ -337,7 +337,7 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManagerDidPauseLocationUpdates(mockLocationManager)
         
         // Wait for async operation to complete
-        let pauseExpectation = expectation(description: "Pause processing")
+        let pauseExpectation = self.expectation(description: "Pause processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             pauseExpectation.fulfill()
         }
@@ -379,7 +379,7 @@ final class MapViewModelTests: XCTestCase {
         )
         
         sut.locationManager(mockLocationManager, didUpdateLocation: invalidSpeedLocation)
-        let invalidSpeedExpectation = expectation(description: "Invalid speed processing")
+        let invalidSpeedExpectation = self.expectation(description: "Invalid speed processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             invalidSpeedExpectation.fulfill()
         }
@@ -418,7 +418,7 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
         
         // Wait for async operation to complete
-        let resumeExpectation = expectation(description: "Speed resume processing")
+        let resumeExpectation = self.expectation(description: "Speed resume processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             resumeExpectation.fulfill()
         }
