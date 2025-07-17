@@ -191,20 +191,20 @@ final class MapViewModelTests: XCTestCase {
         await fulfillment(of: [expectation1], timeout: 1.0)
         
         sut.updateMapCenter(center2)
-        let expectation2 = expectation(description: "Second update")
+        let secondUpdateExpectation = expectation(description: "Second update")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            expectation2.fulfill()
+            secondUpdateExpectation.fulfill()
         }
-        await fulfillment(of: [expectation2], timeout: 1.0)
+        await fulfillment(of: [secondUpdateExpectation], timeout: 1.0)
         
         sut.updateMapCenter(center3)
         
         // Then - 最後の更新のみが処理される
-        let expectation3 = expectation(description: "Final update processing")
+        let finalUpdateExpectation = expectation(description: "Final update processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            expectation3.fulfill()
+            finalUpdateExpectation.fulfill()
         }
-        await fulfillment(of: [expectation3], timeout: 1.0)
+        await fulfillment(of: [finalUpdateExpectation], timeout: 1.0)
         XCTAssertEqual(sut.mapCenterCoordinate.latitude, center3.latitude, accuracy: 0.0001)
         XCTAssertEqual(sut.mapCenterCoordinate.longitude, center3.longitude, accuracy: 0.0001)
     }
