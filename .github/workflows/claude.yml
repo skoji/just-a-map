@@ -54,7 +54,8 @@ jobs:
             Bash(git *)
             Bash(gh *)
             Bash(pwd)
-            Bash(ls *)Bash(cat *)
+            Bash(ls *)
+            Bash(cat *)
             Bash(echo *)
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
