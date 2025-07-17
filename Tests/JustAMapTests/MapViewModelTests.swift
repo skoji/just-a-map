@@ -337,11 +337,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManagerDidPauseLocationUpdates(mockLocationManager)
         
         // Wait for async operation to complete
-        let expectation2 = expectation(description: "Pause processing")
+        let pauseExpectation = expectation(description: "Pause processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            expectation2.fulfill()
+            pauseExpectation.fulfill()
         }
-        await fulfillment(of: [expectation2], timeout: 1.0)
+        await fulfillment(of: [pauseExpectation], timeout: 1.0)
         
         // Then - 速度が0にリセットされるべき
         XCTAssertEqual(sut.currentSpeed, 0.0, "位置情報更新が一時停止した場合、速度は0にリセットされるべき")
@@ -379,11 +379,11 @@ final class MapViewModelTests: XCTestCase {
         )
         
         sut.locationManager(mockLocationManager, didUpdateLocation: invalidSpeedLocation)
-        let expectation2 = expectation(description: "Invalid speed processing")
+        let invalidSpeedExpectation = expectation(description: "Invalid speed processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            expectation2.fulfill()
+            invalidSpeedExpectation.fulfill()
         }
-        await fulfillment(of: [expectation2], timeout: 1.0)
+        await fulfillment(of: [invalidSpeedExpectation], timeout: 1.0)
         
         // Then - 速度は前の有効な値を保持するべき
         XCTAssertEqual(sut.currentSpeed, 10.0, "無効な速度値は無視され、前の有効な値が保持されるべき")
@@ -418,11 +418,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
         
         // Wait for async operation to complete
-        let expectation3 = expectation(description: "Speed resume processing")
+        let resumeExpectation = expectation(description: "Speed resume processing")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            expectation3.fulfill()
+            resumeExpectation.fulfill()
         }
-        await fulfillment(of: [expectation3], timeout: 1.0)
+        await fulfillment(of: [resumeExpectation], timeout: 1.0)
         
         // Then - 速度が更新されるべき
         XCTAssertEqual(sut.currentSpeed, 15.0, "位置情報更新が再開した場合、速度が更新されるべき")
