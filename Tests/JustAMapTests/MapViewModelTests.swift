@@ -87,8 +87,7 @@ final class MapViewModelTests: XCTestCase {
         
         // 非同期処理を待つ
         let expectation = expectation(description: "Location update")
-        Task {
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1.0)
@@ -110,8 +109,7 @@ final class MapViewModelTests: XCTestCase {
         
         // 非同期処理を待つ
         let expectation = expectation(description: "Location update")
-        Task {
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1.0)
@@ -166,7 +164,11 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertNil(sut.mapCenterAddress)
         
         // デバウンス時間（300ms）+ 処理時間を考慮してより長く待つ
-        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8秒
+        let expectation = expectation(description: "Debounce completion")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 1.0)
         
         // Then - デバウンス後に住所が取得される
         XCTAssertNotNil(sut.mapCenterAddress)
@@ -182,13 +184,27 @@ final class MapViewModelTests: XCTestCase {
         
         // When - 連続して地図中心を更新
         sut.updateMapCenter(center1)
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+        let expectation1 = expectation(description: "First update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation1.fulfill()
+        }
+        await fulfillment(of: [expectation1], timeout: 1.0)
+        
         sut.updateMapCenter(center2)
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+        let expectation2 = expectation(description: "Second update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation2.fulfill()
+        }
+        await fulfillment(of: [expectation2], timeout: 1.0)
+        
         sut.updateMapCenter(center3)
         
         // Then - 最後の更新のみが処理される
-        try? await Task.sleep(nanoseconds: 400_000_000) // 0.4秒
+        let expectation3 = expectation(description: "Final update processing")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            expectation3.fulfill()
+        }
+        await fulfillment(of: [expectation3], timeout: 1.0)
         XCTAssertEqual(sut.mapCenterCoordinate.latitude, center3.latitude, accuracy: 0.0001)
         XCTAssertEqual(sut.mapCenterCoordinate.longitude, center3.longitude, accuracy: 0.0001)
     }
@@ -210,7 +226,11 @@ final class MapViewModelTests: XCTestCase {
         
         // When
         sut.updateMapCenter(mapCenter)
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒（デバウンス + 処理時間）
+        let expectation = expectation(description: "Map center address update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 1.0)
         
         // Then
         XCTAssertNotNil(sut.mapCenterAddress)
@@ -304,7 +324,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
         
         // Wait for async operation to complete
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation = expectation(description: "Speed update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 1.0)
         
         // Then - 速度が設定されていることを確認
         XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
@@ -313,7 +337,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManagerDidPauseLocationUpdates(mockLocationManager)
         
         // Wait for async operation to complete
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation2 = expectation(description: "Pause processing")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation2.fulfill()
+        }
+        await fulfillment(of: [expectation2], timeout: 1.0)
         
         // Then - 速度が0にリセットされるべき
         XCTAssertEqual(sut.currentSpeed, 0.0, "位置情報更新が一時停止した場合、速度は0にリセットされるべき")
@@ -332,7 +360,11 @@ final class MapViewModelTests: XCTestCase {
         )
         
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation = expectation(description: "Speed update")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 1.0)
         XCTAssertEqual(sut.currentSpeed, 10.0, "速度が設定されるべき")
         
         // When - 無効な速度値（-1）を受信
@@ -347,7 +379,11 @@ final class MapViewModelTests: XCTestCase {
         )
         
         sut.locationManager(mockLocationManager, didUpdateLocation: invalidSpeedLocation)
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation2 = expectation(description: "Invalid speed processing")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation2.fulfill()
+        }
+        await fulfillment(of: [expectation2], timeout: 1.0)
         
         // Then - 速度は前の有効な値を保持するべき
         XCTAssertEqual(sut.currentSpeed, 10.0, "無効な速度値は無視され、前の有効な値が保持されるべき")
@@ -358,7 +394,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManagerDidPauseLocationUpdates(mockLocationManager)
         
         // Wait for async operation to complete
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation = expectation(description: "Pause processing")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 1.0)
         
         XCTAssertEqual(sut.currentSpeed, 0.0, "一時停止中は速度が0であるべき")
         
@@ -378,7 +418,11 @@ final class MapViewModelTests: XCTestCase {
         sut.locationManager(mockLocationManager, didUpdateLocation: movingLocation)
         
         // Wait for async operation to complete
-        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        let expectation3 = expectation(description: "Speed resume processing")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation3.fulfill()
+        }
+        await fulfillment(of: [expectation3], timeout: 1.0)
         
         // Then - 速度が更新されるべき
         XCTAssertEqual(sut.currentSpeed, 15.0, "位置情報更新が再開した場合、速度が更新されるべき")

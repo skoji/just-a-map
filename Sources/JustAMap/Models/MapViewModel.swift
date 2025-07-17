@@ -39,8 +39,6 @@ class MapViewModel: ObservableObject {
     private var mapCenterGeocodingTask: Task<Void, Never>?
     private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
     
-    // 位置情報更新の一時停止状態を追跡
-    private var isLocationPaused = false
     
     // 地図の向き切り替え時のコールバック（テスト用）
     var onOrientationToggle: (() -> Void)?
@@ -355,7 +353,6 @@ extension MapViewModel: LocationManagerDelegate {
     
     nonisolated func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {
         Task { @MainActor in
-            self.isLocationPaused = true
             // 位置情報更新が一時停止したら速度を0にリセット
             self.currentSpeed = 0.0
         }
@@ -363,7 +360,6 @@ extension MapViewModel: LocationManagerDelegate {
     
     nonisolated func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {
         Task { @MainActor in
-            self.isLocationPaused = false
             // 位置情報更新が再開されたので、次の更新を待つ
         }
     }
