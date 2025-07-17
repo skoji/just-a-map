@@ -50,7 +50,13 @@ jobs:
           # assignee_trigger: "claude-bot"
           
           # Optional: Allow Claude to run specific commands
-          allowed_tools: "Bash(git *),Bash(gh *),Bash(xcodebuild *),Bash(swift *),Bash(pwd),Bash(ls *),Bash(cat *),Bash(echo *)"
+          allowed_tools: |
+            Bash(git *)
+            Bash(gh *)
+            Bash(pwd)
+            Bash(ls *)
+            Bash(cat *)
+            Bash(echo *)
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
           # custom_instructions: |
