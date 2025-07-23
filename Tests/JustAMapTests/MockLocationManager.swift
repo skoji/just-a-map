@@ -99,4 +99,14 @@ class MockLocationManager: LocationManagerProtocol {
         authorizationStatus = status
         delegate?.locationManager(self, didChangeAuthorization: status)
     }
+    
+    /// テスト用: 位置情報更新の一時停止をシミュレート
+    func simulateLocationUpdatesPaused() {
+        delegate?.locationManagerDidPauseLocationUpdates(self)
+    }
+    
+    /// テスト用: 位置情報更新の再開をシミュレート
+    func simulateLocationUpdatesResumed() {
+        delegate?.locationManagerDidResumeLocationUpdates(self)
+    }
 }
