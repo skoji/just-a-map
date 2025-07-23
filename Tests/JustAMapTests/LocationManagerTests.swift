@@ -92,43 +92,52 @@ final class LocationManagerTests: XCTestCase {
         XCTAssertEqual(mockDelegate.lastAuthorizationStatus, .authorizedWhenInUse)
     }
     
-    func testLocationManagerAdjustsDistanceFilterForHighSpeedAndCloseZoom() {
+    func testLocationManagerAdjustsDistanceFilterForVeryDetailedZoom() {
         // Given
         sut = MockLocationManager()
-        let speed = 60.0 // km/h
-        let zoomDistance = 500.0 // meters (close zoom)
+        let zoomLevel = 17.0 // Very detailed zoom level
         
         // When
-        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
         
         // Then
-        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 5.0) // 5m for high speed + close zoom
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 5.0) // 5m for very detailed zoom
     }
     
-    func testLocationManagerAdjustsDistanceFilterForLowSpeedAndFarZoom() {
+    func testLocationManagerAdjustsDistanceFilterForWideAreaZoom() {
         // Given
         sut = MockLocationManager()
-        let speed = 10.0 // km/h
-        let zoomDistance = 5000.0 // meters (far zoom)
+        let zoomLevel = 10.0 // Wide area zoom level
         
         // When
-        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
         
         // Then
-        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 50.0) // 50m for low speed + far zoom
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 50.0) // 50m for wide area zoom
     }
     
-    func testLocationManagerAdjustsDistanceFilterForMediumSpeed() {
+    func testLocationManagerAdjustsDistanceFilterForDetailedZoom() {
         // Given
         sut = MockLocationManager()
-        let speed = 30.0 // km/h
-        let zoomDistance = 1000.0 // meters
+        let zoomLevel = 15.0 // Detailed zoom level
         
         // When
-        sut.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
         
         // Then
-        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 10.0) // 10m for medium conditions
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 10.0) // 10m for detailed zoom
+    }
+    
+    func testLocationManagerAdjustsDistanceFilterForStandardZoom() {
+        // Given
+        sut = MockLocationManager()
+        let zoomLevel = 13.0 // Standard zoom level
+        
+        // When
+        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
+        
+        // Then
+        XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 20.0) // 20m for standard zoom
     }
     
     func testLocationManagerReportsPauseToDelegate() {

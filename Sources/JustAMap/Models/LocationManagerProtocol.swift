@@ -19,11 +19,9 @@ protocol LocationManagerProtocol: AnyObject {
     /// 位置情報の更新を停止
     func stopLocationUpdates()
     
-    /// 速度とズームレベルに基づいて更新頻度を調整
-    /// - Parameters:
-    ///   - speed: 現在の速度（km/h）
-    ///   - zoomDistance: 地図のズーム距離（メートル）
-    func adjustUpdateFrequency(forSpeed speed: Double, zoomDistance: Double)
+    /// ズームレベルに基づいて更新頻度を調整
+    /// - Parameter zoomLevel: 地図のズームレベル
+    func adjustUpdateFrequency(forZoomLevel zoomLevel: Double)
 }
 
 /// LocationManagerのイベントを受け取るデリゲート
