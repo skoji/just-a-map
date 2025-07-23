@@ -95,10 +95,10 @@ final class LocationManagerTests: XCTestCase {
     func testLocationManagerAdjustsDistanceFilterForVeryDetailedZoom() {
         // Given
         sut = MockLocationManager()
-        let zoomLevel = 17.0 // Very detailed zoom level
+        let altitude = 200.0 // Very low altitude (very detailed zoom)
         
         // When
-        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
+        sut.adjustUpdateFrequency(forAltitude: altitude)
         
         // Then
         XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 5.0) // 5m for very detailed zoom
@@ -107,10 +107,10 @@ final class LocationManagerTests: XCTestCase {
     func testLocationManagerAdjustsDistanceFilterForWideAreaZoom() {
         // Given
         sut = MockLocationManager()
-        let zoomLevel = 10.0 // Wide area zoom level
+        let altitude = 50000.0 // High altitude (wide area zoom)
         
         // When
-        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
+        sut.adjustUpdateFrequency(forAltitude: altitude)
         
         // Then
         XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 50.0) // 50m for wide area zoom
@@ -119,10 +119,10 @@ final class LocationManagerTests: XCTestCase {
     func testLocationManagerAdjustsDistanceFilterForDetailedZoom() {
         // Given
         sut = MockLocationManager()
-        let zoomLevel = 15.0 // Detailed zoom level
+        let altitude = 1000.0 // Low altitude (detailed zoom)
         
         // When
-        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
+        sut.adjustUpdateFrequency(forAltitude: altitude)
         
         // Then
         XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 10.0) // 10m for detailed zoom
@@ -131,10 +131,10 @@ final class LocationManagerTests: XCTestCase {
     func testLocationManagerAdjustsDistanceFilterForStandardZoom() {
         // Given
         sut = MockLocationManager()
-        let zoomLevel = 13.0 // Standard zoom level
+        let altitude = 5000.0 // Medium altitude (standard zoom)
         
         // When
-        sut.adjustUpdateFrequency(forZoomLevel: zoomLevel)
+        sut.adjustUpdateFrequency(forAltitude: altitude)
         
         // Then
         XCTAssertEqual((sut as! MockLocationManager).distanceFilter, 20.0) // 20m for standard zoom

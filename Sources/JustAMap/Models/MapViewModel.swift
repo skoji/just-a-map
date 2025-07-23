@@ -299,12 +299,9 @@ extension MapViewModel: LocationManagerDelegate {
             // 住所を取得
             self.fetchAddress(for: location)
             
-            // 速度とズームレベルに基づいて更新頻度を調整
-            // 速度が無効な場合は、現在の速度値を使用（前回の有効な値）
-            let speedForAdjustment = location.speed >= 0 ? location.speed : (self.currentSpeed ?? 0)
-            let speed = max(0, speedForAdjustment * 3.6) // m/s to km/h, 負の値は0に
-            let zoomDistance = self.mapControlsViewModel.currentAltitude
-            manager.adjustUpdateFrequency(forSpeed: speed, zoomDistance: zoomDistance)
+            // カメラの高度に基づいて更新頻度を調整
+            let altitude = self.mapControlsViewModel.currentAltitude
+            manager.adjustUpdateFrequency(forAltitude: altitude)
         }
     }
     

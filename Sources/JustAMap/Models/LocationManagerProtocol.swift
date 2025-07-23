@@ -19,9 +19,9 @@ protocol LocationManagerProtocol: AnyObject {
     /// 位置情報の更新を停止
     func stopLocationUpdates()
     
-    /// ズームレベルに基づいて更新頻度を調整
-    /// - Parameter zoomLevel: 地図のズームレベル
-    func adjustUpdateFrequency(forZoomLevel zoomLevel: Double)
+    /// カメラの高度に基づいて更新頻度を調整
+    /// - Parameter altitude: 地図カメラの高度（メートル）
+    func adjustUpdateFrequency(forAltitude altitude: Double)
 }
 
 /// LocationManagerのイベントを受け取るデリゲート

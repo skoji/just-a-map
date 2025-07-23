@@ -26,21 +26,21 @@ class MockLocationManager: LocationManagerProtocol {
         isUpdatingLocation = false
     }
     
-    func adjustUpdateFrequency(forZoomLevel zoomLevel: Double) {
-        // ズームレベルに基づいてdistanceFilterを計算
-        // ズームインしているほど細かく更新（小さいdistanceFilter）
+    func adjustUpdateFrequency(forAltitude altitude: Double) {
+        // カメラの高度に基づいてdistanceFilterを計算
+        // 高度が低いほど（ズームインしているほど）細かく更新（小さいdistanceFilter）
         
-        if zoomLevel >= 16 {
-            // 非常に詳細なズーム
+        if altitude <= 500 {
+            // 非常に詳細なズーム（街区レベル以下）
             distanceFilter = 5.0
-        } else if zoomLevel >= 14 {
-            // 詳細なズーム
+        } else if altitude <= 2000 {
+            // 詳細なズーム（地区レベル以下）
             distanceFilter = 10.0
-        } else if zoomLevel >= 12 {
-            // 標準的なズーム
+        } else if altitude <= 10000 {
+            // 標準的なズーム（市レベル以下）
             distanceFilter = 20.0
         } else {
-            // 広域ズーム
+            // 広域ズーム（市レベルより広域）
             distanceFilter = 50.0
         }
     }
