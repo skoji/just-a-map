@@ -67,19 +67,18 @@ class LocationManager: NSObject, LocationManagerProtocol {
         // カメラの高度に基づいてdistanceFilterを計算
         // 高度が低いほど（ズームインしているほど）細かく更新（小さいdistanceFilter）
         
-        let newDistanceFilter: CLLocationDistance
-        if altitude <= 500 {
+        let newDistanceFilter = if altitude <= 500 {
             // 非常に詳細なズーム（街区レベル以下）
-            newDistanceFilter = 5.0
+            5.0
         } else if altitude <= 2000 {
             // 詳細なズーム（地区レベル以下）
-            newDistanceFilter = 10.0
+            10.0
         } else if altitude <= 10000 {
             // 標準的なズーム（市レベル以下）
-            newDistanceFilter = 20.0
+            20.0
         } else {
             // 広域ズーム（市レベルより広域）
-            newDistanceFilter = 50.0
+            50.0
         }
         
         // 変化が大きい場合のみ更新（頻繁な更新を避ける）
