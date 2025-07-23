@@ -9,34 +9,38 @@ Issue #14「もっと滑らかに現在地に追従してほしい」への対�
 ### 1. 位置情報更新頻度の動的調整
 
 #### 背景
-従来は固定のdistanceFilter（10m）を使用していたため、高速移動時やズームイン時に現在地が画面から外れやすい問題がありました。
+従来は固定のdistanceFilter（10m）を使用していたため、ズームレベルに関係なく同じ頻度で更新され、詳細表示時に細かい動きが追従できない問題がありました。
 
-#### 実装
-`LocationManager`に`adjustUpdateFrequency`メソッドを追加し、以下の要素に基づいて動的に更新頻度を調整：
+#### 実装（Issue #76 で改善）
+`LocationManager`に`adjustUpdateFrequency`メソッドを追加し、地図カメラの高度に基づいて動的に更新頻度を調整：
 
-- **速度（km/h）**: 高速移動時ほど頻繁な更新が必要
-- **ズームレベル（距離）**: ズームインしているほど頻繁な更新が必要
+- **カメラの高度（メートル）**: 高度が低い（ズームイン）ほど頻繁な更新が必要
 
 ```swift
-func adjustUpdateFrequency(forSpeed speed: Double, zoomDistance: Double) {
-    // 速度とズームレベルに基づいてdistanceFilterを計算
-    // 高速 + 近いズーム = 頻繁な更新（小さいdistanceFilter）
-    // 低速 + 遠いズーム = 少ない更新（大きいdistanceFilter）
+func adjustUpdateFrequency(forAltitude altitude: Double) {
+    // カメラの高度に基づいてdistanceFilterを計算
+    // 高度が低いほど（ズームインしているほど）細かく更新（小さいdistanceFilter）
     
-    let speedFactor = min(max(speed / 60.0, 0.1), 1.0) // 0.1 ~ 1.0 に正規化
-    let zoomFactor = min(max(zoomDistance / 5000.0, 0.1), 1.0) // 0.1 ~ 1.0 に正規化
-    
-    // 逆相関：速度が速くズームが近いほど小さい値
-    let combinedFactor = 1.0 - (speedFactor * (1.0 - zoomFactor))
-    
-    // 5m ~ 50m の範囲で調整
-    let newDistanceFilter = 5.0 + (combinedFactor * 45.0)
+    let newDistanceFilter: CLLocationDistance
+    if altitude <= 500 {
+        // 非常に詳細なズーム（街区レベル以下）
+        newDistanceFilter = 5.0
+    } else if altitude <= 2000 {
+        // 詳細なズーム（地区レベル以下）
+        newDistanceFilter = 10.0
+    } else if altitude <= 10000 {
+        // 標準的なズーム（市レベル以下）
+        newDistanceFilter = 20.0
+    } else {
+        // 広域ズーム（市レベルより広域）
+        newDistanceFilter = 50.0
+    }
 }
 ```
 
 #### 調整範囲
-- **最小distanceFilter**: 5m（高速移動 + ズームイン時）
-- **最大distanceFilter**: 50m（低速移動 + ズームアウト時）
+- **最小distanceFilter**: 5m（高度500m以下、街区レベルの詳細表示）
+- **最大distanceFilter**: 50m（高度10000m超、市レベルより広域の表示）
 
 ### 2. アニメーションの改善
 
@@ -62,29 +66,33 @@ withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDurat
 #### テストケース
 以下のテストケースを追加して、動的な更新頻度調整を検証：
 
-1. **高速移動 + ズームイン時のテスト**
-   - 速度: 60km/h、ズーム距離: 500m
+1. **非常に詳細なズーム時のテスト**
+   - 高度: 200m（街区レベル）
    - 期待値: distanceFilter = 5m
 
-2. **低速移動 + ズームアウト時のテスト**
-   - 速度: 10km/h、ズーム距離: 5000m
+2. **広域ズーム時のテスト**
+   - 高度: 50000m（県レベル）
    - 期待値: distanceFilter = 50m
 
-3. **中速移動時のテスト**
-   - 速度: 30km/h、ズーム距離: 1000m
+3. **詳細ズーム時のテスト**
+   - 高度: 1000m（近隣レベル）
    - 期待値: distanceFilter = 10m
+
+4. **標準ズーム時のテスト**
+   - 高度: 5000m（市区レベル）
+   - 期待値: distanceFilter = 20m
 
 ## 効果
 
-1. **高速移動時の追従性向上**: 現在地が画面から外れにくくなりました
-2. **バッテリー効率の改善**: 低速時やズームアウト時は更新頻度を下げることで、無駄な処理を削減
+1. **直感的な動作**: 詳細表示時は細かく更新され、広域表示時は粗く更新されるようになりました
+2. **バッテリー効率の最適化**: ズームレベルに応じて適切な更新頻度を設定し、無駄な処理を削減
 3. **滑らかな動き**: アニメーションの改善により、視覚的にスムーズな追従を実現
 
 ## 技術的な考慮事項
 
 1. **CPU負荷の最小化**: distanceFilterの変更は2m以上の差がある場合のみ実行
 2. **非同期処理**: 位置情報の処理は非同期で実行し、UIの応答性を維持
-3. **エラーハンドリング**: 速度が負の値（GPS精度低下時）の場合は0として扱う
+3. **シンプルな判定ロジック**: 高度のみに基づくシンプルな判定で、複雑な計算を回避
 
 ## 今後の改善案
 

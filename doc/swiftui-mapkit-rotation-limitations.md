@@ -75,7 +75,7 @@ Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isN
 
 ### 3. 頻繁な位置更新による滑らかさの改善
 
-速度とズームレベルに基づいて位置情報の更新頻度を動的に調整することで、ある程度の滑らかさを実現。
+カメラの高度（ズームレベル）に基づいて位置情報の更新頻度を動的に調整することで、ある程度の滑らかさを実現。
 
 ## 推奨される解決策
 
