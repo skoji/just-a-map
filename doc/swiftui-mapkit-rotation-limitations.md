@@ -1,57 +1,57 @@
-# SwiftUI MapKit 回転アニメーションの制限事項
+# SwiftUI MapKit Rotation Animation Limitations
 
-## 概要
+## Overview
 
-SwiftUI の Map コンポーネントには、UIKit の MKMapView と比較して、地図の回転アニメーションと滑らかな追従モードに関していくつかの重要な制限があります。このドキュメントでは、2025年1月時点での既知の制限事項と、それらに対する対処法を記載します。
+SwiftUI's Map component has several important limitations regarding map rotation animation and smooth follow mode compared to UIKit's MKMapView. This document records the known limitations as of January 2025 and workarounds for them.
 
-## 主な制限事項
+## Major Limitations
 
-### 1. 回転アニメーションの制御制限
+### 1. Rotation Animation Control Limitations
 
-#### UIKit MKMapView の機能
-- `MKMapView.camera.heading` プロパティを通じてカメラの回転を直接制御
-- アニメーション中のリアルタイムな回転値へのアクセス
-- カスタムタイミングによる滑らかな回転アニメーション
-- デリゲートメソッドを通じた継続的な回転更新の取得
+#### UIKit MKMapView Capabilities
+- Direct control of camera rotation through `MKMapView.camera.heading` property
+- Access to real-time rotation values during animation
+- Smooth rotation animation with custom timing
+- Continuous rotation updates through delegate methods
 
-#### SwiftUI Map の制限
-- `MapCameraPosition` で heading を設定できるが、細かい制御は不可能
-- アニメーション中のリアルタイム回転値へのアクセス不可
-- アニメーションのカスタマイズオプションが限定的
-- 回転完了後にのみ値が更新される
+#### SwiftUI Map Limitations
+- Can set heading with `MapCameraPosition` but fine control is impossible
+- No access to real-time rotation values during animation
+- Limited animation customization options
+- Values only update after rotation completion
 
-### 2. ジェスチャー認識の制限
+### 2. Gesture Recognition Limitations
 
-SwiftUI の Map では、`.onTapGesture` 以外のジェスチャー（`LongPressGesture` や `DragGesture` など）を追加すると、組み込みの地図操作がブロックされ、パンニングが不可能になります。
+In SwiftUI Map, adding gestures other than `.onTapGesture` (such as `LongPressGesture` or `DragGesture`) blocks built-in map operations, making panning impossible.
 
-### 3. デリゲートメソッドの欠如
+### 3. Lack of Delegate Methods
 
-iOS 14 以降の SwiftUI Map は、MKMapView の多くの機能が欠けています：
-- リアルタイムな回転変更の追跡
-- カスタム回転アニメーションの実装
-- ユーザーの回転ジェスチャーへの応答
+SwiftUI Map since iOS 14 lacks many features of MKMapView:
+- Real-time rotation change tracking
+- Custom rotation animation implementation
+- Response to user rotation gestures
 
-### 4. アニメーションの問題
+### 4. Animation Issues
 
-開発者フォーラムで報告されている問題：
-- `withAnimation { }` や `.animation()` モディファイアが Map アノテーションで正しく動作しない
-- 地図を含むビューを回転させると、初期の矩形に回転が適用されるため、ラグやガタつきが発生
-- `CLLocationManager` から適切な heading 更新があっても、地図が滑らかに回転しない
+Problems reported in developer forums:
+- `withAnimation { }` or `.animation()` modifiers don't work correctly with Map annotations
+- When rotating views containing maps, rotation is applied to the initial rectangle, causing lag and jitter
+- Maps don't rotate smoothly even with proper heading updates from `CLLocationManager`
 
-### 5. iOS 18 での状況
+### 5. Status in iOS 18
 
-iOS 18 では UIKit ビューを SwiftUI アニメーションタイプでアニメーション化できるようになりましたが、Map の回転問題は直接解決されていません。
+iOS 18 allows animating UIKit views with SwiftUI animation types, but the Map rotation problem isn't directly resolved.
 
-2024年から2025年のフォーラムでは、以下の問題が継続的に報告されています：
-- ジャーキーまたは存在しない回転アニメーション
-- マップアノテーションのアニメーション問題
-- 動的な heading 更新の問題
-- 「Publishing changes from within view updates is not allowed」警告
-- 滑らかなアニメーションのために MKMapView へのフォールバックが必要
+From 2024 to 2025 forums, the following issues continue to be reported:
+- Jerky or non-existent rotation animations
+- Map annotation animation problems
+- Dynamic heading update issues
+- "Publishing changes from within view updates is not allowed" warnings
+- Need to fallback to MKMapView for smooth animations
 
-## 現在の実装での対処法
+## Current Implementation Workarounds
 
-### 1. interactiveSpring アニメーションの使用
+### 1. Using interactiveSpring Animation
 
 ```swift
 withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
@@ -65,7 +65,7 @@ withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDurat
 }
 ```
 
-### 2. North Up モードでの回転無効化
+### 2. Disabling Rotation in North Up Mode
 
 ```swift
 Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isNorthUp ? [.pan, .zoom] : .all) {
@@ -73,31 +73,31 @@ Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isN
 }
 ```
 
-### 3. 頻繁な位置更新による滑らかさの改善
+### 3. Improving Smoothness with Frequent Location Updates
 
-カメラの高度（ズームレベル）に基づいて位置情報の更新頻度を動的に調整することで、ある程度の滑らかさを実現。
+Achieve some degree of smoothness by dynamically adjusting location information update frequency based on camera altitude (zoom level).
 
-## 推奨される解決策
+## Recommended Solutions
 
-### 1. UIViewRepresentable での MKMapView ラップ
+### 1. Wrapping MKMapView with UIViewRepresentable
 
-より高度な回転アニメーション制御が必要な場合は、UIKit の MKMapView を UIViewRepresentable でラップすることを検討。
+Consider wrapping UIKit's MKMapView with UIViewRepresentable when more advanced rotation animation control is needed.
 
-### 2. サードパーティライブラリの使用
+### 2. Using Third-Party Libraries
 
-GitHub で公開されている MKMapView ラッパーなど、より強力な制御を提供するライブラリの使用。
+Use libraries that provide more powerful control, such as MKMapView wrappers published on GitHub.
 
-### 3. 基本的な回転のみの実装
+### 3. Basic Rotation Only Implementation
 
-SwiftUI Map の制約内で作業し、MapCameraPosition と標準アニメーションを使用して基本的な回転ニーズに対応。
+Work within SwiftUI Map constraints and address basic rotation needs using MapCameraPosition and standard animations.
 
-## 今後の展望
+## Future Outlook
 
-2025年1月時点でも、SwiftUI Map と UIKit MKMapView の間には回転アニメーションに関する大きなギャップが存在します。高度な回転アニメーション要件については、UIKit 統合が依然として必要です。
+As of January 2025, there's still a significant gap between SwiftUI Map and UIKit MKMapView regarding rotation animations. UIKit integration remains necessary for advanced rotation animation requirements.
 
-Apple はこれらの制限に対するフィードバックを受け続けており、将来のアップデートで改善される可能性がありますが、現時点では確実な解決策はありません。
+Apple continues to receive feedback on these limitations and they may be improved in future updates, but there's no definitive solution currently available.
 
-## 参考リンク
+## Reference Links
 
 - [Apple Developer Forums - SwiftUI Map Animation Issues](https://forums.developer.apple.com/forums/thread/759289)
 - [Stack Overflow - SwiftUI Map Rotation](https://stackoverflow.com/questions/77764972/swiftui-map-rotation)

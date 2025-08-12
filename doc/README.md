@@ -1,97 +1,97 @@
-# ドキュメント一覧
+# Documentation Index
 
-このディレクトリには、Just a Mapプロジェクトの技術ドキュメントが含まれています。
+This directory contains technical documentation for the Just a Map project.
 
-## ドキュメント
+## Documentation
 
-### 1. [段階1実装ガイド](stage1-implementation-guide.md)
-段階1で実装した基本的な地図表示機能について、コードレベルで詳しく解説しています。
-- プロジェクト構造
-- 主要コンポーネントの役割
-- 位置情報取得のフロー
-- SwiftUIとMapKitの連携
+### 1. [Stage 1 Implementation Guide](stage1-implementation-guide.md)
+Detailed explanation of the basic map display functionality implemented in Stage 1, at the code level.
+- Project structure
+- Roles of major components
+- Location information acquisition flow
+- SwiftUI and MapKit integration
 
-### 2. [段階2実装ガイド](stage2-implementation-guide.md)
-段階2で実装した住所表示とスリープ防止機能について解説しています。
-- TDDによる開発プロセス
-- 逆ジオコーディングサービス
-- async/awaitの活用
-- スリープ防止の実装
+### 2. [Stage 2 Implementation Guide](stage2-implementation-guide.md)
+Explains the address display and sleep prevention features implemented in Stage 2.
+- Development process using TDD
+- Reverse geocoding service
+- Utilization of async/await
+- Sleep prevention implementation
 
-### 3. [段階3実装ガイド](stage3-implementation-guide.md)
-段階3で実装した地図コントロールと表示モード切り替えについて解説しています。
-- ズームコントロールの実装
-- 地図スタイル切り替え機能
-- 設定の永続化（UserDefaults）
-- iOS 17 MapKit APIの活用
+### 3. [Stage 3 Implementation Guide](stage3-implementation-guide.md)
+Explains the map controls and display mode switching implemented in Stage 3.
+- Zoom control implementation
+- Map style switching functionality
+- Settings persistence (UserDefaults)
+- Utilization of iOS 17 MapKit API
 
-### 4. [iOS開発の基本概念](ios-development-basics.md)
-iOS開発に初めて触れる方向けの基礎知識をまとめています。
-- SwiftUIの基本
-- プロパティラッパーの使い方
-- 非同期処理とスレッド
-- メモリ管理の基礎
+### 4. [iOS Development Fundamentals](ios-development-basics.md)
+Summarizes basic knowledge for those new to iOS development.
+- SwiftUI basics
+- How to use property wrappers
+- Asynchronous processing and threads
+- Memory management fundamentals
 
-### 5. [設定画面とデフォルトズームレベル機能](settings-and-default-zoom.md)
-設定画面の実装とデフォルトズームレベル機能について解説しています。
-- 設定画面の実装（SwiftUI Form）
-- デフォルトズームレベルの適用
-- 追従モード維持の問題と解決
-- TDDによる機能開発
+### 5. [Settings Screen and Default Zoom Level Feature](settings-and-default-zoom.md)
+Explains the implementation of the settings screen and default zoom level functionality.
+- Settings screen implementation (SwiftUI Form)
+- Application of default zoom level
+- Issues and solutions for maintaining follow mode
+- Feature development using TDD
 
-### 6. [トラブルシューティングガイド](troubleshooting-guide.md)
-実際の開発で遭遇した問題と解決方法を記録しています。
-- ビルドエラーの対処法
-- 実行時エラーの解決
-- シミュレータ特有の問題
-- デバッグのコツ
+### 6. [Troubleshooting Guide](troubleshooting-guide.md)
+Records problems encountered during actual development and their solutions.
+- Dealing with build errors
+- Resolving runtime errors
+- Simulator-specific issues
+- Debugging tips
 
-### 7. [xtool移行ガイド](xtool-migration-guide.md)
-XcodeプロジェクトからxtoolベースのSwiftPMワークスペースへの移行について解説しています。
-- プロジェクト構造の変更
-- ビルド方法とMakefileの使用
-- アセット管理の仕組み
-- CI/CD設定
+### 7. [xtool Migration Guide](xtool-migration-guide.md)
+Explains the migration from Xcode projects to xtool-based SwiftPM workspaces.
+- Project structure changes
+- Build methods and use of Makefile
+- Asset management mechanism
+- CI/CD configuration
 
-### 8. [バージョン管理システム](version-management-system.md)
-Gitベースの自動バージョン管理システムについて解説しています。
-- バージョン番号の自動生成
-- ビルド時のバージョン情報埋め込み
-- Git追跡を汚さない設計
-- VersionInfo.plistの仕組み
+### 8. [Version Management System](version-management-system.md)
+Explains the Git-based automatic version management system.
+- Automatic version number generation
+- Embedding version information during build
+- Design that doesn't pollute Git tracking
+- VersionInfo.plist mechanism
 
-### 9. [高度表示機能](altitude-display-feature.md)
-リアルタイムで高度を表示する機能の実装について解説しています。
-- 高度データの取得と処理
-- 単位変換（メートル/フィート）
-- 設定画面での切り替え機能
-- エラーハンドリングと表示制御
-- TDDによる品質保証
+### 9. [Altitude Display Feature](altitude-display-feature.md)
+Explains the implementation of the feature that displays altitude in real time.
+- Altitude data acquisition and processing
+- Unit conversion (meters/feet)
+- Settings screen toggle functionality
+- Error handling and display control
+- Quality assurance using TDD
 
-## 読む順序
+## Reading Order
 
-iOS開発が初めての方：
-1. iOS開発の基本概念
-2. 段階1実装ガイド
-3. 段階2実装ガイド
-4. 段階3実装ガイド
-5. 設定画面とデフォルトズームレベル機能
-6. 高度表示機能
-7. トラブルシューティングガイド
+For those new to iOS development:
+1. iOS Development Fundamentals
+2. Stage 1 Implementation Guide
+3. Stage 2 Implementation Guide
+4. Stage 3 Implementation Guide
+5. Settings Screen and Default Zoom Level Feature
+6. Altitude Display Feature
+7. Troubleshooting Guide
 
-iOS開発経験がある方：
-1. 段階1実装ガイド
-2. 段階2実装ガイド
-3. 段階3実装ガイド
-4. 設定画面とデフォルトズームレベル機能
-5. 高度表示機能
-6. トラブルシューティングガイド（必要に応じて）
+For those experienced with iOS development:
+1. Stage 1 Implementation Guide
+2. Stage 2 Implementation Guide
+3. Stage 3 Implementation Guide
+4. Settings Screen and Default Zoom Level Feature
+5. Altitude Display Feature
+6. Troubleshooting Guide (as needed)
 
-## 更新履歴
+## Update History
 
-- 2025-07-06: 初版作成（段階1完了時点）
-- 2025-07-06: 段階2のドキュメント追加（住所表示とスリープ防止）
-- 2025-07-06: 段階3のドキュメント追加（地図コントロールと表示モード切り替え）
-- 2025-07-07: 設定画面とデフォルトズームレベル機能のドキュメント追加（Issue #12対応）
-- 2025-07-10: xtool移行ガイドとバージョン管理システムのドキュメント追加（PR #50対応）
-- 2025-07-10: 高度表示機能のドキュメント追加（Issue #58対応）
+- 2025-07-06: Initial version created (at Stage 1 completion)
+- 2025-07-06: Added Stage 2 documentation (address display and sleep prevention)
+- 2025-07-06: Added Stage 3 documentation (map controls and display mode switching)
+- 2025-07-07: Added settings screen and default zoom level feature documentation (Issue #12 support)
+- 2025-07-10: Added xtool migration guide and version management system documentation (PR #50 support)
+- 2025-07-10: Added altitude display feature documentation (Issue #58 support)

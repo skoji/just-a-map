@@ -1,133 +1,133 @@
-# iOS開発の基本概念
+# iOS Development Fundamentals
 
-iOS開発に初めて触れるプログラマー向けに、基本的な概念と用語を解説します。
+This document explains basic concepts and terminology for programmers new to iOS development.
 
-## 目次
+## Table of Contents
 
-1. [SwiftUIとは](#swiftuiとは)
-2. [プロパティラッパー](#プロパティラッパー)
-3. [ビューのライフサイクル](#ビューのライフサイクル)
-4. [非同期処理](#非同期処理)
-5. [権限システム](#権限システム)
-6. [Xcodeの基本](#xcodeの基本)
+1. [What is SwiftUI](#what-is-swiftui)
+2. [Property Wrappers](#property-wrappers)
+3. [View Lifecycle](#view-lifecycle)
+4. [Asynchronous Processing](#asynchronous-processing)
+5. [Permission System](#permission-system)
+6. [Xcode Basics](#xcode-basics)
 
-## SwiftUIとは
+## What is SwiftUI
 
-SwiftUIは、Appleが2019年に発表した宣言的UIフレームワークです。
+SwiftUI is a declarative UI framework announced by Apple in 2019.
 
-### 宣言的UIの例
+### Example of Declarative UI
 
 ```swift
-// 命令的（UIKit）
+// Imperative (UIKit)
 let label = UILabel()
 label.text = "Hello"
 label.textColor = .red
 view.addSubview(label)
 
-// 宣言的（SwiftUI）
+// Declarative (SwiftUI)
 Text("Hello")
     .foregroundColor(.red)
 ```
 
-**特徴：**
-- 「どう作るか」ではなく「何を表示するか」を記述
-- 状態が変わると自動的にUIが更新される
-- プレビュー機能でリアルタイムに確認可能
+**Features:**
+- Describes "what to display" rather than "how to create it"
+- UI automatically updates when state changes
+- Real-time preview with preview functionality
 
-## プロパティラッパー
+## Property Wrappers
 
-SwiftUIでよく使われる特殊な属性です。
+Special attributes frequently used in SwiftUI.
 
 ### @State
-ビュー内部の状態を管理します。
+Manages state within a view.
 ```swift
 struct CounterView: View {
-    @State private var count = 0  // 値が変わるとビューが再描画
+    @State private var count = 0  // View redraws when value changes
     
     var body: some View {
         Button("Count: \(count)") {
-            count += 1  // 自動的にUIが更新される
+            count += 1  // UI automatically updates
         }
     }
 }
 ```
 
 ### @StateObject
-ビューが所有するオブジェクトを管理します。
+Manages objects owned by the view.
 ```swift
 struct MapView: View {
-    @StateObject private var viewModel = MapViewModel()  // ビューが再描画されても同じインスタンス
+    @StateObject private var viewModel = MapViewModel()  // Same instance even when view redraws
 }
 ```
 
 ### @Published
-ObservableObject内で、変更を通知するプロパティです。
+In ObservableObject, a property that notifies of changes.
 ```swift
 class MapViewModel: ObservableObject {
-    @Published var location: CLLocation?  // 変更されると購読者に通知
+    @Published var location: CLLocation?  // Notifies subscribers when changed
 }
 ```
 
 ### @ObservedObject
-他から渡されたオブジェクトを監視します。
+Observes objects passed from elsewhere.
 ```swift
 struct DetailView: View {
-    @ObservedObject var viewModel: MapViewModel  // 親から受け取る
+    @ObservedObject var viewModel: MapViewModel  // Received from parent
 }
 ```
 
 ### @EnvironmentObject
-アプリ全体で共有されるオブジェクトです。
+An object shared across the entire app.
 ```swift
-@EnvironmentObject var settings: UserSettings  // どこからでもアクセス可能
+@EnvironmentObject var settings: UserSettings  // Accessible from anywhere
 ```
 
-## ビューのライフサイクル
+## View Lifecycle
 
-SwiftUIビューの主要なイベント：
+Main events in SwiftUI view lifecycle:
 
 ```swift
 struct MapView: View {
     var body: some View {
         Map()
             .onAppear {
-                // ビューが表示される時
-                print("ビューが表示されました")
+                // When view appears
+                print("View appeared")
             }
             .onDisappear {
-                // ビューが非表示になる時
-                print("ビューが非表示になりました")
+                // When view disappears
+                print("View disappeared")
             }
             .onChange(of: someValue) { newValue in
-                // 特定の値が変更された時
-                print("値が変更されました: \(newValue)")
+                // When specific value changes
+                print("Value changed: \(newValue)")
             }
     }
 }
 ```
 
-## 非同期処理
+## Asynchronous Processing
 
-### async/await（Swift 5.5以降）
+### async/await (Swift 5.5 and later)
 
 ```swift
-// 従来のコールバック方式
+// Traditional callback approach
 CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
     if let placemark = placemarks?.first {
-        // 処理
+        // Processing
     }
 }
 
-// async/await方式
+// async/await approach
 func getAddress(for location: CLLocation) async throws -> String {
     let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
-    return placemarks.first?.name ?? "不明"
+    return placemarks.first?.name ?? "Unknown"
 }
 ```
 
 ### Task
 
-非同期処理を開始します：
+Starts asynchronous processing:
 ```swift
 Task {
     let address = try await getAddress(for: location)
@@ -137,134 +137,134 @@ Task {
 
 ### @MainActor
 
-UI更新は必ずメインスレッドで行う必要があります：
+UI updates must always be performed on the main thread:
 ```swift
 @MainActor
 class MapViewModel: ObservableObject {
-    // このクラス内の全てのプロパティ・メソッドはメインスレッドで実行
+    // All properties and methods in this class execute on the main thread
 }
 
-// または
+// Or
 Task { @MainActor in
-    // この中のコードはメインスレッドで実行
+    // Code inside here executes on the main thread
     self.userLocation = newLocation
 }
 ```
 
-## 権限システム
+## Permission System
 
-iOSは以下のようなユーザーデータへのアクセスに権限が必要です：
+iOS requires permissions for access to the following user data:
 
-- 位置情報
-- カメラ
-- マイク
-- 連絡先
-- 写真
+- Location information
+- Camera
+- Microphone
+- Contacts
+- Photos
 
-### 権限リクエストの流れ
+### Permission Request Flow
 
-1. **Info.plistに使用理由を記載**
+1. **Record usage reason in Info.plist**
    ```xml
    <key>NSLocationWhenInUseUsageDescription</key>
-   <string>地図に現在地を表示するため</string>
+   <string>To display current location on the map</string>
    ```
 
-2. **権限をリクエスト**
+2. **Request permission**
    ```swift
    locationManager.requestWhenInUseAuthorization()
    ```
 
-3. **権限状態を確認**
+3. **Check permission status**
    ```swift
    switch locationManager.authorizationStatus {
-   case .notDetermined:  // まだ聞いていない
-   case .denied:         // 拒否された
-   case .authorizedWhenInUse:  // 使用中のみ許可
+   case .notDetermined:  // Not asked yet
+   case .denied:         // Denied
+   case .authorizedWhenInUse:  // Authorized when in use only
    }
    ```
 
-## Xcodeの基本
+## Xcode Basics
 
-### プロジェクト構造
+### Project Structure
 
 ```
-MyApp.xcodeproj/          # プロジェクトファイル
-├── MyApp/                # ソースコード
-│   ├── Assets.xcassets/  # 画像やアイコン
-│   ├── Info.plist        # アプリ設定
-│   └── *.swift           # Swiftファイル
-├── MyAppTests/           # ユニットテスト
-└── MyAppUITests/         # UIテスト
+MyApp.xcodeproj/          # Project file
+├── MyApp/                # Source code
+│   ├── Assets.xcassets/  # Images and icons
+│   ├── Info.plist        # App settings
+│   └── *.swift           # Swift files
+├── MyAppTests/           # Unit tests
+└── MyAppUITests/         # UI tests
 ```
 
-### よく使うショートカット
+### Frequently Used Shortcuts
 
-- **⌘+R**: ビルド&実行
-- **⌘+B**: ビルドのみ
-- **⌘+U**: テスト実行
-- **⌘+Shift+K**: クリーンビルド
-- **⌘+.**: 実行停止
-- **⌘+Shift+O**: ファイルを開く
+- **⌘+R**: Build & Run
+- **⌘+B**: Build only
+- **⌘+U**: Run tests
+- **⌘+Shift+K**: Clean build
+- **⌘+.**: Stop execution
+- **⌘+Shift+O**: Open file
 
-### シミュレータの操作
+### Simulator Operations
 
-- **⌘+D**: ホーム画面
-- **⌘+Shift+H**: ホームボタン
-- **⌘+→/←**: 画面回転
-- **Features > Location**: 位置情報シミュレート
+- **⌘+D**: Home screen
+- **⌘+Shift+H**: Home button
+- **⌘+→/←**: Rotate screen
+- **Features > Location**: Simulate location information
 
-### デバッグ
+### Debugging
 
 ```swift
-// プリントデバッグ
-print("現在地: \(location)")
+// Print debugging
+print("Current location: \(location)")
 
-// ブレークポイント
-// 行番号をクリックして青い矢印を設置
+// Breakpoint
+// Click line number to place blue arrow
 
-// デバッグコンソール
-// Xcodeの下部に表示される
+// Debug console
+// Displayed at bottom of Xcode
 ```
 
-## メモリ管理
+## Memory Management
 
-SwiftはARC（Automatic Reference Counting）でメモリを管理します。
+Swift manages memory with ARC (Automatic Reference Counting).
 
-### 循環参照を防ぐ
+### Preventing Retain Cycles
 
 ```swift
-// 悪い例：循環参照
+// Bad example: Retain cycle
 class LocationManager {
-    var delegate: LocationManagerDelegate?  // 強参照
+    var delegate: LocationManagerDelegate?  // Strong reference
 }
 
-// 良い例：弱参照
+// Good example: Weak reference
 class LocationManager {
-    weak var delegate: LocationManagerDelegate?  // 弱参照
+    weak var delegate: LocationManagerDelegate?  // Weak reference
 }
 ```
 
-### クロージャでの注意
+### Caution with Closures
 
 ```swift
-// 悪い例：selfを強参照
+// Bad example: Strong reference to self
 locationManager.updateHandler = { location in
-    self.updateLocation(location)  // selfを捕獲
+    self.updateLocation(location)  // Captures self
 }
 
-// 良い例：weakで捕獲
+// Good example: Weak capture
 locationManager.updateHandler = { [weak self] location in
-    self?.updateLocation(location)  // 弱参照
+    self?.updateLocation(location)  // Weak reference
 }
 ```
 
-## まとめ
+## Summary
 
-iOS開発の特徴：
+Characteristics of iOS development:
 
-1. **宣言的UI**：状態を宣言すれば、UIは自動更新
-2. **厳格な権限管理**：ユーザーのプライバシーを重視
-3. **非同期処理**：UIの応答性を保つため重要
-4. **メモリ管理**：ARCで自動化されているが、循環参照に注意
+1. **Declarative UI**: Declare state, and UI updates automatically
+2. **Strict Permission Management**: Emphasis on user privacy
+3. **Asynchronous Processing**: Important for maintaining UI responsiveness
+4. **Memory Management**: Automated with ARC, but be careful of retain cycles
 
-これらの概念を理解することで、iOS開発の基礎が身につきます。
+Understanding these concepts will give you a foundation in iOS development basics.

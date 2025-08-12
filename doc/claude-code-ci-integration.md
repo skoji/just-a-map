@@ -1,14 +1,14 @@
-# Claude Code Action CI統合
+# Claude Code Action CI Integration
 
-## 概要
+## Overview
 
-このドキュメントでは、just-a-mapプロジェクトにおけるClaude Code ActionとGitHub Actions CIの統合について説明します。CI失敗時に自動的にClaude Codeを呼び出し、問題の修正を依頼する仕組みを実装しています。
+This document explains the integration of Claude Code Action with GitHub Actions CI in the just-a-map project. We've implemented a mechanism that automatically calls Claude Code to request problem fixes when CI fails.
 
-## 背景と課題
+## Background and Issues
 
-### 当初の試み：workflow_runイベント
+### Initial Attempt: workflow_run Event
 
-最初は、GitHub Actionsの`workflow_run`イベントを使用して、CI失敗時に自動的にClaude Code Actionを起動しようとしました。
+Initially, we tried to automatically trigger Claude Code Action when CI failed using GitHub Actions' `workflow_run` event.
 
 ```yaml
 on:
@@ -17,35 +17,35 @@ on:
     types: [completed]
 ```
 
-しかし、この方法では以下の問題に直面しました：
+However, this approach faced the following issues:
 
-1. **OIDC認証エラー**: `Invalid OIDC token`エラーが発生
-2. **権限の継承問題**: workflow_runイベントは、トリガー元のワークフローから権限を継承しない
-3. **解決不可能**: 様々な権限設定を試みたが、根本的にworkflow_runでの認証問題は解決できなかった
+1. **OIDC Authentication Error**: `Invalid OIDC token` error occurred
+2. **Permission Inheritance Problem**: workflow_run events don't inherit permissions from the triggering workflow
+3. **Unsolvable**: Despite trying various permission settings, the authentication problem with workflow_run was fundamentally unsolvable
 
-### GitHub Actionsのトークン制限
+### GitHub Actions Token Limitations
 
-次に、通常のGitHub Actionsトークン（`GITHUB_TOKEN`）を使用して、CI失敗時にPRに`@claude`コメントを投稿する方法を試みました。
+Next, we tried posting `@claude` comments to PRs when CI failed using regular GitHub Actions tokens (`GITHUB_TOKEN`).
 
-しかし、新たな問題が発生：
-- `github-actions[bot]`ユーザーからのコメントとなる
-- Claude Code Actionは、botユーザーからの`@claude`メンションを無視する仕様
-- ラベル付与も試みたが、`GITHUB_TOKEN`では他のワークフローをトリガーできない（セキュリティ制限）
+However, new problems emerged:
+- Comments appear from the `github-actions[bot]` user
+- Claude Code Action ignores `@claude` mentions from bot users by design
+- Label addition was also attempted, but `GITHUB_TOKEN` cannot trigger other workflows (security restriction)
 
-## 解決策：Personal Access Token (PAT)の使用
+## Solution: Using Personal Access Token (PAT)
 
-最終的に、Personal Access Token（PAT）を使用することで、すべての問題を解決しました。
+Finally, we resolved all issues by using a Personal Access Token (PAT).
 
-### 実装の詳細
+### Implementation Details
 
-#### 1. ios-build.ymlの変更
+#### 1. Changes to ios-build.yml
 
 ```yaml
 - name: Comment @claude on PR failure
   if: failure() && github.event_name == 'pull_request'
   uses: actions/github-script@v7
   with:
-    github-token: ${{ secrets.GH_PAT }}  # PATを使用
+    github-token: ${{ secrets.GH_PAT }}  # Using PAT
     script: |
       const prNumber = context.issue.number;
       const workflowRun = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -71,72 +71,72 @@ on:
       });
 ```
 
-#### 2. 必要な権限設定
+#### 2. Required Permission Settings
 
-ワークフローには以下の権限が必要です：
+The workflow requires the following permissions:
 
 ```yaml
 permissions:
   contents: read
-  pull-requests: write  # PRへのコメント投稿に必要
+  pull-requests: write  # Required for posting comments to PRs
 ```
 
-### PATを使用する利点
+### Advantages of Using PAT
 
-1. **実際のユーザーアカウントからのアクション**: PATを使用することで、コメントは設定したユーザーのアカウントから投稿される
-2. **Claude Code Actionの正常な起動**: botではなく実際のユーザーからの`@claude`メンションとして認識される
-3. **シンプルな実装**: ラベルやworkflow_runなどの複雑な仕組みが不要
+1. **Actions from Real User Account**: Comments are posted from the configured user account when using PAT
+2. **Proper Claude Code Action Activation**: Recognized as `@claude` mentions from real users, not bots
+3. **Simple Implementation**: No need for complex mechanisms like labels or workflow_run
 
-## セットアップ手順
+## Setup Instructions
 
-### 1. Personal Access Tokenの作成
+### 1. Creating a Personal Access Token
 
-1. GitHubの Settings > Developer settings > Personal access tokens へアクセス
-2. 「Generate new token」をクリック
-3. 必要なスコープを選択：
-   - `repo`（フルアクセス）
-4. トークンを生成し、安全に保管
+1. Go to GitHub Settings > Developer settings > Personal access tokens
+2. Click "Generate new token"
+3. Select required scopes:
+   - `repo` (full access)
+4. Generate token and store it securely
 
-### 2. リポジトリシークレットの設定
+### 2. Repository Secret Configuration
 
-1. リポジトリの Settings > Secrets and variables > Actions へアクセス
-2. 「New repository secret」をクリック
-3. 名前：`GH_PAT`
-4. 値：生成したPersonal Access Token
+1. Go to repository Settings > Secrets and variables > Actions
+2. Click "New repository secret"
+3. Name: `GH_PAT`
+4. Value: Generated Personal Access Token
 
-### 3. 動作確認
+### 3. Operation Verification
 
-設定後、PRでCIが失敗すると：
-1. 自動的に`@claude`コメントが投稿される
-2. Claude Code Actionが起動し、問題の分析と修正を開始する
+After setup, when CI fails on a PR:
+1. `@claude` comment is automatically posted
+2. Claude Code Action starts and begins analyzing and fixing the problem
 
-## セキュリティ考慮事項
+## Security Considerations
 
-- PATは強力な権限を持つため、最小限の必要なスコープのみを付与する
-- PATは定期的に更新する
-- リポジトリシークレットとして安全に管理する
+- PAT has powerful permissions, so grant only the minimum required scopes
+- Update PAT regularly
+- Manage securely as repository secrets
 
-## トラブルシューティング
+## Troubleshooting
 
-### コメントが投稿されない場合
+### Comments Not Being Posted
 
-1. ワークフローの権限設定を確認（`pull-requests: write`が必要）
-2. `GH_PAT`シークレットが正しく設定されているか確認
-3. PATの有効期限が切れていないか確認
+1. Check workflow permission settings (`pull-requests: write` required)
+2. Verify `GH_PAT` secret is correctly configured
+3. Check if PAT hasn't expired
 
-### Claude Code Actionが起動しない場合
+### Claude Code Action Not Starting
 
-1. コメントが実際のユーザーアカウントから投稿されているか確認
-2. `@claude`メンションが正しく含まれているか確認
-3. claude.ymlの設定を確認
+1. Verify comment is posted from real user account
+2. Check `@claude` mention is correctly included
+3. Verify claude.yml configuration
 
-## 今後の改善案
+## Future Improvement Ideas
 
-- エラーの種類に応じたカスタムメッセージ
-- 特定の条件下でのみClaude Codeを呼び出す設定
-- 複数の失敗に対する重複コメントの防止
+- Custom messages based on error type
+- Conditional Claude Code calling under specific conditions
+- Prevention of duplicate comments for multiple failures
 
-## 参考リンク
+## Reference Links
 
 - [GitHub Actions: Automatic token authentication](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
 - [GitHub Actions: Using secrets in GitHub Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)

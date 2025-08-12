@@ -1,41 +1,41 @@
-# 段階3 実装ガイド - 地図コントロールと表示モード切り替え
+# Stage 3 Implementation Guide - Map Controls and Display Mode Switching
 
-## 概要
-段階3では、just a mapアプリに直感的な地図操作機能を追加しました。バイクのハンドルマウントでの使用を考慮し、大きなタップターゲットと分かりやすいUIを実装しています。
+## Overview
+In Stage 3, we added intuitive map operation features to the just a map application. The implementation considers use on motorcycle handle mounts, with large tap targets and clear UI.
 
-## 実装した機能
+## Implemented Features
 
-### 1. ズームコントロール
-- **ズームイン/アウトボタン**: 虫眼鏡アイコンで表示される60x60ポイントの大きなボタン
-- **12段階の離散的ズームレベル**: 建物レベル（200m）から地球レベル（1,000,000m）まで
-- **高度ベースの実装**: MapKitの内部変換に影響されない安定した動作
-- **ズーム制限インジケーター**: ズームの限界に達した時はボタンがグレーアウト
-- **スムーズなアニメーション**: withAnimationによる自然な拡大縮小
+### 1. Zoom Controls
+- **Zoom In/Out Buttons**: Large 60x60 point buttons displayed with magnifying glass icons
+- **12-Level Discrete Zoom**: From building level (200m) to earth level (1,000,000m)
+- **Altitude-Based Implementation**: Stable operation unaffected by MapKit's internal conversions
+- **Zoom Limit Indicator**: Buttons gray out when zoom limits are reached
+- **Smooth Animation**: Natural scaling with withAnimation
 
-### 2. 地図表示モード切り替え
-- **3つの表示モード**:
-  - 標準（通常の地図）
-  - ハイブリッド（航空写真+地図情報）
-  - 航空写真のみ
-- **ワンタップ切り替え**: 地図アイコンをタップするたびに循環
-- **視覚的フィードバック**: 現在のモードに応じてアイコンが変化
+### 2. Map Display Mode Switching
+- **3 Display Modes**:
+  - Standard (normal map)
+  - Hybrid (satellite imagery + map information)
+  - Satellite only
+- **One-Tap Switching**: Cycles through modes each time map icon is tapped
+- **Visual Feedback**: Icon changes according to current mode
 
-### 3. North Up / Heading Up 切り替え準備
-- **切り替えボタン**: コンパスアイコンで表示
-- **状態管理**: 将来のヘディング情報に対応するための基盤を実装
-- **アイコンの変化**: North UpとHeading Upで異なるアイコン表示
+### 3. North Up / Heading Up Switching Preparation
+- **Toggle Button**: Displayed with compass icon
+- **State Management**: Foundation implemented for future heading information support
+- **Icon Changes**: Different icons for North Up and Heading Up
 
-### 4. 設定の永続化
-- **UserDefaultsによる保存**:
-  - 現在の地図スタイル
-  - North Up/Heading Upの設定
-  - ズームレベル（インデックスとして保存）
-- **アプリ再起動時の復元**: 前回の設定が自動的に適用される
+### 4. Settings Persistence
+- **UserDefaults Storage**:
+  - Current map style
+  - North Up/Heading Up settings
+  - Zoom level (saved as index)
+- **App Restart Restoration**: Previous settings automatically applied
 
-## 実装の詳細
+## Implementation Details
 
 ### MapControlsViewModel
-地図コントロールのビジネスロジックを管理する新しいViewModelを作成しました。
+Created a new ViewModel to manage map control business logic.
 
 ```swift
 @MainActor
@@ -44,49 +44,49 @@ class MapControlsViewModel: ObservableObject {
     @Published var isNorthUp: Bool = true
     @Published private(set) var currentZoomIndex: Int = 5
     
-    // 高度ベースのズームレベル（12段階）
+    // Altitude-based zoom levels (12 levels)
     private let predefinedAltitudes: [Double] = [
-        200,      // 建物レベル
-        500,      // 街区レベル
-        1000,     // 近隣レベル
-        2000,     // 地区レベル
-        5000,     // 市区レベル
-        10000,    // 市レベル
-        20000,    // 都市圏レベル
-        50000,    // 県レベル
-        100000,   // 地方レベル
-        200000,   // 国レベル
-        500000,   // 大陸レベル
-        1000000,  // 地球レベル
+        200,      // Building level
+        500,      // Block level
+        1000,     // Neighborhood level
+        2000,     // District level
+        5000,     // Ward/City level
+        10000,    // City level
+        20000,    // Metropolitan level
+        50000,    // Prefecture level
+        100000,   // Regional level
+        200000,   // National level
+        500000,   // Continental level
+        1000000,  // Global level
     ]
     
-    // ズーム操作
+    // Zoom operations
     func zoomIn()
     func zoomOut()
     func setNearestZoomIndex(for altitude: Double)
     
-    // プロパティ
+    // Properties
     var currentAltitude: Double { get }
     var canZoomIn: Bool { get }
     var canZoomOut: Bool { get }
 }
 ```
 
-### ズーム実装の改善
+### Zoom Implementation Improvements
 
-#### 問題点
-以前のspan（緯度経度の範囲）ベースの実装では、MapKitが内部で値を変換するため、期待した値と異なる値が返される問題がありました：
+#### Problems
+The previous span (latitude/longitude range) based implementation had issues where MapKit internally converted values, returning different values than expected:
 
 ```
-期待値: 0.02 -> MapKitからの戻り値: 0.034474...
-期待値: 0.05 -> MapKitからの戻り値: 0.08618...
+Expected: 0.02 -> MapKit return: 0.034474...
+Expected: 0.05 -> MapKit return: 0.08618...
 ```
 
-#### 解決策
-MKMapCameraのaltitude（高度）プロパティを使用することで、より安定したズーム管理を実現：
+#### Solution
+Using MKMapCamera's altitude property achieved more stable zoom management:
 
 ```swift
-// 新しいズーム実装
+// New zoom implementation
 let camera = MapCamera(
     centerCoordinate: coordinate,
     distance: viewModel.mapControlsViewModel.currentAltitude,
@@ -97,7 +97,7 @@ mapPosition = .camera(camera)
 ```
 
 ### MapControlsView
-地図コントロールのUIコンポーネントです。
+UI component for map controls.
 
 ```swift
 struct MapControlsView: View {
@@ -109,7 +109,7 @@ struct MapControlsView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // ズームコントロール
+            // Zoom controls
             VStack(spacing: 8) {
                 ControlButton(
                     icon: "plus.magnifyingglass",
@@ -125,10 +125,10 @@ struct MapControlsView: View {
             
             Divider()
             
-            // 地図スタイル切り替え
+            // Map style switching
             ControlButton(icon: mapStyleIcon, action: { controlsViewModel.toggleMapStyle() })
             
-            // North Up / Heading Up 切り替え
+            // North Up / Heading Up switching
             ControlButton(icon: orientationIcon, action: { controlsViewModel.toggleMapOrientation() })
         }
     }
@@ -136,7 +136,7 @@ struct MapControlsView: View {
 ```
 
 ### MapSettingsStorage
-設定の永続化を管理するサービスクラスです。
+Service class that manages settings persistence.
 
 ```swift
 protocol MapSettingsStorageProtocol {
@@ -149,46 +149,46 @@ protocol MapSettingsStorageProtocol {
 }
 ```
 
-## iOS開発の学習ポイント
+## iOS Development Learning Points
 
-### 1. MapCameraとMapCameraPosition
-iOS 17の新しいMapKit APIでは、`MapCamera`と`MapCameraPosition`を使用して地図の位置を管理：
+### 1. MapCamera and MapCameraPosition
+iOS 17's new MapKit API uses `MapCamera` and `MapCameraPosition` to manage map position:
 
 ```swift
-// MapCameraの作成
+// Creating MapCamera
 let camera = MapCamera(
     centerCoordinate: location.coordinate,
-    distance: 10000,  // 高度（メートル）
-    heading: 0,       // 方向（度）
-    pitch: 0          // 傾き（度）
+    distance: 10000,  // Altitude (meters)
+    heading: 0,       // Direction (degrees)
+    pitch: 0          // Tilt (degrees)
 )
 
-// MapCameraPositionへの適用
+// Applying to MapCameraPosition
 @State private var mapPosition: MapCameraPosition = .automatic
 mapPosition = .camera(camera)
 ```
 
-### 2. onMapCameraChangeの活用
-地図の変更を監視し、ユーザーの操作を追跡：
+### 2. Utilizing onMapCameraChange
+Monitor map changes and track user operations:
 
 ```swift
 .onMapCameraChange { context in
-    // contextから現在のカメラ情報を取得
+    // Get current camera information from context
     let camera = context.camera
     currentMapCamera = camera
     
-    // 高度から最も近いズームレベルを設定
+    // Set nearest zoom level from altitude
     viewModel.mapControlsViewModel.setNearestZoomIndex(for: camera.distance)
 }
 ```
 
-### 3. SwiftUIの状態管理
-ボタン操作とピンチ操作を区別するためのフラグ管理：
+### 3. SwiftUI State Management
+Flag management to distinguish button operations from pinch operations:
 
 ```swift
 @State private var isZoomingByButton = false
 
-// ボタンでのズーム時
+// During button zoom
 isZoomingByButton = true
 withAnimation {
     mapPosition = .camera(newCamera)
@@ -198,33 +198,33 @@ DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
 }
 ```
 
-## テスト駆動開発（TDD）の実践
+## Test-Driven Development (TDD) Practice
 
 ### 1. MapControlsViewModelTests
-ズーム操作、スタイル切り替え、向き切り替えのロジックをテスト：
+Test zoom operations, style switching, and orientation switching logic:
 
 ```swift
 func testZoomInLimit() {
-    // 最小ズームレベルに設定
+    // Set to minimum zoom level
     sut.setZoomIndex(0)
     
-    // ズームインを試みる
+    // Attempt to zoom in
     sut.zoomIn()
     
-    // それ以上ズームインできないことを確認
+    // Verify cannot zoom in further
     XCTAssertEqual(sut.currentZoomIndex, 0)
     XCTAssertFalse(sut.canZoomIn)
 }
 
 func testSetNearestZoomIndex() {
-    // 高度750mは1000m（インデックス2）に最も近い
+    // Altitude 750m is nearest to 1000m (index 2)
     sut.setNearestZoomIndex(for: 750)
     XCTAssertEqual(sut.currentZoomIndex, 2)
 }
 ```
 
 ### 2. MapSettingsStorageTests
-設定の保存と読み込みをモックを使用してテスト：
+Test settings save and load using mocks:
 
 ```swift
 func testSaveZoomIndex() {
@@ -233,48 +233,48 @@ func testSaveZoomIndex() {
 }
 ```
 
-### 3. @MainActorの考慮
-UIに関連するクラスのテストでは、`@MainActor`アノテーションが必要：
+### 3. @MainActor Considerations
+UI-related class tests require `@MainActor` annotation:
 
 ```swift
 @MainActor
 final class MapControlsViewModelTests: XCTestCase {
-    // テストコード
+    // Test code
 }
 ```
 
-## 実装の利点
+## Implementation Benefits
 
-### 1. 安定したズーム動作
-- MapKitの内部変換に依存しない
-- 常に予測可能な12段階のズームレベル
-- ピンチ操作後もボタンで確実に次のレベルへ移動
+### 1. Stable Zoom Operation
+- Independent of MapKit's internal conversions
+- Always predictable 12-level zoom
+- Reliable movement to next level with buttons even after pinch operations
 
-### 2. 優れたユーザー体験
-- ズーム制限が視覚的に分かる（ボタンのグレーアウト）
-- 一貫性のあるズームステップ
-- スムーズなアニメーション
+### 2. Excellent User Experience
+- Visual indication of zoom limits (button grayout)
+- Consistent zoom steps
+- Smooth animations
 
-### 3. 保守性の向上
-- インデックスベースのシンプルな実装
-- テストが書きやすく、動作の検証が容易
-- 将来の拡張（音声コマンドなど）に対応しやすい設計
+### 3. Improved Maintainability
+- Simple index-based implementation
+- Easy to write tests and verify behavior
+- Design that accommodates future extensions (voice commands, etc.)
 
-## 今後の拡張予定
+## Future Extensions
 
-### Heading Up機能の実装
-現在はボタンとフラグのみ実装。今後の実装に必要な要素：
-- CLLocationManagerDelegateでheading情報を取得
-- MapCameraのheadingプロパティに適用
-- 磁北と真北の選択オプション
+### Heading Up Feature Implementation
+Currently only buttons and flags implemented. Elements needed for future implementation:
+- Get heading information with CLLocationManagerDelegate
+- Apply to MapCamera's heading property
+- Option to choose magnetic north vs. true north
 
-### 音声コマンド対応
-将来的な音声操作のための基盤：
-- 各操作メソッドが独立している設計
-- 音声認識からの呼び出しが容易
-- "ズームイン"、"ズームアウト"などのシンプルなコマンド
+### Voice Command Support
+Foundation for future voice operations:
+- Each operation method is independent
+- Easy to call from voice recognition
+- Simple commands like "zoom in", "zoom out"
 
-## まとめ
-段階3では、バイクでの使用を考慮した直感的な地図コントロールを実装しました。特に、高度ベースのズーム実装により、MapKitの内部動作に左右されない安定した操作性を実現しました。大きなタップターゲット、視覚的なフィードバック、設定の永続化により、実用的な地図アプリとしての基本機能が完成しました。
+## Summary
+In Stage 3, we implemented intuitive map controls considering motorcycle use. Particularly, the altitude-based zoom implementation achieved stable operability independent of MapKit's internal behavior. Through large tap targets, visual feedback, and settings persistence, we completed basic functionality as a practical map application.
 
-TDDアプローチにより、各機能が確実に動作することを保証しながら、段階的に機能を追加することができました。
+The TDD approach ensured reliable operation of each feature while allowing gradual feature addition.

@@ -1,101 +1,101 @@
-# スムーズな位置情報追従の実装
+# Smooth Location Tracking Implementation
 
-## 概要
+## Overview
 
-Issue #14「もっと滑らかに現在地に追従してほしい」への対応として、以下の改善を実装しました。
+In response to Issue #14 "Want smoother tracking of current location", we implemented the following improvements.
 
-## 実装内容
+## Implementation Details
 
-### 1. 位置情報更新頻度の動的調整
+### 1. Dynamic Adjustment of Location Update Frequency
 
-#### 背景
-従来は固定のdistanceFilter（10m）を使用していたため、ズームレベルに関係なく同じ頻度で更新され、詳細表示時に細かい動きが追従できない問題がありました。
+#### Background
+Previously, a fixed distanceFilter (10m) was used, which caused updates at the same frequency regardless of zoom level, resulting in inability to track fine movements during detailed display.
 
-#### 実装（Issue #76 で改善）
-`LocationManager`に`adjustUpdateFrequency`メソッドを追加し、地図カメラの高度に基づいて動的に更新頻度を調整：
+#### Implementation (Improved in Issue #76)
+Added `adjustUpdateFrequency` method to `LocationManager` to dynamically adjust update frequency based on map camera altitude:
 
-- **カメラの高度（メートル）**: 高度が低い（ズームイン）ほど頻繁な更新が必要
+- **Camera Altitude (meters)**: Lower altitude (zoomed in) requires more frequent updates
 
 ```swift
 func adjustUpdateFrequency(forAltitude altitude: Double) {
-    // カメラの高度に基づいてdistanceFilterを計算
-    // 高度が低いほど（ズームインしているほど）細かく更新（小さいdistanceFilter）
+    // Calculate distanceFilter based on camera altitude
+    // Lower altitude (more zoomed in) means finer updates (smaller distanceFilter)
     
     let newDistanceFilter: CLLocationDistance
     if altitude <= 500 {
-        // 非常に詳細なズーム（街区レベル以下）
+        // Very detailed zoom (block level and below)
         newDistanceFilter = 5.0
     } else if altitude <= 2000 {
-        // 詳細なズーム（地区レベル以下）
+        // Detailed zoom (district level and below)
         newDistanceFilter = 10.0
     } else if altitude <= 10000 {
-        // 標準的なズーム（市レベル以下）
+        // Standard zoom (city level and below)
         newDistanceFilter = 20.0
     } else {
-        // 広域ズーム（市レベルより広域）
+        // Wide area zoom (wider than city level)
         newDistanceFilter = 50.0
     }
 }
 ```
 
-#### 調整範囲
-- **最小distanceFilter**: 5m（高度500m以下、街区レベルの詳細表示）
-- **最大distanceFilter**: 50m（高度10000m超、市レベルより広域の表示）
+#### Adjustment Range
+- **Minimum distanceFilter**: 5m (altitude 500m or below, block-level detailed display)
+- **Maximum distanceFilter**: 50m (altitude over 10000m, wider than city-level display)
 
-### 2. アニメーションの改善
+### 2. Animation Improvements
 
-#### 背景
-デフォルトのアニメーションでは、頻繁な位置更新時にガタつきが発生していました。
+#### Background
+Default animation caused jitter during frequent location updates.
 
-#### 実装
-`MapView`で`interactiveSpring`アニメーションを使用：
+#### Implementation
+Use `interactiveSpring` animation in `MapView`:
 
 ```swift
 withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.1)) {
-    // カメラ位置の更新
+    // Camera position update
 }
 ```
 
-#### パラメータの意味
-- **response**: 0.3秒 - アニメーションの応答速度
-- **dampingFraction**: 0.8 - 適度な減衰で滑らかな動き
-- **blendDuration**: 0.1秒 - 前のアニメーションとの融合時間
+#### Parameter Meanings
+- **response**: 0.3 seconds - Animation response speed
+- **dampingFraction**: 0.8 - Moderate damping for smooth movement
+- **blendDuration**: 0.1 seconds - Blend time with previous animation
 
-### 3. TDDアプローチ
+### 3. TDD Approach
 
-#### テストケース
-以下のテストケースを追加して、動的な更新頻度調整を検証：
+#### Test Cases
+Added the following test cases to verify dynamic update frequency adjustment:
 
-1. **非常に詳細なズーム時のテスト**
-   - 高度: 200m（街区レベル）
-   - 期待値: distanceFilter = 5m
+1. **Very Detailed Zoom Test**
+   - Altitude: 200m (block level)
+   - Expected: distanceFilter = 5m
 
-2. **広域ズーム時のテスト**
-   - 高度: 50000m（県レベル）
-   - 期待値: distanceFilter = 50m
+2. **Wide Area Zoom Test**
+   - Altitude: 50000m (prefecture level)
+   - Expected: distanceFilter = 50m
 
-3. **詳細ズーム時のテスト**
-   - 高度: 1000m（近隣レベル）
-   - 期待値: distanceFilter = 10m
+3. **Detailed Zoom Test**
+   - Altitude: 1000m (neighborhood level)
+   - Expected: distanceFilter = 10m
 
-4. **標準ズーム時のテスト**
-   - 高度: 5000m（市区レベル）
-   - 期待値: distanceFilter = 20m
+4. **Standard Zoom Test**
+   - Altitude: 5000m (ward/city level)
+   - Expected: distanceFilter = 20m
 
-## 効果
+## Effects
 
-1. **直感的な動作**: 詳細表示時は細かく更新され、広域表示時は粗く更新されるようになりました
-2. **バッテリー効率の最適化**: ズームレベルに応じて適切な更新頻度を設定し、無駄な処理を削減
-3. **滑らかな動き**: アニメーションの改善により、視覚的にスムーズな追従を実現
+1. **Intuitive Behavior**: Fine updates during detailed display and coarse updates during wide area display
+2. **Battery Efficiency Optimization**: Set appropriate update frequency according to zoom level, reducing wasteful processing
+3. **Smooth Movement**: Achieved visually smooth tracking through animation improvements
 
-## 技術的な考慮事項
+## Technical Considerations
 
-1. **CPU負荷の最小化**: distanceFilterの変更は2m以上の差がある場合のみ実行
-2. **非同期処理**: 位置情報の処理は非同期で実行し、UIの応答性を維持
-3. **シンプルな判定ロジック**: 高度のみに基づくシンプルな判定で、複雑な計算を回避
+1. **CPU Load Minimization**: distanceFilter changes are executed only when there's a difference of 2m or more
+2. **Asynchronous Processing**: Location information processing is executed asynchronously to maintain UI responsiveness
+3. **Simple Decision Logic**: Simple decision based only on altitude, avoiding complex calculations
 
-## 今後の改善案
+## Future Improvement Ideas
 
-1. **予測アルゴリズムの導入**: 移動方向を予測して先読み表示
-2. **カスタマイズ可能な更新頻度**: ユーザーが好みに応じて調整できる設定
-3. **バッテリーセーバーモード**: 長時間使用時の省電力オプション
+1. **Introduction of Prediction Algorithm**: Predictive display by forecasting movement direction
+2. **Customizable Update Frequency**: Settings that users can adjust according to preference
+3. **Battery Saver Mode**: Power-saving option for long-term use

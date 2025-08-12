@@ -1,32 +1,32 @@
-# 多言語化実装ガイド
+# Internationalization Implementation Guide
 
-## 概要
+## Overview
 
-このガイドでは、just a mapアプリケーションに英語対応を追加した多言語化実装について説明します。
+This guide explains the internationalization implementation that added English support to the just a map application.
 
-## 実装済み機能
+## Implemented Features
 
-### 1. 基本的な国際化インフラストラクチャ
+### 1. Basic Internationalization Infrastructure
 
-#### Localizable.stringsファイル
-- `Resources/Localization/ja.lproj/Localizable.strings` - 日本語リソース
-- `Resources/Localization/en.lproj/Localizable.strings` - 英語リソース
+#### Localizable.strings Files
+- `Resources/Localization/ja.lproj/Localizable.strings` - Japanese resources
+- `Resources/Localization/en.lproj/Localizable.strings` - English resources
 
-#### String拡張によるローカライゼーションヘルパー
+#### Localization Helper with String Extension
 - `Sources/JustAMap/Extensions/String+Localization.swift`
-- `"key".localized` - 基本的なローカライゼーション
-- `"key".localized(with: args...)` - フォーマット付きローカライゼーション
+- `"key".localized` - Basic localization
+- `"key".localized(with: args...)` - Localization with formatting
 
-### 2. 対象テキストの国際化
+### 2. Internationalization of Target Text
 
-#### AddressView（住所表示ビュー）
+#### AddressView (Address Display View)
 - "住所を取得中..." → "address.loading"
-  - 日本語: "住所を取得中..."
-  - 英語: "Loading address..."
+  - Japanese: "住所を取得中..."
+  - English: "Loading address..."
 
-#### SettingsView（設定画面）
+#### SettingsView (Settings Screen)
 - "設定" → "settings.title"
-- "閉じる" → "settings.close"  
+- "閉じる" → "settings.close"
 - "デフォルト設定" → "settings.default_settings"
 - "デフォルトズームレベル" → "settings.default_zoom_level"
 - "地図の種類" → "settings.map_type"
@@ -34,51 +34,51 @@
 - "表示設定" → "settings.display_settings"
 - "住所表示フォーマット" → "settings.address_format"
 
-#### AddressFormat（住所フォーマット）
+#### AddressFormat (Address Format)
 - "標準" → "address_format.standard"
-- "詳細" → "address_format.detailed"  
+- "詳細" → "address_format.detailed"
 - "シンプル" → "address_format.simple"
-- フォーマット説明文も完全にローカライズ
+- Format descriptions are also fully localized
 
-#### MapStyle（地図スタイル）
+#### MapStyle (Map Style)
 - "標準" → "map_style.standard"
-- "航空写真+地図" → "map_style.hybrid" (英語: "Satellite + Map")
-- "航空写真" → "map_style.imagery" (英語: "Satellite")
+- "航空写真+地図" → "map_style.hybrid" (English: "Satellite + Map")
+- "航空写真" → "map_style.imagery" (English: "Satellite")
 
-#### LocationError（位置情報エラー）
-- 全てのエラーメッセージをローカライズ
-- フォーマット付きエラーメッセージにも対応
+#### LocationError (Location Information Errors)
+- All error messages are localized
+- Support for formatted error messages as well
 
-#### AddressFormatter（住所フォーマッター）
-- "現在地" → "address.current_location" (英語: "Current Location")
+#### AddressFormatter (Address Formatter)
+- "現在地" → "address.current_location" (English: "Current Location")
 
-### 3. 国際化対応住所フォーマット
+### 3. Internationalized Address Format
 
-#### ロケール検出による自動切り替え
+#### Automatic Switching Based on Locale Detection
 ```swift
 let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
 ```
 
-#### 郵便番号フォーマット
-- **日本語環境**: 〒100-0001
-- **英語/国際環境**: 100-0001（プレーン形式）
+#### Postal Code Format
+- **Japanese environment**: 〒100-0001
+- **English/International environment**: 100-0001 (plain format)
 
-#### 住所コンポーネントの順序
-- **日本語**: 都道府県 → 市区町村/郡 → 区市町村
-- **英語/国際**: 市区町村 → 州/県 → 国 (カンマ区切り)
+#### Address Component Order
+- **Japanese**: Prefecture → City/Ward/Town/Village/District → Ward/City/Town/Village
+- **English/International**: City/Town/Village → State/Prefecture → Country (comma-separated)
 
-### 4. テスト実装
+### 4. Test Implementation
 
 #### LocalizationTests.swift
-- String拡張のテスト
-- AddressFormatのローカライゼーションテスト
-- MapStyleのローカライゼーションテスト
-- LocationErrorのローカライゼーションテスト
-- AddressFormatterの国際化対応テスト
+- String extension tests
+- AddressFormat localization tests
+- MapStyle localization tests
+- LocationError localization tests
+- AddressFormatter internationalization support tests
 
-## 技術的詳細
+## Technical Details
 
-### Package.swift設定
+### Package.swift Configuration
 ```swift
 .target(
     name: "JustAMap",
@@ -90,95 +90,95 @@ let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
 ),
 ```
 
-### 使用方法の例
+### Usage Examples
 
-#### 基本的な文字列のローカライゼーション
+#### Basic String Localization
 ```swift
 Text("settings.title".localized)
 ```
 
-#### フォーマット付き文字列のローカライゼーション
+#### Formatted String Localization
 ```swift
 "location.error.update_failed".localized(with: errorMessage)
 ```
 
-#### 条件付きローカライゼーション（住所フォーマッターで使用）
+#### Conditional Localization (Used in Address Formatter)
 ```swift
 let currentLanguage = Locale.current.language.languageCode?.identifier ?? "en"
 if currentLanguage == "ja" {
-    // 日本語固有の処理
+    // Japanese-specific processing
 } else {
-    // 国際（英語）処理
+    // International (English) processing
 }
 ```
 
-## 多言語化の拡張方法
+## Extending Internationalization
 
-### 新しい言語の追加手順
+### Steps to Add New Languages
 
-1. **新しい.lprojディレクトリの作成**
+1. **Create New .lproj Directory**
    ```
    Resources/Localization/[language_code].lproj/
    ```
 
-2. **Localizable.stringsファイルの作成**
-   既存の英語版をベースに翻訳
+2. **Create Localizable.strings File**
+   Translate based on existing English version
 
-3. **Package.swiftの更新**（通常は不要、resourcesが自動検出）
+3. **Update Package.swift** (usually unnecessary, resources are auto-detected)
 
-4. **住所フォーマットの調整**
-   必要に応じてAddressFormatterでロケール固有の処理を追加
+4. **Adjust Address Format**
+   Add locale-specific processing in AddressFormatter if needed
 
-### 新しい文字列の追加手順
+### Steps to Add New Strings
 
-1. **全てのLocalizable.stringsファイルに同じキーを追加**
-2. **コード内でローカライズされていない文字列を置換**
+1. **Add the same key to all Localizable.strings files**
+2. **Replace non-localized strings in code**
    ```swift
-   "新しいテキスト" → "new.text.key".localized
+   "New text" → "new.text.key".localized
    ```
-3. **テストケースの追加**
+3. **Add test cases**
 
-## ベストプラクティス
+## Best Practices
 
-### キーの命名規則
-- ドット区切りの階層構造を使用
-- 例: `"settings.display_settings"`, `"address_format.standard"`
+### Key Naming Convention
+- Use dot-separated hierarchical structure
+- Example: `"settings.display_settings"`, `"address_format.standard"`
 
-### コメントの活用
-Localizable.stringsファイルでセクションコメントを使用：
+### Using Comments
+Use section comments in Localizable.strings files:
 ```
 /* SettingsView */
 "settings.title" = "Settings";
 ```
 
-### フォーマット文字列
-- %@, %d などのフォーマット指定子を適切に使用
-- 引数の順序が言語によって異なる場合は位置指定子を使用
+### Format Strings
+- Use format specifiers like %@, %d appropriately
+- Use positional specifiers when argument order differs by language
 
-### 住所フォーマットの国際化
-- ロケールによる住所コンポーネントの順序変更
-- 区切り文字の変更（日本語：なし、英語：カンマ）
-- 郵便番号プレフィックスの調整
+### Address Format Internationalization
+- Change order of address components by locale
+- Change separators (Japanese: none, English: comma)
+- Adjust postal code prefixes
 
-## 注意事項
+## Notes
 
-### UI要素のサイズ調整
-- 英語は日本語より長くなる傾向があるため、UIレイアウトに十分な余裕を持たせる
-- 特にボタンテキストや設定項目名に注意
+### UI Element Size Adjustment
+- English tends to be longer than Japanese, so provide sufficient margin in UI layouts
+- Pay special attention to button text and setting item names
 
-### 文化的配慮
-- 住所フォーマットは文化に依存するため、各国の慣習に合わせる
-- 日付、時刻、数値フォーマットも将来的に考慮が必要
+### Cultural Considerations
+- Address formats depend on culture, so adapt to customs of each country
+- Date, time, and number formats also need future consideration
 
-### テスト環境
-- シミュレータの言語設定を変更してテスト
-- 実機での動作確認も重要
+### Test Environment
+- Test by changing simulator language settings
+- Real device testing is also important
 
-## iOSアプリ言語設定
+## iOS App Language Settings
 
-### CFBundleLocalizations設定
+### CFBundleLocalizations Configuration
 
-Info.plistに以下の設定により、iOSの「設定」→「アプリ」→「JustAMap」に「優先する言語」オプションが表示されます：
+With the following settings in Info.plist, the "Preferred Language" option appears in iOS "Settings" → "Apps" → "JustAMap":
 
 ```xml
 <key>CFBundleLocalizations</key>
@@ -190,9 +190,9 @@ Info.plistに以下の設定により、iOSの「設定」→「アプリ」→�
 <string>en</string>
 ```
 
-### InfoPlist.stringsによる権限説明の国際化
+### Permission Description Internationalization with InfoPlist.strings
 
-位置情報アクセス許可の説明文も国際化対応：
+Location access permission descriptions are also internationalized:
 
 - `Resources/Localization/en.lproj/InfoPlist.strings`
 - `Resources/Localization/ja.lproj/InfoPlist.strings`
@@ -202,19 +202,19 @@ Info.plistに以下の設定により、iOSの「設定」→「アプリ」→�
 "NSLocationWhenInUseUsageDescription" = "We use location to display your current position on the map and show your address.";
 ```
 
-### ユーザー体験
+### User Experience
 
-1. **システム言語追従**: デフォルトではiOSのシステム言語設定に従う
-2. **アプリ個別設定**: 「設定」→「アプリ」→「JustAMap」→「優先する言語」でアプリ単体の言語を変更可能
-3. **即座反映**: 言語変更は次回アプリ起動時に反映
+1. **System Language Following**: By default, follows iOS system language settings
+2. **App-specific Settings**: Language can be changed for the app alone in "Settings" → "Apps" → "JustAMap" → "Preferred Language"
+3. **Immediate Reflection**: Language changes are reflected the next time the app is launched
 
-## 今後の改善点
+## Future Improvements
 
-1. **複数形対応**: NSStringLocalizedStringWithDefaultValue を使用した複数形対応
-2. **右から左への言語対応**: アラビア語、ヘブライ語などのサポート
-3. **地域特化**: 同じ言語でも地域による差異への対応
-4. **音声読み上げ**: VoiceOverでの多言語対応
+1. **Plural Support**: Support for plurals using NSStringLocalizedStringWithDefaultValue
+2. **Right-to-Left Language Support**: Support for Arabic, Hebrew, etc.
+3. **Regional Specialization**: Support for regional differences even within the same language
+4. **Voice Narration**: Multilingual support for VoiceOver
 
 ---
 
-このガイドに従って、just a mapアプリケーションの多言語化を効率的に管理・拡張できます。
+Following this guide, you can efficiently manage and extend the internationalization of the just a map application.

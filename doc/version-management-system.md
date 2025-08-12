@@ -1,61 +1,61 @@
 # Version Management System
 
-## 概要
+## Overview
 
-JustAMapプロジェクトでは、Gitベースの自動バージョン管理システムを採用しています。このシステムは、ビルド時にGitの情報から自動的にバージョン番号を生成し、アプリケーションに埋め込みます。
+The JustAMap project adopts a Git-based automatic version management system. This system automatically generates version numbers from Git information during build and embeds them in the application.
 
-## システム構成
+## System Components
 
-### 主要コンポーネント
+### Major Components
 
 1. **scripts/generate-version.sh**
-   - Gitリポジトリから情報を取得
-   - バージョン文字列とビルド番号を生成
-   - コマンドライン引数で特定の情報を返す
+   - Retrieves information from Git repository
+   - Generates version strings and build numbers
+   - Returns specific information via command line arguments
 
 2. **scripts/sync-version-info.sh**
-   - ビルド時に実行される
-   - `Resources/built/VersionInfo.plist`を生成
-   - Git情報をplist形式に同期
+   - Executed during build
+   - Generates `Resources/built/VersionInfo.plist`
+   - Synchronizes Git information in plist format
 
 3. **Resources/built/VersionInfo.plist**
-   - ビルド時に生成される
-   - Git追跡対象外（.gitignoreに記載）
-   - アプリケーションから読み込まれる
+   - Generated during build
+   - Excluded from Git tracking (listed in .gitignore)
+   - Read by application
 
 4. **SettingsViewModel**
-   - VersionInfo.plistからバージョン情報を読み込む
-   - 存在しない場合はBundleから取得（フォールバック）
+   - Reads version information from VersionInfo.plist
+   - Fallback to Bundle if file doesn't exist
 
-## バージョン番号の構成
+## Version Number Structure
 
-### バージョン文字列
+### Version String
 ```
 <major>.<minor>.<patch>+<commit-hash>[.dirty]
 ```
 
-- **major.minor.patch**: セマンティックバージョニング
-- **commit-hash**: 短縮形のGitコミットハッシュ（7文字）
-- **.dirty**: 未コミットの変更がある場合に付加
+- **major.minor.patch**: Semantic versioning
+- **commit-hash**: Shortened Git commit hash (7 characters)
+- **.dirty**: Added when uncommitted changes exist
 
-例: `1.0.0+89a1dfd.dirty`
+Example: `1.0.0+89a1dfd.dirty`
 
-### ビルド番号
-- Gitのコミット数を使用
-- 自動的にインクリメントされる
-- 例: `234`
+### Build Number
+- Uses Git commit count
+- Automatically increments
+- Example: `234`
 
-## ビルドプロセス
+## Build Process
 
-1. `make build`または`make test`実行時
-2. `sync-version-info.sh`が呼ばれる
-3. `generate-version.sh`でGit情報を取得
-4. `Resources/built/VersionInfo.plist`を生成
-5. `fix-assets.sh`でアプリバンドルにコピー
+1. Execute `make build` or `make test`
+2. `sync-version-info.sh` is called
+3. Get Git information with `generate-version.sh`
+4. Generate `Resources/built/VersionInfo.plist`
+5. Copy to app bundle with `fix-assets.sh`
 
-## 実装の詳細
+## Implementation Details
 
-### VersionInfo.plistの形式
+### VersionInfo.plist Format
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,9 +69,9 @@ JustAMapプロジェクトでは、Gitベースの自動バージョン管理シ
 </plist>
 ```
 
-### SettingsViewModelでの読み込み
+### Loading in SettingsViewModel
 ```swift
-// VersionInfo.plistから読み込み
+// Load from VersionInfo.plist
 if let versionInfoURL = bundle.url(forResource: "VersionInfo", withExtension: "plist"),
    let data = try? Data(contentsOf: versionInfoURL),
    let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
@@ -79,41 +79,41 @@ if let versionInfoURL = bundle.url(forResource: "VersionInfo", withExtension: "p
 }
 ```
 
-## 重要な設計判断
+## Important Design Decisions
 
-### なぜInfo.plistを直接変更しないのか
+### Why Not Directly Modify Info.plist
 
-1. **Git管理の問題**: Info.plistはGit追跡対象のため、ビルドごとに変更されるとリポジトリが汚れる
-2. **CI/CDの問題**: 自動ビルドでコミットされていない変更が発生する
-3. **開発体験**: 開発中に常にGitステータスがdirtyになる
+1. **Git Management Issues**: Info.plist is tracked by Git, so changes with each build would pollute the repository
+2. **CI/CD Issues**: Uncommitted changes occur during automated builds
+3. **Development Experience**: Git status becomes dirty constantly during development
 
-### ランタイムバージョン情報の利点
+### Benefits of Runtime Version Information
 
-1. **クリーンなGitステータス**: ビルド後もリポジトリがクリーン
-2. **柔軟性**: ビルド時に動的にバージョン情報を生成
-3. **互換性**: 既存のInfo.plist構造を変更不要
+1. **Clean Git Status**: Repository stays clean even after builds
+2. **Flexibility**: Dynamically generate version information during build
+3. **Compatibility**: No need to change existing Info.plist structure
 
-## トラブルシューティング
+## Troubleshooting
 
-### VersionInfo.plistが見つからない
+### VersionInfo.plist Not Found
 
-- 初回ビルド前は存在しない（正常）
-- `make build`を実行すると自動生成される
-- 手動で作成する必要はない
+- Doesn't exist before first build (normal)
+- Auto-generated when running `make build`
+- No need to create manually
 
-### バージョン情報が更新されない
+### Version Information Not Updating
 
-1. Gitリポジトリであることを確認
-2. `git status`で現在の状態を確認
-3. `./scripts/generate-version.sh version-string`で手動確認
+1. Confirm it's a Git repository
+2. Check current status with `git status`
+3. Manual check with `./scripts/generate-version.sh version-string`
 
-### テスト時のバージョン情報
+### Version Information During Tests
 
-- `MockBundle`を使用してテスト
-- `mockResources`プロパティでVersionInfo.plistのURLを設定可能
+- Use `MockBundle` for testing
+- Can set VersionInfo.plist URL with `mockResources` property
 
-## 今後の拡張
+## Future Extensions
 
-- リリースタグからの自動バージョン取得
-- ビルド環境情報の追加（ブランチ名など）
-- バージョン履歴の記録
+- Automatic version acquisition from release tags
+- Add build environment information (branch name, etc.)
+- Record version history

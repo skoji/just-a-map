@@ -1,19 +1,19 @@
-# 設定画面とデフォルトズームレベル機能
+# Settings Screen and Default Zoom Level Feature
 
-## 概要
+## Overview
 
-JustAMapの設定画面では、ユーザーが以下の項目をカスタマイズできます：
-- デフォルトズームレベル
-- デフォルト地図スタイル（標準/衛星写真/ハイブリッド）
-- デフォルト地図の向き（北固定/進行方向）
-- 住所表示フォーマット（標準/詳細/シンプル）
-- アプリバージョン情報の表示
+JustAMap's settings screen allows users to customize the following items:
+- Default zoom level
+- Default map style (Standard/Satellite/Hybrid)
+- Default map orientation (North Fixed/Direction of Travel)
+- Address display format (Standard/Detailed/Simple)
+- App version information display
 
-## 実装の詳細
+## Implementation Details
 
 ### SettingsViewModel
 
-設定画面のビジネスロジックを管理するViewModelです：
+ViewModel that manages the business logic of the settings screen:
 
 ```swift
 class SettingsViewModel: ObservableObject {
@@ -28,21 +28,21 @@ class SettingsViewModel: ObservableObject {
 }
 ```
 
-### バージョン情報の取得
+### Version Information Acquisition
 
-PR #50で実装されたバージョン管理システムを使用：
+Uses the version management system implemented in PR #50:
 
-1. **VersionInfo.plistから取得**（優先）
-   - ビルド時に生成される
-   - Git情報から自動生成されたバージョン番号を含む
+1. **Acquire from VersionInfo.plist** (Priority)
+   - Generated at build time
+   - Contains automatically generated version number from Git information
 
-2. **Bundle.mainから取得**（フォールバック）
-   - VersionInfo.plistが存在しない場合に使用
-   - 開発中やテスト時に有効
+2. **Acquire from Bundle.main** (Fallback)
+   - Used when VersionInfo.plist doesn't exist
+   - Valid during development and testing
 
-### 設定の永続化
+### Settings Persistence
 
-`MapSettingsStorage`を使用してUserDefaultsに保存：
+Saved to UserDefaults using `MapSettingsStorage`:
 
 ```swift
 protocol MapSettingsStorageProtocol {
@@ -53,21 +53,21 @@ protocol MapSettingsStorageProtocol {
 }
 ```
 
-## TDDアプローチ
+## TDD Approach
 
-### テストファースト開発
+### Test-First Development
 
 1. **SettingsViewModelTests**
-   - バージョン情報の取得ロジック
-   - 設定値の読み書き
-   - MockBundleを使用したテスト
+   - Version information acquisition logic
+   - Settings value read/write
+   - Tests using MockBundle
 
-2. **統合テスト**
-   - 設定画面の表示
-   - 設定変更の反映
-   - アプリ再起動時の設定保持
+2. **Integration Tests**
+   - Settings screen display
+   - Settings change reflection
+   - Settings persistence on app restart
 
-### モックオブジェクト
+### Mock Objects
 
 ```swift
 class MockBundle: BundleProtocol {
@@ -75,45 +75,45 @@ class MockBundle: BundleProtocol {
     var mockResources: [String: URL] = [:]
     
     func url(forResource name: String?, withExtension ext: String?) -> URL? {
-        // VersionInfo.plistのモック
+        // Mock for VersionInfo.plist
     }
 }
 ```
 
-## UI実装
+## UI Implementation
 
 ### SwiftUI Form
 
-設定画面はSwiftUIのFormを使用：
+The settings screen uses SwiftUI Form:
 
 ```swift
 Form {
     Section("map_settings") {
-        // ズームレベル設定
-        // 地図スタイル設定
-        // 地図の向き設定
+        // Zoom level settings
+        // Map style settings
+        // Map orientation settings
     }
     
     Section("address_settings") {
-        // 住所フォーマット設定
+        // Address format settings
     }
     
     Section("app_info") {
-        // バージョン情報表示
+        // Version information display
     }
 }
 ```
 
-## 国際化対応
+## Internationalization Support
 
-全ての設定項目は多言語対応：
-- 日本語（ja）
-- 英語（en）
+All setting items support multiple languages:
+- Japanese (ja)
+- English (en)
 
-Localizable.stringsファイルで管理。
+Managed in Localizable.strings files.
 
-## 今後の拡張
+## Future Extensions
 
-- 設定のエクスポート/インポート
-- iCloud同期
-- 詳細なカスタマイズオプション
+- Settings export/import
+- iCloud synchronization
+- Detailed customization options

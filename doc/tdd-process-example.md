@@ -1,20 +1,20 @@
-# テスト駆動開発（TDD）の実践例
+# Test-Driven Development (TDD) Practice Example
 
-## 概要
+## Overview
 
-Issue #8（地図中心点の住所表示機能）の実装で実践したTDDプロセスを、具体的なコード例と共に解説します。
+This document explains the TDD process practiced in the implementation of Issue #8 (Map Center Address Display Feature) with specific code examples.
 
-## TDDサイクル
+## TDD Cycle
 
 ```
-1. Red   - 失敗するテストを書く
-2. Green - テストを通す最小限の実装
-3. Refactor - コードを改善（テストは通ったまま）
+1. Red   - Write failing test
+2. Green - Minimal implementation to pass test
+3. Refactor - Improve code (while keeping tests passing)
 ```
 
-## 実装例1: 追従モード状態管理
+## Implementation Example 1: Follow Mode State Management
 
-### 1. Red - 失敗するテストを書く
+### 1. Red - Write failing test
 
 ```swift
 // MapViewModelTests.swift
@@ -28,22 +28,22 @@ func testCenterOnUserLocationEnablesFollowingMode() {
     sut.centerOnUserLocation()
     
     // Then
-    XCTAssertTrue(sut.isFollowingUser, "centerOnUserLocationを呼ぶと追従モードが有効になるべき")
+    XCTAssertTrue(sut.isFollowingUser, "Follow mode should be enabled when calling centerOnUserLocation")
 }
 ```
 
-**この時点でのエラー**：
-- `centerOnUserLocation`メソッドが追従モードを有効化していない
+**Error at this point:**
+- `centerOnUserLocation` method is not enabling follow mode
 
-### 2. Green - テストを通す最小限の実装
+### 2. Green - Minimal implementation to pass test
 
 ```swift
 // MapViewModel.swift
 func centerOnUserLocation() {
     guard let location = userLocation else { return }
     
-    // 追従モードを有効化
-    isFollowingUser = true  // この行を追加
+    // Enable follow mode
+    isFollowingUser = true  // Added this line
     
     withAnimation(.easeInOut(duration: 0.3)) {
         region = MKCoordinateRegion(
@@ -54,13 +54,13 @@ func centerOnUserLocation() {
 }
 ```
 
-### 3. Refactor - 必要に応じて改善
+### 3. Refactor - Improve as needed
 
-この例では、実装がシンプルなのでリファクタリングは不要でした。
+In this example, no refactoring was needed due to simple implementation.
 
-## 実装例2: デバウンス処理付き住所取得
+## Implementation Example 2: Address Acquisition with Debounce Processing
 
-### 1. Red - 失敗するテストを書く
+### 1. Red - Write failing test
 
 ```swift
 func testFetchAddressForMapCenterWithDebounce() async {
@@ -68,30 +68,30 @@ func testFetchAddressForMapCenterWithDebounce() async {
     let newCenter = CLLocationCoordinate2D(latitude: 35.6812, longitude: 139.7671)
     sut.isFollowingUser = false
     
-    // When - 地図中心を更新
+    // When - Update map center
     sut.updateMapCenter(newCenter)
     
-    // Then - 即座には住所取得が開始されない
+    // Then - Address acquisition doesn't start immediately
     XCTAssertFalse(sut.isLoadingMapCenterAddress)
     XCTAssertNil(sut.mapCenterAddress)
     
-    // デバウンス時間（300ms）待つ
-    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+    // Wait for debounce time (300ms)
+    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
     
-    // Then - デバウンス後に住所が取得される
+    // Then - Address is acquired after debounce
     XCTAssertNotNil(sut.mapCenterAddress)
     XCTAssertFalse(sut.isLoadingMapCenterAddress)
 }
 ```
 
-**この時点でのエラー**：
-- `updateMapCenter`メソッドが存在しない
-- `isLoadingMapCenterAddress`プロパティが存在しない
-- `mapCenterAddress`プロパティが存在しない
+**Errors at this point:**
+- `updateMapCenter` method doesn't exist
+- `isLoadingMapCenterAddress` property doesn't exist
+- `mapCenterAddress` property doesn't exist
 
-### 2. Green - テストを通す実装
+### 2. Green - Implementation to pass tests
 
-まず、必要なプロパティを追加：
+First, add necessary properties:
 
 ```swift
 // MapViewModel.swift
@@ -103,7 +103,7 @@ private var mapCenterGeocodingTask: Task<Void, Never>?
 private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
 ```
 
-次に、メソッドを実装：
+Next, implement methods:
 
 ```swift
 func updateMapCenter(_ coordinate: CLLocationCoordinate2D) {
@@ -111,17 +111,17 @@ func updateMapCenter(_ coordinate: CLLocationCoordinate2D) {
     
     guard !isFollowingUser else { return }
     
-    // 前のタスクをキャンセル
+    // Cancel previous task
     mapCenterGeocodingTask?.cancel()
     
-    // 新しいタスクを開始
+    // Start new task
     mapCenterGeocodingTask = Task {
-        // デバウンス
+        // Debounce
         try? await Task.sleep(nanoseconds: mapCenterDebounceDelay)
         
         guard !Task.isCancelled else { return }
         
-        // 住所を取得
+        // Acquire address
         await fetchAddressForMapCenter()
     }
 }
@@ -150,20 +150,20 @@ private func fetchAddressForMapCenter() async {
 }
 ```
 
-### 3. Refactor - タスク管理の改善
+### 3. Refactor - Improve task management
 
 ```swift
-// stopLocationTracking()メソッドに追加
+// Added to stopLocationTracking() method
 func stopLocationTracking() {
     locationManager.stopLocationUpdates()
     geocodingTask?.cancel()
-    mapCenterGeocodingTask?.cancel()  // 追加：地図中心のタスクもキャンセル
+    mapCenterGeocodingTask?.cancel()  // Added: Cancel map center task too
 }
 ```
 
-## 実装例3: 連続的な更新のキャンセル
+## Implementation Example 3: Continuous Update Cancellation
 
-### 1. Red - 失敗するテストを書く
+### 1. Red - Write failing test
 
 ```swift
 func testRapidMapCenterUpdatesCancelPreviousFetch() async {
@@ -173,53 +173,53 @@ func testRapidMapCenterUpdatesCancelPreviousFetch() async {
     let center3 = CLLocationCoordinate2D(latitude: 35.6830, longitude: 139.7690)
     sut.isFollowingUser = false
     
-    // When - 連続して地図中心を更新
+    // When - Continuously update map center
     sut.updateMapCenter(center1)
-    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
     sut.updateMapCenter(center2)
-    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
     sut.updateMapCenter(center3)
     
-    // Then - 最後の更新のみが処理される
-    try? await Task.sleep(nanoseconds: 400_000_000) // 0.4秒
+    // Then - Only the last update is processed
+    try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
     XCTAssertEqual(sut.mapCenterCoordinate.latitude, center3.latitude, accuracy: 0.0001)
     XCTAssertEqual(sut.mapCenterCoordinate.longitude, center3.longitude, accuracy: 0.0001)
 }
 ```
 
-このテストは、既に実装したデバウンス処理により自動的にパスしました。これは良い設計の証拠です。
+This test automatically passed with the debounce processing already implemented. This is evidence of good design.
 
-## TDDの利点（実例から）
+## Benefits of TDD (From Examples)
 
-### 1. 設計の改善
-- テストを先に書くことで、APIの使いやすさを考慮
-- 例：`updateMapCenter`メソッドの引数が自然に決まった
+### 1. Design Improvement
+- Consider API usability by writing tests first
+- Example: `updateMapCenter` method arguments naturally determined
 
-### 2. リグレッション防止
-- 全てのテストが通ることで、既存機能が壊れていないことを確認
-- 例：追従モード時の位置更新が正常に動作し続けることを保証
+### 2. Regression Prevention
+- Ensure existing functionality doesn't break by having all tests pass
+- Example: Guarantee that location updates in follow mode continue to work normally
 
-### 3. ドキュメント化
-- テストコードが仕様書として機能
-- 例：デバウンス時間が300msであることが明確
+### 3. Documentation
+- Test code functions as specification documentation
+- Example: Clear that debounce time is 300ms
 
-### 4. リファクタリングの安全性
-- テストがあることで、安心してコードを改善可能
-- 例：タスク管理の改善時もテストで動作を保証
+### 4. Safe Refactoring
+- Tests ensure safe code improvement
+- Example: Guarantee behavior when improving task management
 
-## モックオブジェクトの活用
+## Utilizing Mock Objects
 
 ```swift
 // MockGeocodeService.swift
 class MockGeocodeService: GeocodeServiceProtocol {
     var reverseGeocodeResult: Result<Address, Error> = .success(Address(
-        name: "東京駅",
-        fullAddress: "東京都千代田区丸の内１丁目９−１",
+        name: "Tokyo Station",
+        fullAddress: "1-9-1 Marunouchi, Chiyoda City, Tokyo",
         postalCode: "100-0005",
-        locality: "千代田区",
+        locality: "Chiyoda City",
         subAdministrativeArea: nil,
-        administrativeArea: "東京都",
-        country: "日本"
+        administrativeArea: "Tokyo",
+        country: "Japan"
     ))
     
     func reverseGeocode(location: CLLocation) async throws -> Address {
@@ -233,30 +233,30 @@ class MockGeocodeService: GeocodeServiceProtocol {
 }
 ```
 
-**モックの利点**：
-- 外部APIに依存しない高速なテスト
-- エラーケースのテストが容易
-- 予測可能な結果でテストの安定性向上
+**Benefits of Mocks:**
+- Fast tests without external API dependencies
+- Easy testing of error cases
+- Improved test stability with predictable results
 
-## 学んだこと
+## Lessons Learned
 
-### 1. 非同期処理のテスト
-- `async/await`を使用したテストの書き方
-- `Task.sleep`でタイミングを制御
+### 1. Asynchronous Processing Tests
+- How to write tests using `async/await`
+- Control timing with `Task.sleep`
 
-### 2. SwiftUIとの統合
-- ViewModelのテストに集中
-- UIテストは最小限に（今回は手動テストで補完）
+### 2. SwiftUI Integration
+- Focus on ViewModel tests
+- Minimal UI tests (supplemented with manual testing this time)
 
-### 3. 段階的な実装
-- 小さな単位でRed-Green-Refactorサイクルを回す
-- 各段階でコミット
+### 3. Incremental Implementation
+- Run Red-Green-Refactor cycle in small units
+- Commit at each stage
 
-## まとめ
+## Summary
 
-TDDを実践することで：
-- バグの少ない、信頼性の高いコードを実装
-- 設計が自然に改善される
-- 将来の変更に対する安全性が確保される
+By practicing TDD:
+- Implement reliable, low-bug code
+- Design naturally improves
+- Safety for future changes is ensured
 
-特に、デバウンス処理のような複雑な非同期処理では、TDDのアプローチが非常に有効であることが実証されました。
+Particularly for complex asynchronous processing like debounce processing, the TDD approach proved very effective.
