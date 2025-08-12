@@ -1,51 +1,51 @@
-# 段階2実装ガイド：住所表示とスリープ防止
+# Stage 2 Implementation Guide: Address Display and Sleep Prevention
 
-このドキュメントでは、段階2で実装した住所表示とスリープ防止機能について解説します。
+This document explains the address display and sleep prevention features implemented in Stage 2.
 
-## 目次
+## Table of Contents
 
-1. [実装概要](#実装概要)
-2. [TDDによる開発プロセス](#tddによる開発プロセス)
-3. [逆ジオコーディングサービス](#逆ジオコーディングサービス)
-4. [住所フォーマッター](#住所フォーマッター)
-5. [スリープ防止機能](#スリープ防止機能)
-6. [UI統合](#ui統合)
-7. [学んだこと](#学んだこと)
+1. [Implementation Overview](#implementation-overview)
+2. [TDD Development Process](#tdd-development-process)
+3. [Reverse Geocoding Service](#reverse-geocoding-service)
+4. [Address Formatter](#address-formatter)
+5. [Sleep Prevention Feature](#sleep-prevention-feature)
+6. [UI Integration](#ui-integration)
+7. [Lessons Learned](#lessons-learned)
 
-## 実装概要
+## Implementation Overview
 
-段階2では以下の機能を実装しました：
+Stage 2 implemented the following features:
 
-1. **住所表示機能**
-   - 現在位置から住所を取得（逆ジオコーディング）
-   - 日本の住所フォーマットに対応
-   - 場所名（東京駅など）を優先表示
+1. **Address Display Feature**
+   - Acquire address from current location (reverse geocoding)
+   - Support for Japanese address format
+   - Prioritize place names (e.g., Tokyo Station) for display
 
-2. **スリープ防止機能**
-   - バイク走行中に画面が消えない
-   - アプリのライフサイクルに応じた制御
+2. **Sleep Prevention Feature**
+   - Screen doesn't turn off during motorcycle riding
+   - Control according to app lifecycle
 
-## TDDによる開発プロセス
+## TDD Development Process
 
-### 1. GeocodeServiceの開発
+### 1. GeocodeService Development
 
-**Red（失敗するテストを書く）:**
+**Red (Write failing test):**
 ```swift
 func testReverseGeocodeSuccess() async throws {
     // Given
     let location = CLLocation(latitude: 35.6762, longitude: 139.6503)
-    let expectedPlacemark = MockPlacemark(name: "東京駅", ...)
+    let expectedPlacemark = MockPlacemark(name: "Tokyo Station", ...)
     mockGeocoder.placemarkToReturn = expectedPlacemark
     
     // When
     let address = try await sut.reverseGeocode(location: location)
     
     // Then
-    XCTAssertEqual(address.name, "東京駅")
+    XCTAssertEqual(address.name, "Tokyo Station")
 }
 ```
 
-**Green（テストを通す最小限の実装）:**
+**Green (Minimal implementation to pass test):**
 ```swift
 func reverseGeocode(location: CLLocation) async throws -> Address {
     let placemarks = try await geocoder.reverseGeocodeLocation(location)
@@ -56,9 +56,9 @@ func reverseGeocode(location: CLLocation) async throws -> Address {
 }
 ```
 
-## 逆ジオコーディングサービス
+## Reverse Geocoding Service
 
-### プロトコルによる抽象化
+### Abstraction with Protocols
 
 ```swift
 protocol GeocoderProtocol {
@@ -68,12 +68,12 @@ protocol GeocoderProtocol {
 extension CLGeocoder: GeocoderProtocol {}
 ```
 
-**なぜプロトコルを使うのか？**
-- CLGeocoderをモック化してテスト可能に
-- ネットワーク接続なしでテスト実行
-- エラーケースも簡単にテスト
+**Why Use Protocols?**
+- Make CLGeocoder mockable for testing
+- Run tests without network connection
+- Easy testing of error cases
 
-### async/awaitの活用
+### Utilizing async/await
 
 ```swift
 func reverseGeocode(location: CLLocation) async throws -> Address {
@@ -86,20 +86,20 @@ func reverseGeocode(location: CLLocation) async throws -> Address {
 }
 ```
 
-**従来のコールバック方式との違い：**
-- コードが読みやすい（同期的な見た目）
-- エラーハンドリングが統一的
-- キャンセル処理が簡単
+**Differences from Traditional Callback Approach:**
+- Code is more readable (looks synchronous)
+- Unified error handling
+- Simple cancellation processing
 
-## 住所フォーマッター
+## Address Formatter
 
-### 日本の住所表示への対応
+### Support for Japanese Address Display
 
 ```swift
 private func buildFullAddress(from placemark: CLPlacemark) -> String {
     var components: [String] = []
     
-    // 日本の住所フォーマット: 都道府県 > 市区町村 > 番地
+    // Japanese address format: Prefecture > City/Ward/Town/Village > Street Number
     if let administrativeArea = placemark.administrativeArea {
         components.append(administrativeArea)
     }
@@ -112,24 +112,24 @@ private func buildFullAddress(from placemark: CLPlacemark) -> String {
 }
 ```
 
-### 表示の優先順位
+### Display Priority
 
 ```swift
 private func determinePrimaryText(from address: Address) -> String {
-    // 優先順位: 1. 場所の名前, 2. 市区町村, 3. デフォルト
+    // Priority: 1. Place name, 2. City/Ward/Town/Village, 3. Default
     if let name = address.name, !name.isEmpty {
-        return name  // "東京駅"
+        return name  // "Tokyo Station"
     }
     if let locality = address.locality, !locality.isEmpty {
-        return locality  // "千代田区"
+        return locality  // "Chiyoda City"
     }
-    return "現在地"
+    return "Current Location"
 }
 ```
 
-## スリープ防止機能
+## Sleep Prevention Feature
 
-### UIApplicationのラップ
+### UIApplication Wrapping
 
 ```swift
 protocol UIApplicationProtocol {
@@ -139,29 +139,29 @@ protocol UIApplicationProtocol {
 extension UIApplication: UIApplicationProtocol {}
 ```
 
-**テスタビリティの向上：**
-- UIApplicationをモック化可能
-- 実際のアプリケーション状態に依存しない
+**Improved Testability:**
+- UIApplication can be mocked
+- Independent of actual application state
 
-### ライフサイクル管理
+### Lifecycle Management
 
 ```swift
 func handleAppDidEnterBackground() {
-    // バックグラウンドでは必ずスリープ防止を解除
+    // Always disable sleep prevention in background
     application.isIdleTimerDisabled = false
 }
 
 func handleAppWillEnterForeground() {
-    // 前の状態を復元
+    // Restore previous state
     application.isIdleTimerDisabled = shouldKeepScreenOn
 }
 ```
 
-**重要なポイント：**
-- バックグラウンドでスリープ防止を維持するとバッテリーを無駄に消費
-- フォアグラウンド復帰時に状態を復元
+**Important Points:**
+- Maintaining sleep prevention in background wastes battery
+- Restore state when returning to foreground
 
-## UI統合
+## UI Integration
 
 ### AddressView
 
@@ -173,13 +173,13 @@ struct AddressView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if isLoading && formattedAddress == nil {
-                // 初回ローディング
+                // Initial loading
                 HStack {
                     ProgressView()
-                    Text("住所を取得中...")
+                    Text("Loading address...")
                 }
             } else if let address = formattedAddress {
-                // 住所表示
+                // Address display
                 Text(address.primaryText)
                     .font(.headline)
                 Text(address.secondaryText)
@@ -190,11 +190,11 @@ struct AddressView: View {
 }
 ```
 
-### MapViewModelの統合
+### MapViewModel Integration
 
 ```swift
 private func fetchAddress(for location: CLLocation) {
-    geocodingTask?.cancel()  // 前のタスクをキャンセル
+    geocodingTask?.cancel()  // Cancel previous task
     
     geocodingTask = Task {
         do {
@@ -202,18 +202,18 @@ private func fetchAddress(for location: CLLocation) {
             guard !Task.isCancelled else { return }
             self.formattedAddress = addressFormatter.formatForDisplay(address)
         } catch {
-            // エラーでも前の住所を保持
+            // Keep previous address even on error
         }
     }
 }
 ```
 
-**非同期処理の考慮点：**
-- 連続した位置更新で前のリクエストをキャンセル
-- タスクキャンセル時は UI を更新しない
-- エラー時は前の住所を保持（UX向上）
+**Asynchronous Processing Considerations:**
+- Cancel previous requests for continuous location updates
+- Don't update UI if task is cancelled
+- Keep previous address on error (improves UX)
 
-### NotificationCenterの活用
+### Utilizing NotificationCenter
 
 ```swift
 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
@@ -221,50 +221,50 @@ private func fetchAddress(for location: CLLocation) {
 }
 ```
 
-**SwiftUIでのライフサイクル管理：**
-- ScenePhaseも使えるが、NotificationCenterの方が確実
-- 複数のビューで同じイベントを購読可能
+**SwiftUI Lifecycle Management:**
+- NotificationCenter is more reliable than ScenePhase
+- Multiple views can subscribe to the same event
 
-## 学んだこと
+## Lessons Learned
 
-### 1. TDDの効果
-- モック化により外部依存なしでテスト可能
-- リファクタリング時の安心感
-- インターフェース設計が明確に
+### 1. Effects of TDD
+- Testable without external dependencies through mocking
+- Confidence during refactoring
+- Clear interface design
 
-### 2. async/awaitのメリット
-- 非同期処理が読みやすい
-- エラーハンドリングが統一的
-- Taskによるキャンセル処理
+### 2. Benefits of async/await
+- Readable asynchronous processing
+- Unified error handling
+- Cancellation processing with Task
 
-### 3. プロトコル指向の設計
-- 依存性の注入が容易
-- テスタビリティの向上
-- 実装の詳細を隠蔽
+### 3. Protocol-Oriented Design
+- Easy dependency injection
+- Improved testability
+- Hide implementation details
 
-### 4. UXの配慮
-- ローディング表示で待機時間を明確に
-- エラー時も前の情報を保持
-- バッテリー消費への配慮
+### 4. UX Considerations
+- Clear waiting time with loading display
+- Keep previous information on errors
+- Consideration for battery consumption
 
-## まとめ
+## Summary
 
-段階2では、TDDを徹底して以下を実装しました：
+In Stage 2, we implemented the following with thorough TDD:
 
-1. **逆ジオコーディングサービス**
-   - プロトコルによる抽象化
-   - async/awaitによる非同期処理
+1. **Reverse Geocoding Service**
+   - Abstraction with protocols
+   - Asynchronous processing with async/await
 
-2. **住所フォーマッター**
-   - 日本の住所形式に対応
-   - 見やすい表示の工夫
+2. **Address Formatter**
+   - Support for Japanese address format
+   - Thoughtful display improvements
 
-3. **スリープ防止機能**
-   - ライフサイクルに応じた制御
-   - バッテリー消費への配慮
+3. **Sleep Prevention Feature**
+   - Control according to lifecycle
+   - Consideration for battery consumption
 
-4. **UI統合**
-   - 非同期処理の適切な管理
-   - ユーザー体験の向上
+4. **UI Integration**
+   - Proper management of asynchronous processing
+   - Improved user experience
 
-これらの実装により、バイク走行中でも使いやすい地図アプリケーションがさらに改善されました。
+These implementations further improved the map application for easier use during motorcycle riding.

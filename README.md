@@ -1,221 +1,220 @@
 # Just a Map
 
-**just a map** - リアルタイムで更新される以外は単なる地図
+**just a map** - Just a map, except it updates in real-time
 
-バイク（オートバイ）のハンドルマウントで使用することを想定した、シンプルで実用的な地図アプリケーション。
+A simple and practical map application designed for motorcycle handlebar mounting.
 
-## 主な機能
+## Main Features
 
-### 段階1（実装済み）
-- ✅ 現在位置を中心とした地図表示
-- ✅ 位置情報の自動追従（10m以上移動時）
-- ✅ 手動で地図を動かすと追従モード解除
-- ✅ 現在地に戻るボタン（60x60ptでグローブ対応）
-- ✅ 位置情報権限の適切な処理
-- ✅ エラー表示と設定画面への誘導
+### Stage 1 (Implemented)
+- ✅ Map display centered on current location
+- ✅ Automatic location tracking (when moved 10m or more)
+- ✅ Tracking mode disabled when map is manually moved
+- ✅ Return to current location button (60x60pt for glove compatibility)
+- ✅ Proper location permission handling
+- ✅ Error display and navigation to settings
 
-### 段階2（実装済み）
-- ✅ 現在位置の住所表示（逆ジオコーディング）
-- ✅ 日本の住所フォーマットに対応（都道府県→市区町村→番地）
-- ✅ 場所名の優先表示（東京駅など）
-- ✅ 郵便番号の表示
-- ✅ スリープ防止機能（画面が自動で消えない）
-- ✅ バックグラウンド/フォアグラウンド遷移の適切な処理
+### Stage 2 (Implemented)
+- ✅ Current location address display (reverse geocoding)
+- ✅ Support for Japanese address format (Prefecture → City → Street)
+- ✅ Priority display of place names (e.g., Tokyo Station)
+- ✅ Postal code display
+- ✅ Sleep prevention feature (screen doesn't automatically turn off)
+- ✅ Proper background/foreground transition handling
 
-### 段階3（実装済み）
-- ✅ ズームコントロール（12段階の離散的ズームレベル）
-  - 建物レベル（200m）から地球レベル（1,000,000m）まで
-  - 高度ベースの安定した実装（MapKitの内部変換に影響されない）
-  - ズーム制限時のボタングレーアウト表示
-- ✅ 地図表示モードの切り替え（標準/ハイブリッド/航空写真）
-- ✅ North Up / Heading Up の切り替えボタン（実際の回転は今後実装）
-- ✅ 設定の永続化（UserDefaults）
-  - ズームレベル（インデックスとして保存）
-  - 地図スタイル
-  - 地図の向き設定
+### Stage 3 (Implemented)
+- ✅ Zoom controls (12 discrete zoom levels)
+  - From building level (200m) to global level (1,000,000m)
+  - Stable altitude-based implementation (unaffected by MapKit internal conversions)
+  - Button grays out at zoom limits
+- ✅ Map display mode switching (Standard/Hybrid/Satellite)
+- ✅ North Up / Heading Up toggle button (rotation implemented)
+- ✅ Settings persistence (UserDefaults)
+  - Zoom level (saved as index)
+  - Map style
+  - Map orientation setting
 
-### その他実装済み機能
+### Other Implemented Features
 
-- ✅ North Up / Heading Upの切り替え・回転
-- ✅ コンパス
+- ✅ North Up / Heading Up switching and rotation
+- ✅ Compass
 
+## Technical Specifications
 
-## 技術仕様
+- **iOS**: 17.0 or later
+- **Frameworks**: SwiftUI, MapKit, CoreLocation
+- **Location Accuracy**: Best (kCLLocationAccuracyBest)
+- **Update Frequency**: Varies according to speed and zoom
+- **Address Retrieval**: CLGeocoder (reverse geocoding)
+- **Sleep Prevention**: UIApplication.shared.isIdleTimerDisabled
+- **Zoom Implementation**: MKMapCamera.distance (altitude) based
 
-- **iOS**: 17.0以上
-- **フレームワーク**: SwiftUI, MapKit, CoreLocation
-- **位置情報精度**: 最高精度（kCLLocationAccuracyBest）
-- **更新頻度**: 速度とズームに応じて変化
-- **住所取得**: CLGeocoder（逆ジオコーディング）
-- **スリープ防止**: UIApplication.shared.isIdleTimerDisabled
-- **ズーム実装**: MKMapCamera.distance（高度）ベース
+## Development Environment
 
-## 開発環境
+- Xcode 16.0 or later (optional)
+- Swift 5.9 or later
+- macOS 14.0 or later / Linux / WSL
+- iOS Simulator (iOS 18.5 recommended)
+- xtool (cross-platform build tool)
 
-- Xcode 16.0以上（オプション）
-- Swift 5.9以上
-- macOS 14.0以上 / Linux / WSL
-- iOS Simulator（iOS 18.5推奨）
-- xtool（クロスプラットフォームビルドツール）
+## Setup
 
-## セットアップ
-
-### 1. プロジェクトを開く
+### 1. Open the Project
 ```bash
 git clone <repository-url>
 cd just-a-map
 ```
 
-### 2. ビルドと実行
+### 2. Build and Run
 
-#### xtoolを使用する場合（推奨）
+#### Using xtool (Recommended)
 ```bash
-# xtoolのインストール
+# Install xtool
 brew install xtool  # macOS
-# Linux/WSLの場合は https://github.com/xtool-org/xtool を参照
+# For Linux/WSL see https://github.com/xtool-org/xtool
 
-# Makefileを使用したビルドと実行
-make build           # アプリをビルド
-make run             # シミュレータで実行
-make install DEVICE_ID=<device-id>  # 実機にインストール
+# Build and run using Makefile
+make build           # Build the app
+make run             # Run in simulator
+make install DEVICE_ID=<device-id>  # Install on physical device
 
-# デバイスIDの確認
-make devices         # 接続されているデバイス一覧を表示
+# Check device IDs
+make devices         # Display list of connected devices
 
-# その他の便利なコマンド
-make test           # テストを実行
-make clean          # ビルド成果物をクリーン
-make help           # 利用可能なコマンド一覧を表示
+# Other useful commands
+make test           # Run tests
+make clean          # Clean build artifacts
+make help           # Display available commands
 ```
 
-**注意**: xtoolはAssets.xcassetsをコンパイルできないため、アセットの処理には特別な手順が必要です。Makefileがこれを自動的に処理します。
+**Note**: xtool cannot compile Assets.xcassets, so special steps are required for asset processing. The Makefile handles this automatically.
 
-#### アセットの更新について
-アイコンやその他のアセットを変更した場合：
-1. macOSで `make compile-assets` を実行してアセットをコンパイル
-2. コンパイル済みアセットはGitにコミットされているため、他のプラットフォームでもビルド可能
+#### About Asset Updates
+When changing icons or other assets:
+1. Run `make compile-assets` on macOS to compile assets
+2. Since compiled assets are committed to Git, builds are possible on other platforms
 
-#### Xcodeを使用する場合
+#### Using Xcode
 ```bash
-# SwiftPMプロジェクトとして開く
+# Open as SwiftPM project
 open Package.swift
 ```
 
-詳細は[xtool移行ガイド](doc/xtool-migration-guide.md)を参照してください。
+See [xtool Migration Guide](doc/xtool-migration-guide.md) for details.
 
-### 3. 位置情報の権限設定
-アプリ起動時に位置情報の許可ダイアログが表示されるので、「Allow While Using App」を選択
+### 3. Location Permission Settings
+When the app launches, a location permission dialog will appear. Select "Allow While Using App"
 
-## エミュレータで位置情報をシミュレート
+## Simulating Location in Emulator
 
-### 位置情報の設定方法:
-1. エミュレータのメニューバーから: Features > Location
-2. 以下のオプションから選択:
-   - **Apple**: Apple本社（カリフォルニア）
-   - **City Bicycle Ride**: 自転車での移動をシミュレート
-   - **City Run**: ランニングでの移動をシミュレート
-   - **Freeway Drive**: 高速道路での移動をシミュレート
-   - **Custom Location...**: 任意の緯度経度を入力
+### How to Set Location:
+1. From the emulator menu bar: Features > Location
+2. Select from the following options:
+   - **Apple**: Apple headquarters (California)
+   - **City Bicycle Ride**: Simulate bicycle movement
+   - **City Run**: Simulate running movement
+   - **Freeway Drive**: Simulate highway driving
+   - **Custom Location...**: Enter custom latitude/longitude
 
-### おすすめテストシナリオ:
-1. まず "Apple" を選択して基本動作を確認
-2. "City Bicycle Ride" でバイク走行に近い動きをテスト
-3. Custom Location で日本の位置を設定:
-   - 東京駅: 緯度 35.6762, 経度 139.6503
-   - 大阪駅: 緯度 34.7024, 経度 135.4959
+### Recommended Test Scenarios:
+1. First select "Apple" to verify basic operation
+2. Test movements similar to motorcycle riding with "City Bicycle Ride"
+3. Set Japanese locations with Custom Location:
+   - Tokyo Station: Latitude 35.6762, Longitude 139.6503
+   - Osaka Station: Latitude 34.7024, Longitude 135.4959
 
-## 5. 動作確認項目
+## 5. Functional Verification Items
 
-### 基本機能
-- [ ] アプリ起動時に位置情報許可ダイアログが表示される
-- [ ] 許可後、現在地が地図の中心に表示される
-- [ ] 位置が移動すると地図も追従する
-- [ ] 地図を手動でドラッグすると追従が解除される
-- [ ] 右下の位置ボタンをタップすると現在地に戻る
-- [ ] 位置情報を拒否した場合、エラーバナーが表示される
-- [ ] エラーバナーの「設定」ボタンで設定アプリが開く
+### Basic Functions
+- [ ] Location permission dialog appears on app launch
+- [ ] After permission, current location is displayed at map center
+- [ ] Map follows when location moves
+- [ ] Tracking is disabled when map is manually dragged
+- [ ] Tapping the location button in bottom-right returns to current location
+- [ ] Error banner displays when location permission is denied
+- [ ] Settings button in error banner opens Settings app
 
-### 住所表示とスリープ防止
-- [ ] 現在地の住所が上部に表示される
-- [ ] 移動すると住所が更新される
-- [ ] アプリ使用中は画面がスリープしない
-- [ ] バックグラウンドに移行するとスリープ防止が解除される
+### Address Display and Sleep Prevention
+- [ ] Current location address displays at the top
+- [ ] Address updates when moving
+- [ ] Screen doesn't sleep while app is in use
+- [ ] Sleep prevention is disabled when moving to background
 
-### 地図コントロール
-- [ ] ズームイン/アウトボタンで12段階のズームレベルを切り替えられる
-- [ ] ズーム限界に達するとボタンがグレーアウトする
-- [ ] ピンチ操作後もボタンで確実に次のレベルに移動する
-- [ ] 地図スタイルボタンで標準/ハイブリッド/航空写真を切り替えられる
-- [ ] North Up/Heading Upボタンが表示される（タップで状態が切り替わる）
-- [ ] アプリ再起動時に前回の設定が復元される
+### Map Controls
+- [ ] Zoom in/out buttons switch between 12 zoom levels
+- [ ] Buttons gray out at zoom limits
+- [ ] Buttons reliably move to next level after pinch operation
+- [ ] Map style button switches between Standard/Hybrid/Satellite
+- [ ] North Up/Heading Up button displays (state toggles on tap)
+- [ ] Previous settings restore on app restart
 
-## 6. デバッグTips
+## 6. Debug Tips
 
-### 位置情報が取得できない場合:
-1. エミュレータをリセット: Device > Erase All Content and Settings...
-2. Xcodeをクリーンビルド: Product > Clean Build Folder
-3. エミュレータの位置情報設定を確認: Settings > Privacy & Security > Location Services
+### If Location Cannot Be Obtained:
+1. Reset emulator: Device > Erase All Content and Settings...
+2. Clean build in Xcode: Product > Clean Build Folder
+3. Check emulator location settings: Settings > Privacy & Security > Location Services
 
-### コンソールログの確認:
-Xcodeの下部にあるデバッグエリアでログを確認できます。ズーム操作時は現在のレベルがコンソールに出力されます。
+### Checking Console Logs:
+You can check logs in the debug area at the bottom of Xcode. Current level is output to console during zoom operations.
 
-## テスト
+## Testing
 
-### ユニットテストの実行
+### Running Unit Tests
 
-#### Makefileを使用する場合（推奨）
+#### Using Makefile (Recommended)
 ```bash
 make test
 ```
 
-#### Xcodeを使用する場合
+#### Using Xcode
 ```bash
 open Package.swift
-# Xcode内で ⌘+U
+# ⌘+U in Xcode
 ```
 
-#### xcodebuildを使用する場合
+#### Using xcodebuild
 ```bash
 xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-### 現在のテストカバレッジ
-- LocationManagerのプロトコル準拠
-- 位置情報の権限処理
-- 位置情報更新のデリゲート通知
-- エラーハンドリング
-- 住所フォーマットの変換（AddressFormatterTests）
-- スリープ防止機能（IdleTimerManagerTests）
-- 高度ベースズーム機能とマップスタイル切り替え（MapControlsViewModelTests）
-  - 12段階のズームレベル管理
-  - ズーム制限のテスト
-  - 高度からズームインデックスへの変換
-- 設定の永続化（MapSettingsStorageTests）
-  - ズームインデックスの保存/読み込み
+### Current Test Coverage
+- LocationManager protocol compliance
+- Location permission handling
+- Location update delegate notifications
+- Error handling
+- Address format conversion (AddressFormatterTests)
+- Sleep prevention feature (IdleTimerManagerTests)
+- Altitude-based zoom feature and map style switching (MapControlsViewModelTests)
+  - 12-level zoom management
+  - Zoom limit testing
+  - Altitude to zoom index conversion
+- Settings persistence (MapSettingsStorageTests)
+  - Zoom index save/load
 
-## トラブルシューティング
+## Troubleshooting
 
-### 位置情報が取得できない場合
-1. シミュレータの位置情報設定を確認: Features > Location
-2. Settings > Privacy & Security > Location Services がオンになっているか確認
-3. アプリを削除して再インストール
+### If Location Cannot Be Obtained
+1. Check simulator location settings: Features > Location
+2. Verify Settings > Privacy & Security > Location Services is ON
+3. Delete and reinstall the app
 
-### "kCLErrorDomain Code=0" エラーが表示される場合
-これはシミュレータ特有の一時的なエラーで、アプリの動作には影響しません。実機では発生しません。
+### If "kCLErrorDomain Code=0" Error Appears
+This is a temporary error specific to the simulator and doesn't affect app operation. It doesn't occur on physical devices.
 
-## ライセンス
+## License
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+This project is released under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 貢献
+## Contributing
 
-プルリクエストを歓迎します。大きな変更を行う場合は、まずissueを開いて変更内容について議論してください。
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-## ドキュメント
+## Documentation
 
-より詳細な技術ドキュメントは[doc](doc)ディレクトリを参照してください。
-- [段階1実装ガイド](doc/stage1-implementation-guide.md)
-- [段階2実装ガイド](doc/stage2-implementation-guide.md)
-- [段階3実装ガイド](doc/stage3-implementation-guide.md)
-- [iOS開発の基本概念](doc/ios-development-basics.md)
-- [トラブルシューティングガイド](doc/troubleshooting-guide.md)
+For more detailed technical documentation, see the [doc](doc) directory.
+- [Stage 1 Implementation Guide](doc/stage1-implementation-guide.md)
+- [Stage 2 Implementation Guide](doc/stage2-implementation-guide.md)
+- [Stage 3 Implementation Guide](doc/stage3-implementation-guide.md)
+- [iOS Development Basics](doc/ios-development-basics.md)
+- [Troubleshooting Guide](doc/troubleshooting-guide.md)

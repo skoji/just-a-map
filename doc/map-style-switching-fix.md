@@ -1,18 +1,18 @@
-# 地図スタイル切り替え時のズームレベルリセット問題の修正
+# Fix for Zoom Level Reset Issue When Switching Map Styles
 
-## 問題の概要
+## Problem Overview
 
-実機で地図スタイル（標準/ハイブリッド/航空写真）を切り替えた際に、以下の問題が発生していました：
+When switching map styles (Standard/Hybrid/Satellite) on actual devices, the following issues occurred:
 
-1. **スタイル切り替えが即座に反映されない**：スタイルボタンをタップしても見た目が変わらず、その後ズームやスクロール操作を行うと反映される
-2. **ズームレベルがリセットされる**：スタイル切り替え後、日本全体が表示される最大ズームレベルに戻ってしまう
+1. **Style changes not immediately reflected**: Tapping the style button didn't change the appearance, and it would only be reflected after zoom or scroll operations
+2. **Zoom level reset**: After style switching, it would return to the maximum zoom level displaying all of Japan
 
-## 原因分析
+## Root Cause Analysis
 
-### 初期実装の問題点
+### Problems with Initial Implementation
 
 ```swift
-// 地図
+// Map
 Group {
     switch viewModel.mapControlsViewModel.currentMapStyle {
     case .standard:
@@ -34,41 +34,41 @@ Group {
 }
 ```
 
-この実装では、スタイルごとに別々の`Map`インスタンスを作成していました。そのため：
+This implementation created separate `Map` instances for each style. Therefore:
 
-1. スタイル切り替え時に新しい`Map`インスタンスが作成される
-2. `onMapCameraChange`イベントが予期せず発火し、ズームレベルが変更される
-3. カメラ位置（ズームレベルと中心座標）が失われる
+1. A new `Map` instance was created when switching styles
+2. The `onMapCameraChange` event fired unexpectedly, changing the zoom level
+3. Camera position (zoom level and center coordinates) was lost
 
-## 解決アプローチの変遷
+## Evolution of Solution Approaches
 
-### 1. 複雑なアプローチ（失敗）
+### 1. Complex Approach (Failed)
 
-最初は以下のような複雑な解決策を試みました：
+Initially, we attempted the following complex solutions:
 
-- スタイル変更中フラグ（`isChangingMapStyle`）の導入
-- カメラ位置の保存と復元
-- 微小なカメラ位置変更による強制的な再描画
-- `.id()`モディファイアによるビューの再作成
+- Introduction of style changing flag (`isChangingMapStyle`)
+- Saving and restoring camera position
+- Forced redraw through minor camera position changes
+- View recreation using `.id()` modifier
 
-これらのアプローチは過度に複雑で、新たな問題（予期しないズームアウト）を引き起こしました。
+These approaches were overly complex and caused new problems (unexpected zoom out).
 
-### 2. シンプルなアプローチ（成功）
+### 2. Simple Approach (Successful)
 
-最終的に、SwiftUIの基本的な状態管理を活用したシンプルな解決策に到達しました。
+Eventually, we reached a simple solution that leveraged SwiftUI's basic state management.
 
-## 最終的な解決策
+## Final Solution
 
-### 実装コード
+### Implementation Code
 
 ```swift
 struct MapView: View {
-    // ... 他のプロパティ ...
+    // ... other properties ...
     
-    // マップスタイル表示用の@State変数（初期値はnil）
+    // @State variable for map style display (initial value is nil)
     @State private var mapStyleForDisplay: JustAMap.MapStyle?
     
-    // MapKit.MapStyleに変換する計算プロパティ
+    // Computed property to convert to MapKit.MapStyle
     private var currentMapKitStyle: MapKit.MapStyle {
         switch mapStyleForDisplay ?? viewModel.mapControlsViewModel.currentMapStyle {
         case .standard:
@@ -82,85 +82,85 @@ struct MapView: View {
     
     var body: some View {
         ZStack {
-            // 単一のMapインスタンスを使用
+            // Use single Map instance
             Map(position: $mapPosition) {
                 UserAnnotation()
             }
-            .mapStyle(currentMapKitStyle)  // 動的にスタイルを適用
+            .mapStyle(currentMapKitStyle)  // Apply style dynamically
             .mapControls {
                 MapCompass()
                 MapScaleView()
             }
-            // ... 他のモディファイア ...
+            // ... other modifiers ...
         }
         .onAppear {
-            // ... 他の初期化処理 ...
-            // 初期スタイルを設定（まだ設定されていない場合のみ）
+            // ... other initialization processing ...
+            // Set initial style (only if not already set)
             if mapStyleForDisplay == nil {
                 mapStyleForDisplay = viewModel.mapControlsViewModel.currentMapStyle
             }
         }
         .onReceive(viewModel.mapControlsViewModel.$currentMapStyle) { newStyle in
             viewModel.saveSettings()
-            // State変数を更新してSwiftUIの再描画を促す
+            // Update State variable to trigger SwiftUI redraw
             mapStyleForDisplay = newStyle
         }
     }
 }
 ```
 
-### 解決のポイント
+### Key Points of the Solution
 
-1. **単一のMapインスタンス**：`switch`文による複数インスタンスではなく、単一の`Map`を使用
-2. **@State変数の活用**：`mapStyleForDisplay`を介することで、SwiftUIの再描画メカニズムを適切に動作させる
-3. **初期値の適切な処理**：オプショナル型にして、`onAppear`でviewModelから初期値を設定することで、フリッカーを防止
-4. **シンプルな実装**：カメラ位置の保存・復元などの複雑な処理は不要
+1. **Single Map Instance**: Use a single `Map` instead of multiple instances through switch statement
+2. **Utilize @State Variable**: Use `mapStyleForDisplay` to properly trigger SwiftUI's redraw mechanism
+3. **Proper Initial Value Handling**: Use optional type and set initial value from viewModel in `onAppear` to prevent flicker
+4. **Simple Implementation**: No need for complex processing like camera position save/restore
 
-## なぜこの解決策が機能するか
+## Why This Solution Works
 
-### SwiftUIの再描画メカニズム
+### SwiftUI's Redraw Mechanism
 
-1. `@State`変数が変更されると、SwiftUIはビューを再描画する
-2. 単一の`Map`インスタンスを使用しているため、カメラ位置は自動的に保持される
-3. `mapStyle`プロパティの変更により、地図の見た目だけが更新される
+1. When `@State` variable changes, SwiftUI redraws the view
+2. Since we're using a single `Map` instance, camera position is automatically preserved
+3. Only the map appearance is updated by changing the `mapStyle` property
 
-### 型の衝突の解決
+### Resolving Type Conflicts
 
-アプリ内で定義した`MapStyle`列挙型と`MapKit.MapStyle`の名前衝突を避けるため：
+To avoid name conflicts between the app-defined `MapStyle` enum and `MapKit.MapStyle`:
 
-- 完全修飾名（`JustAMap.MapStyle`）を使用
-- 計算プロパティで`MapKit.MapStyle`に変換
+- Use fully qualified names (`JustAMap.MapStyle`)
+- Convert to `MapKit.MapStyle` with computed property
 
-## 学んだ教訓
+## Lessons Learned
 
-1. **シンプルさの重要性**：地図スタイルの切り替えは基本的な操作であり、複雑な対処は不要
-2. **SwiftUIの基本に立ち返る**：`@State`と計算プロパティという基本的な機能で解決可能
-3. **単一インスタンスの利点**：状態の保持が自動的に行われ、追加の管理コードが不要
+1. **Importance of Simplicity**: Map style switching is a basic operation and doesn't require complex handling
+2. **Return to SwiftUI Basics**: Solvable with basic features like `@State` and computed properties
+3. **Single Instance Benefits**: State preservation is automatic, no additional management code needed
 
-## テストの追加
+## Test Additions
 
-`MapStyleSwitchingTests`を追加し、TDDアプローチで開発しました：
+Added `MapStyleSwitchingTests` and developed using TDD approach:
 
 ```swift
 @MainActor
 class MapStyleSwitchingTests: XCTestCase {
-    // MainActorアノテーションが必要（ViewModelがMainActor isolated）
+    // MainActor annotation required (ViewModel is MainActor isolated)
     
     func testMapStyleChangePreservesZoomLevel() {
-        // ズームレベルが保持されることを確認
+        // Verify zoom level is preserved
     }
 }
 ```
 
-## 今後の改善点
+## Future Improvements
 
-現在の実装はシンプルで効果的ですが、将来的に以下の改善を検討できます：
+The current implementation is simple and effective, but future improvements could include:
 
-1. アニメーション付きのスタイル切り替え
-2. スタイル切り替え時の視覚的フィードバック
-3. より高度なカメラ制御（必要に応じて）
+1. Animated style switching
+2. Visual feedback during style switching
+3. More advanced camera control (if needed)
 
-## 参考資料
+## References
 
 - [SwiftUI Map Documentation](https://developer.apple.com/documentation/mapkit/map)
 - [Managing State in SwiftUI](https://developer.apple.com/documentation/swiftui/state-and-data-flow)

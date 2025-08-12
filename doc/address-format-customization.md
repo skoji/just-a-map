@@ -1,65 +1,65 @@
-# 住所表示フォーマットのカスタマイズ
+# Address Display Format Customization
 
-## 概要
+## Overview
 
-JustAMapでは、住所表示を3つのフォーマット（標準、詳細、シンプル）から選択できます。2025年1月7日の更新で、標準フォーマットの動作を改善し、より見やすい表示を実現しました。
+JustAMap allows users to choose from three address display formats (Standard, Detailed, Simple). With the update on January 7, 2025, we improved the behavior of the Standard format to achieve a more readable display.
 
-## 住所表示フォーマット
+## Address Display Formats
 
-### 標準フォーマット (Standard)
-施設名がある場合は施設名を、ない場合は「都道府県 市区町村」を表示します。
+### Standard Format
+Displays the facility name if available, otherwise displays "Prefecture + City/Ward/Town/Village".
 
-**表示例：**
-- 施設の場合: `東京駅`
-- 通常の住所: `東京都 千代田区`
-- 郡がある場合: `神奈川県 横浜市`
+**Display Examples:**
+- For facilities: `Tokyo Station`
+- For regular addresses: `Tokyo + Chiyoda City`
+- When districts exist: `Kanagawa Prefecture + Yokohama City`
 
-### 詳細フォーマット (Detailed)
-完全な住所情報を表示し、さらに詳細情報を2行目に表示します。
+### Detailed Format
+Displays complete address information and additional details on the second line.
 
-**表示例：**
+**Display Example:**
 ```
-東京都千代田区丸の内1-9-1
-東京駅 / 千代田区 / 東京都 / 日本
+1-9-1 Marunouchi, Chiyoda City, Tokyo
+Tokyo Station / Chiyoda City / Tokyo / Japan
 ```
 
-### シンプルフォーマット (Simple)
-市区町村のみを表示する最小限のフォーマットです。
+### Simple Format
+A minimal format that displays only the city/ward/town/village.
 
-**表示例：**
-- `千代田区`
+**Display Example:**
+- `Chiyoda City`
 
-## 技術的な実装詳細
+## Technical Implementation Details
 
-### 施設名の判定ロジック
+### Facility Name Determination Logic
 
-`GeocodeService`では、以下のロジックで施設名を判定しています：
+In `GeocodeService`, facility names are determined using the following logic:
 
-1. **areasOfInterest**のチェック
-   - CLPlacemarkの`areasOfInterest`プロパティを確認
-   - 地理的大区分（本州、四国、九州、北海道、沖縄）は除外
+1. **Check areasOfInterest**
+   - Check the `areasOfInterest` property of CLPlacemark
+   - Exclude geographic major divisions (Honshu, Shikoku, Kyushu, Hokkaido, Okinawa)
 
-2. **住所パターンの検出**
-   - name属性に以下のパターンが含まれる場合は住所として扱う：
-     - 丁目
-     - 番地
-     - 番
-     - 号
-     - ハイフン（-）
+2. **Address Pattern Detection**
+   - If the name attribute contains the following patterns, treat it as an address:
+     - Chome (丁目)
+     - Banchi (番地)
+     - Ban (番)
+     - Go (号)
+     - Hyphen (-)
 
 ```swift
 let facilityName: String? = {
     if let areas = placemark.areasOfInterest, !areas.isEmpty {
         let area = areas.first!
-        // 地理的な大区分は施設名として扱わない
-        let geographicTerms = ["本州", "四国", "九州", "北海道", "沖縄"]
+        // Don't treat geographic major divisions as facility names
+        let geographicTerms = ["Honshu", "Shikoku", "Kyushu", "Hokkaido", "Okinawa"]
         if geographicTerms.contains(area) {
             return nil
         }
         return area
     } else if let name = placemark.name {
-        // 番地や丁目を含む場合は施設名ではなく住所として扱う
-        let addressPatterns = ["丁目", "番地", "番", "号", "-"]
+        // Treat names containing lot numbers or chome as addresses, not facility names
+        let addressPatterns = ["Chome", "Banchi", "Ban", "Go", "-"]
         let isAddress = addressPatterns.contains { name.contains($0) }
         return isAddress ? nil : name
     }
@@ -67,55 +67,55 @@ let facilityName: String? = {
 }()
 ```
 
-### 住所の構築
+### Address Construction
 
-`AddressFormatter`の`buildFullAddressFromComponents`メソッドでは、個別のコンポーネントから完全な住所を構築します：
+The `buildFullAddressFromComponents` method in `AddressFormatter` constructs a complete address from individual components:
 
-1. 都道府県（administrativeArea）
-2. 市区町村/郡（subAdministrativeArea）
-3. 区市町村（locality）
-4. 残りの住所部分（番地など）
+1. Prefecture (administrativeArea)
+2. City/Ward/Town/Village/District (subAdministrativeArea)
+3. Ward/City/Town/Village (locality)
+4. Remaining address parts (lot numbers, etc.)
 
-この実装により、`fullAddress`プロパティにsubAdministrativeAreaが含まれていない場合でも、正しく住所を構築できます。
+This implementation allows proper address construction even when `subAdministrativeArea` is not included in the `fullAddress` property.
 
-## Address構造体
+## Address Structure
 
 ```swift
 struct Address: Equatable {
-    let name: String?              // 施設名（番地情報は含まない）
-    let fullAddress: String?       // 完全な住所
-    let postalCode: String?        // 郵便番号
-    let locality: String?          // 市区町村
-    let subAdministrativeArea: String? // 郡・地区
-    let administrativeArea: String? // 都道府県
-    let country: String?           // 国
+    let name: String?              // Facility name (excludes lot number information)
+    let fullAddress: String?       // Complete address
+    let postalCode: String?        // Postal code
+    let locality: String?          // City/Ward/Town/Village
+    let subAdministrativeArea: String? // District/Region
+    let administrativeArea: String? // Prefecture
+    let country: String?           // Country
 }
 ```
 
-## 注意事項
+## Notes
 
-### CLPlacemarkの特性
+### CLPlacemark Characteristics
 
-- `areasOfInterest`には予期しない値（例：「本州」）が含まれることがある
-- `name`プロパティには施設名だけでなく、詳細な住所が入ることがある
-- `subAdministrativeArea`は東京23区などでは通常nilになる
+- `areasOfInterest` may contain unexpected values (e.g., "Honshu")
+- The `name` property may contain not only facility names but also detailed addresses
+- `subAdministrativeArea` is usually nil for Tokyo's 23 special wards
 
-### テストの考慮事項
+### Testing Considerations
 
-住所フォーマットのテストでは、以下のケースを考慮する必要があります：
+When testing address formats, the following cases need to be considered:
 
-1. 施設名がある場合とない場合
-2. subAdministrativeAreaがある場合とない場合
-3. 最小限の情報しかない場合
-4. 地理的大区分が含まれる場合
+1. Cases with and without facility names
+2. Cases with and without subAdministrativeArea
+3. Cases with minimal information only
+4. Cases where geographic major divisions are included
 
-## 関連ファイル
+## Related Files
 
-- `/JustAMap/Models/AddressFormatter.swift` - 住所フォーマット処理
-- `/JustAMap/Services/GeocodeService.swift` - ジオコーディングと施設名判定
-- `/JustAMapTests/AddressFormatterTests.swift` - テストケース
+- `/JustAMap/Models/AddressFormatter.swift` - Address format processing
+- `/JustAMap/Services/GeocodeService.swift` - Geocoding and facility name determination
+- `/JustAMapTests/AddressFormatterTests.swift` - Test cases
 
-## 参考情報
+## Reference Information
 
 - [Apple CLPlacemark Documentation](https://developer.apple.com/documentation/corelocation/clplacemark)
 - [Apple CLGeocoder Documentation](https://developer.apple.com/documentation/corelocation/clgeocoder)

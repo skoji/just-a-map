@@ -1,20 +1,20 @@
-# Altitude Display Feature Implementation
+# 高度表示機能の実装
 
-## Overview
+## 概要
 
-The altitude display feature in JustAMap displays the current altitude in real time on the map. It is designed with a focus on visibility and operability for motorcycle riding, allowing riders to check elevation while in motion.
+JustAMapの高度表示機能は、リアルタイムで現在の高度を地図上に表示する機能です。バイク走行中に標高を確認できるよう、視認性と操作性を重視して設計されています。
 
-## Key Features
+## 主要機能
 
-- **Real-time altitude display**: Obtains altitude from GPS location information and displays it on the map
-- **Unit switching**: Conversion between meters (m) and feet (ft)
-- **Display toggle**: ON/OFF switching for altitude display from the settings screen
-- **Error handling**: Proper handling of invalid GPS data
-- **Multilingual support**: Complete support for Japanese and English
+- **リアルタイム高度表示**: GPS位置情報から高度を取得し、地図上に表示
+- **単位切り替え**: メートル(m)とフィート(ft)の相互変換
+- **表示切り替え**: 設定画面から高度表示のON/OFF切り替え
+- **エラーハンドリング**: 無効なGPSデータの適切な処理
+- **多言語対応**: 日本語・英語の完全対応
 
-## Architecture
+## アーキテクチャ
 
-### Overall Structure
+### 全体構成
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -30,19 +30,19 @@ The altitude display feature in JustAMap displays the current altitude in real t
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Separation of Responsibilities
+### 責任分離
 
-- **AltitudeUnit**: Unit conversion and format processing
-- **AltitudeView**: UI display and user interface
-- **MapViewModel**: Location information management and state management
-- **SettingsViewModel**: Settings management
-- **MapSettingsStorage**: Data persistence
+- **AltitudeUnit**: 単位変換とフォーマット処理
+- **AltitudeView**: UI表示とユーザーインターフェース
+- **MapViewModel**: 位置情報の管理と状態管理
+- **SettingsViewModel**: 設定の管理
+- **MapSettingsStorage**: データの永続化
 
-## Major Components
+## 主要コンポーネント
 
-### 1. AltitudeUnit (Models/AltitudeUnit.swift)
+### 1. AltitudeUnit（Models/AltitudeUnit.swift）
 
-An enum responsible for altitude unit conversion:
+高度の単位変換を担当するenumです：
 
 ```swift
 enum AltitudeUnit: String, CaseIterable {
@@ -70,14 +70,14 @@ enum AltitudeUnit: String, CaseIterable {
 }
 ```
 
-**Design Features:**
-- Conversion factor: 1 meter = 3.28084 feet
-- Negative values are displayed as "---" (indicating invalid GPS data)
-- Display is rounded to integer values (decimals are hidden)
+**設計上の特徴：**
+- 変換係数: 1メートル = 3.28084フィート
+- 負の値は"---"で表示（無効なGPSデータを示す）
+- 表示は整数値に丸め込み（小数点以下は非表示）
 
-### 2. AltitudeView (Views/AltitudeView.swift)
+### 2. AltitudeView（Views/AltitudeView.swift）
 
-The UI component for altitude display:
+高度表示のUI コンポーネントです：
 
 ```swift
 struct AltitudeView: View {
@@ -108,16 +108,16 @@ struct AltitudeView: View {
 }
 ```
 
-**UI Design Features:**
-- **Icon**: Mountain icon (mountain.2.fill) to visually indicate altitude display
-- **Font**: Monospaced font for improved number readability
-- **Size**: 16pt (readable while riding a motorcycle)
-- **Layout**: Same left padding structure (52pt) as AddressView for alignment
-- **Background**: White background with light shadow for visibility
+**UI設計の特徴：**
+- **アイコン**: 山のアイコン（mountain.2.fill）で高度表示を視覚的に示す
+- **フォント**: 等幅フォント（monospaced）で数値の読みやすさを向上
+- **サイズ**: 16pt（バイク走行中でも読みやすい）
+- **レイアウト**: AddressViewと同じ左側パディング構造（52pt）で整列
+- **背景**: 白い背景に軽い影で視認性を確保
 
-### 3. MapViewModel Integration (Models/MapViewModel.swift)
+### 3. MapViewModel統合（Models/MapViewModel.swift）
 
-Location information management and altitude data processing:
+位置情報の管理と高度データの処理：
 
 ```swift
 @MainActor
@@ -125,27 +125,27 @@ class MapViewModel: ObservableObject {
     @Published var currentAltitude: Double?
     @Published var currentVerticalAccuracy: Double?
     
-    /// Whether altitude display is enabled
+    /// 高度表示が有効かどうか
     var isAltitudeDisplayEnabled: Bool {
         return settingsStorage.isAltitudeDisplayEnabled
     }
     
-    /// Altitude unit
+    /// 高度の単位
     var altitudeUnit: AltitudeUnit {
         return settingsStorage.altitudeUnit
     }
     
-    /// Get altitude display string
+    /// 高度の表示文字列を取得
     func getAltitudeDisplayString(altitude: Double, verticalAccuracy: Double, unit: AltitudeUnit) -> String {
         guard verticalAccuracy >= 0 else {
-            return "---" // For invalid accuracy
+            return "---" // 無効な精度の場合
         }
         return unit.displayString(for: altitude)
     }
 }
 ```
 
-**LocationManagerDelegate Integration:**
+**LocationManagerDelegate 統合：**
 
 ```swift
 extension MapViewModel: LocationManagerDelegate {
@@ -153,22 +153,22 @@ extension MapViewModel: LocationManagerDelegate {
         Task { @MainActor in
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
-            // Other location information processing...
+            // 他の位置情報処理...
         }
     }
 }
 ```
 
-### 4. Settings Screen Integration (Views/SettingsView.swift)
+### 4. 設定画面統合（Views/SettingsView.swift）
 
-Altitude display settings in the settings screen:
+設定画面での高度表示設定：
 
 ```swift
 Section("settings.display_settings".localized) {
-    // Altitude display settings
+    // 高度表示設定
     Toggle("settings.altitude_display".localized, isOn: $viewModel.isAltitudeDisplayEnabled)
     
-    // Altitude unit settings (displayed only when altitude display is ON)
+    // 高度単位設定（高度表示がONの場合のみ表示）
     if viewModel.isAltitudeDisplayEnabled {
         Picker("settings.altitude_unit".localized, selection: $viewModel.altitudeUnit) {
             Text("settings.altitude_unit_meters".localized).tag(AltitudeUnit.meters)
@@ -178,9 +178,9 @@ Section("settings.display_settings".localized) {
 }
 ```
 
-### 5. Data Persistence (Services/MapSettingsStorage.swift)
+### 5. データ永続化（Services/MapSettingsStorage.swift）
 
-Settings persistence processing:
+設定の永続化処理：
 
 ```swift
 protocol MapSettingsStorageProtocol {
@@ -194,11 +194,11 @@ protocol MapSettingsStorageProtocol {
 }
 ```
 
-**UserDefaults Keys:**
-- `isAltitudeDisplayEnabled`: Altitude display enabled/disabled
-- `altitudeUnit`: Altitude unit ("meters" / "feet")
+**UserDefaultsキー:**
+- `isAltitudeDisplayEnabled`: 高度表示の有効/無効
+- `altitudeUnit`: 高度の単位（"meters" / "feet"）
 
-## Data Flow
+## データフロー
 
 ```
 CLLocationManager → MapViewModel → AltitudeView
@@ -208,15 +208,15 @@ CLLocationManager → MapViewModel → AltitudeView
                    UserDefaults
 ```
 
-1. **Location Information Acquisition**: CLLocationManager acquires location information
-2. **Data Processing**: MapViewModel extracts altitude and verticalAccuracy
-3. **Settings Check**: Retrieve display settings and unit settings from MapSettingsStorage
-4. **UI Update**: AltitudeView updates display based on settings
-5. **Persistence**: Save to UserDefaults when settings change
+1. **位置情報取得**: CLLocationManagerが位置情報を取得
+2. **データ処理**: MapViewModelがaltitudeとverticalAccuracyを抽出
+3. **設定確認**: MapSettingsStorageから表示設定と単位設定を取得
+4. **UI更新**: AltitudeViewが設定に基づいて表示を更新
+5. **永続化**: 設定変更時にUserDefaultsに保存
 
-## Error Handling
+## エラーハンドリング
 
-### Handling Invalid GPS Data
+### 無効なGPSデータの処理
 
 ```swift
 private var displayText: String {
@@ -227,23 +227,23 @@ private var displayText: String {
     guard let altitude = altitude,
           let accuracy = verticalAccuracy,
           accuracy >= 0 else {
-        return "---" // For invalid altitude data
+        return "---" // 無効な高度データの場合
     }
     
     return unit.displayString(for: altitude)
 }
 ```
 
-**Error Cases:**
-- When GPS signal cannot be acquired: Display "---"
-- When vertical accuracy is negative: Display "---"
-- When altitude data doesn't exist: Display "---"
+**エラーケース:**
+- GPS信号が取得できない場合: "---"表示
+- 垂直精度が負の値の場合: "---"表示
+- 高度データが存在しない場合: "---"表示
 
-## Multilingual Support
+## 多言語対応
 
-### Localization Keys
+### ローカライゼーションキー
 
-**Japanese (ja.lproj/Localizable.strings):**
+**日本語（ja.lproj/Localizable.strings）:**
 ```
 "settings.altitude_display" = "高度表示";
 "settings.altitude_unit" = "高度の単位";
@@ -251,7 +251,7 @@ private var displayText: String {
 "settings.altitude_unit_feet" = "フィート (ft)";
 ```
 
-**English (en.lproj/Localizable.strings):**
+**英語（en.lproj/Localizable.strings）:**
 ```
 "settings.altitude_display" = "Show Altitude";
 "settings.altitude_unit" = "Altitude Unit";
@@ -259,29 +259,29 @@ private var displayText: String {
 "settings.altitude_unit_feet" = "Feet (ft)";
 ```
 
-## Test Strategy
+## テスト戦略
 
-### TDD Approach
+### TDDアプローチ
 
-1. **Red**: Write failing tests first
-2. **Green**: Minimal implementation to pass tests
-3. **Refactor**: Improve through refactoring
+1. **Red**: 失敗するテストを先に記述
+2. **Green**: テストを通す最小実装
+3. **Refactor**: リファクタリングによる改善
 
-### Test File Structure
+### テストファイル構成
 
 ```
 Tests/JustAMapTests/
-├── AltitudeUnitTests.swift           # Unit conversion tests
-├── AltitudeViewTests.swift           # UI component tests
-├── MapViewModelAltitudeTests.swift   # ViewModel tests
-├── AltitudeIntegrationTests.swift    # Integration tests
-├── AltitudeSettingsTests.swift       # Settings tests
-└── AltitudeSettingsViewModelTests.swift # Settings ViewModel tests
+├── AltitudeUnitTests.swift           # 単位変換テスト
+├── AltitudeViewTests.swift           # UI コンポーネントテスト
+├── MapViewModelAltitudeTests.swift   # ViewModelテスト
+├── AltitudeIntegrationTests.swift    # 統合テスト
+├── AltitudeSettingsTests.swift       # 設定テスト
+└── AltitudeSettingsViewModelTests.swift # 設定ViewModelテスト
 ```
 
-### Major Test Cases
+### 主要テストケース
 
-#### 1. AltitudeUnitTests.swift (Unit Conversion)
+#### 1. AltitudeUnitTests.swift（単位変換）
 
 ```swift
 func testMetersToFeetConversion() {
@@ -307,7 +307,7 @@ func testDisplayStringForInvalidAltitude() {
 }
 ```
 
-#### 2. AltitudeViewTests.swift (UI Tests)
+#### 2. AltitudeViewTests.swift（UI テスト）
 
 ```swift
 func testAltitudeViewDisplaysCorrectText() {
@@ -324,11 +324,11 @@ func testAltitudeViewDisplaysCorrectText() {
     )
     
     // Then
-    // Test using SwiftUI Testing framework
+    // SwiftUI Testing frameworkを使用してテスト
 }
 ```
 
-#### 3. MapViewModelAltitudeTests.swift (Integration Tests)
+#### 3. MapViewModelAltitudeTests.swift（統合テスト）
 
 ```swift
 @MainActor
@@ -347,7 +347,7 @@ class MapViewModelAltitudeTests: XCTestCase {
         
         // When
         mockLocationManager.simulateLocationUpdate(location)
-        await Task.yield() // Wait for async processing to complete
+        await Task.yield() // 非同期処理の完了を待つ
         
         // Then
         XCTAssertEqual(mapViewModel.currentAltitude, 100.0)
@@ -356,7 +356,7 @@ class MapViewModelAltitudeTests: XCTestCase {
 }
 ```
 
-### Mock Objects
+### モックオブジェクト
 
 #### MockLocationManager
 
@@ -390,64 +390,64 @@ class MockUserDefaults: UserDefaultsProtocol {
 }
 ```
 
-## UI/UX Considerations
+## UI/UX考慮事項
 
-### Design for Motorcycle Riding Use
+### バイク走行中の使用を想定した設計
 
-1. **Visibility**
-   - 16pt font size (not too small, not too large)
-   - Monospaced font (number readability)
-   - High contrast (black text/white background)
+1. **視認性**
+   - 16ptのフォントサイズ（小さすぎず大きすぎず）
+   - 等幅フォント（数値の読みやすさ）
+   - 高コントラスト（黒文字/白背景）
 
-2. **Layout**
-   - Alignment with AddressView (52pt left padding)
-   - Sufficient margins (for touch accessibility)
-   - Mountain icon for intuitive identification
+2. **レイアウト**
+   - AddressViewとの整列（52pt左パディング）
+   - 十分な余白（タッチしやすさ）
+   - 山のアイコンで直感的な識別
 
-3. **Error State Display**
-   - Clear indication of invalid state with "---" display
-   - Distinction from loading state
+3. **エラー状態の表示**
+   - "---"表示で無効状態を明確に表現
+   - ローディング状態との区別
 
-### Accessibility Support
+### アクセシビリティ対応
 
-- VoiceOver support (combination of icon + text)
-- Information display not dependent solely on color
-- Ensuring sufficient contrast ratio
+- VoiceOver対応（アイコン + テキストの組み合わせ）
+- 色のみに依存しない情報表示
+- 十分なコントラスト比の確保
 
-## Performance Considerations
+## パフォーマンス考慮
 
-### Memory Efficiency
-- Lightweight enum (AltitudeUnit)
-- Minimal Published properties needed
-- Proper SwiftUI lifecycle management
+### メモリ効率
+- 軽量なenum（AltitudeUnit）
+- 必要最小限のPublished プロパティ
+- 適切なSwiftUIライフサイクル管理
 
-### Processing Efficiency
-- Reduced computational load through integer rounding
-- Avoidance of unnecessary calculations through conditional branching
-- Avoiding main thread blocking with asynchronous processing
+### 処理効率
+- 整数への丸め処理による計算負荷軽減
+- 条件分岐による不要な計算の回避
+- 非同期処理でのメインスレッドブロック回避
 
-## Future Extension Possibilities
+## 今後の拡張可能性
 
-### Additional Features Available
-1. **Altitude Accuracy Indicator**: Reliability display based on vertical accuracy
-2. **Altitude History**: Graph display of altitude changes during movement
-3. **Altitude Alerts**: Notifications when reaching specific altitudes
-4. **Automatic Unit Switching**: Automatic unit selection based on regional settings
+### 追加できる機能
+1. **高度精度インジケーター**: 垂直精度に基づく信頼度表示
+2. **高度履歴**: 移動中の高度変化をグラフで表示
+3. **高度アラート**: 特定の高度に達した際の通知
+4. **単位の自動切り替え**: 地域設定に基づく単位の自動選択
 
-### Considerations for Extensions
-- Integration with existing settings system
-- Continuous quality assurance through TDD
-- Extension of multilingual support
-- Performance impact evaluation
+### 拡張時の考慮事項
+- 既存の設定システムとの統合
+- TDDによる継続的な品質保証
+- 多言語対応の拡張
+- パフォーマンスへの影響評価
 
-## Summary
+## まとめ
 
-The altitude display feature is implemented based on the following design principles:
+高度表示機能は、以下の設計原則に基づいて実装されています：
 
-1. **Single Responsibility Principle**: Each component has a clear responsibility
-2. **Dependency Inversion**: Loosely coupled design through protocols
-3. **Test-Driven Development**: Quality assurance and refactoring safety
-4. **User Experience Focus**: Design considering use while riding motorcycles
-5. **Internationalization Support**: Consideration for use in multilingual environments
+1. **単一責任の原則**: 各コンポーネントが明確な責任を持つ
+2. **依存性の逆転**: プロトコルによる疎結合設計
+3. **テスト駆動開発**: 品質保証とリファクタリング安全性
+4. **ユーザー体験重視**: バイク走行中の使用を想定した設計
+5. **国際化対応**: 多言語環境での使用を考慮
 
-This implementation provides a robust and maintainable altitude display feature, allowing users to safely and comfortably check altitude information while riding motorcycles.
+この実装により、堅牢で保守性の高い高度表示機能が提供され、ユーザーは安全かつ快適にバイク走行中の高度情報を確認できます。

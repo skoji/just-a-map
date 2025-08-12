@@ -1,27 +1,27 @@
 # xtool Migration Guide
 
-## 概要
+## Overview
 
-JustAMapプロジェクトは、XcodeプロジェクトからxtoolベースのSwiftPMワークスペースへ移行しました。これにより、Linux、WSL、macOSでのクロスプラットフォーム開発が可能になります。
+The JustAMap project has migrated from Xcode projects to xtool-based SwiftPM workspaces. This enables cross-platform development on Linux, WSL, and macOS.
 
-## 新しいプロジェクト構造
+## New Project Structure
 
 ```
 just-a-map/
-├── Package.swift           # SwiftPMマニフェスト
-├── xtool.yml              # xtool設定ファイル
-├── Info.plist             # アプリ情報（位置情報権限など）
-├── Makefile               # ビルド自動化
-├── Resources/             # リソースファイル
-│   ├── source/           # ソースアセット
+├── Package.swift           # SwiftPM manifest
+├── xtool.yml              # xtool configuration file
+├── Info.plist             # App information (location permissions, etc.)
+├── Makefile               # Build automation
+├── Resources/             # Resource files
+│   ├── source/           # Source assets
 │   │   └── Assets.xcassets
-│   ├── built/            # コンパイル済みアセット
+│   ├── built/            # Compiled assets
 │   │   ├── Assets.car
 │   │   ├── *.png
-│   │   └── VersionInfo.plist  # ビルド時生成（.gitignore）
+│   │   └── VersionInfo.plist  # Generated at build (.gitignore)
 ├── Sources/
-│   └── JustAMap/          # メインターゲット
-│       ├── JustAMapApp.swift  # @mainエントリポイント
+│   └── JustAMap/          # Main target
+│       ├── JustAMapApp.swift  # @main entry point
 │       ├── ContentView.swift
 │       ├── MapView.swift
 │       ├── Models/
@@ -29,21 +29,21 @@ just-a-map/
 │       ├── Views/
 │       └── Extensions/
 ├── Tests/
-│   └── JustAMapTests/     # テストターゲット
-├── scripts/               # ビルドスクリプト
-│   ├── compile-assets.sh  # アセットコンパイル
-│   ├── fix-assets.sh      # アセット配置
-│   ├── generate-version.sh # バージョン情報生成
-│   └── sync-version-info.sh # VersionInfo.plist同期
-└── xtool/                 # ビルド成果物（.gitignoreに追加）
-    └── JustAMap.app/      # 生成されたアプリ
+│   └── JustAMapTests/     # Test target
+├── scripts/               # Build scripts
+│   ├── compile-assets.sh  # Asset compilation
+│   ├── fix-assets.sh      # Asset deployment
+│   ├── generate-version.sh # Version information generation
+│   └── sync-version-info.sh # VersionInfo.plist sync
+└── xtool/                 # Build artifacts (added to .gitignore)
+    └── JustAMap.app/      # Generated app
 ```
 
-## ビルド方法
+## Build Methods
 
-### 前提条件
+### Prerequisites
 
-1. xtoolのインストール:
+1. Install xtool:
 ```bash
 # macOS
 brew install xtool
@@ -53,113 +53,113 @@ curl -L https://github.com/xtool-org/xtool/releases/latest/download/xtool-linux-
 chmod +x /usr/local/bin/xtool
 ```
 
-2. Swift 5.9以上のインストール
+2. Install Swift 5.9 or later
 
-### ビルドと実行
+### Build and Run
 
-#### Makefileを使用（推奨）
+#### Using Makefile (Recommended)
 
 ```bash
-# アプリをビルド
+# Build app
 make build
 
-# シミュレータで実行
+# Run in simulator
 make run
 
-# 実機にインストール
+# Install on device
 make install DEVICE_ID=<device-udid>
 
-# デバイス一覧を確認
+# Check device list
 make devices
 
-# テストを実行
+# Run tests
 make test
 
-# クリーンビルド
+# Clean build
 make clean
 
-# ヘルプを表示
+# Show help
 make help
 ```
 
-#### 手動でのビルド
+#### Manual Build
 
-xtoolの制限により、アセットのコンパイルには追加手順が必要です：
+Due to xtool limitations, asset compilation requires additional steps:
 
 ```bash
-# 1. アプリをビルド
+# 1. Build app
 xtool dev build
 
-# 2. アセットを修正（アイコン表示のため必須）
+# 2. Fix assets (required for icon display)
 ./scripts/fix-assets.sh
 
-# 3. 実機にインストール
+# 3. Install on device
 xtool install -u <device-udid> xtool/JustAMap.app
 ```
 
-### アセットの更新
+### Asset Updates
 
-xtoolはAssets.xcassetsをコンパイルできないため、macOSでの事前コンパイルが必要です：
+xtool cannot compile Assets.xcassets, so pre-compilation on macOS is required:
 
 ```bash
-# macOSでアセットをコンパイル
+# Compile assets on macOS
 make compile-assets
 
-# または手動で実行
+# Or run manually
 ./scripts/compile-assets.sh
 ```
 
-コンパイル済みアセット（Resources/built/）はGitにコミットされているため、他のプラットフォームでもビルド可能です。
+Compiled assets (Resources/built/) are committed to Git, allowing builds on other platforms.
 
-### テスト実行
+### Test Execution
 
-**Makefileを使用（推奨）**
+**Using Makefile (Recommended)**
 ```bash
 make test
 ```
 
-**その他の方法**
+**Other Methods**
 
-1. Xcodeを使用:
+1. Using Xcode:
 ```bash
 open Package.swift
-# Cmd+U でテスト実行
+# Run tests with Cmd+U
 ```
 
-2. xcodebuildを使用:
+2. Using xcodebuild:
 ```bash
 xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-### その他のコマンド
+### Other Commands
 
 ```bash
-# クリーンアップ
+# Cleanup
 rm -rf xtool/ .build/
 
-# デバイスリスト確認
+# Check device list
 xtool devices
 
-# アプリのインストール（.ipaファイル）
+# Install app (.ipa file)
 xtool install <path-to-ipa>
 
-# アプリの起動
+# Launch app
 xtool launch --bundle-id com.example.JustAMap
 ```
 
-## Xcode での開発
+## Development with Xcode
 
-Xcodeを使用する場合は、SwiftPMプロジェクトとして開きます：
+When using Xcode, open as SwiftPM project:
 
 ```bash
 open Package.swift
 ```
 
-または、Xcodeから「File > Open...」でPackage.swiftを選択します。
+Or select Package.swift from Xcode's "File > Open...".
 
-## CI/CD設定
+## CI/CD Configuration
 
-GitHub Actionsなどで以下のようなワークフローを使用できます：
+You can use workflows like the following in GitHub Actions:
 
 ```yaml
 name: Build and Test
@@ -204,54 +204,54 @@ jobs:
       run: xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-### ビルドエラー
+### Build Errors
 
-1. **ビルドエラー: "No devices are booted"**
+1. **Build error: "No devices are booted"**
    ```bash
-   # シミュレータを起動
+   # Start simulator
    xcrun simctl boot "iPhone 16"
-   # 再度実行
+   # Run again
    make run
    ```
 
-2. **アプリアイコンが表示されない**
-   - `make fix-assets`を実行してアセットを修正
-   - Resources/built/にAssets.carが存在することを確認
-   - macOSで`make compile-assets`を実行してアセットを再コンパイル
+2. **App icon not displaying**
+   - Run `make fix-assets` to fix assets
+   - Verify Assets.car exists in Resources/built/
+   - Run `make compile-assets` on macOS to recompile assets
 
-3. **リソースが見つからない場合**
-   - Resources/source/Assets.xcassetsにアセットが配置されているか確認
-   - Package.swiftでリソースが正しく定義されているか確認
+3. **Resources not found**
+   - Verify assets are placed in Resources/source/Assets.xcassets
+   - Check if resources are correctly defined in Package.swift
 
-4. **xtool.ymlエラー**
-   - ファイル名が`xtool.yml`（`.yaml`ではない）であることを確認
-   - 最小構成: `version: 1`、`bundleID: com.example.JustAMap`、`infoPath: Info.plist`
+4. **xtool.yml errors**
+   - Verify filename is `xtool.yml` (not `.yaml`)
+   - Minimum configuration: `version: 1`, `bundleID: com.example.JustAMap`, `infoPath: Info.plist`
 
-### テストエラー
+### Test Errors
 
-1. **テストが見つからない場合**
-   - テストファイルが`Tests/JustAMapTests/`に配置されているか確認
-   - import文が`@testable import JustAMap`になっているか確認
+1. **Tests not found**
+   - Verify test files are placed in `Tests/JustAMapTests/`
+   - Check import statement is `@testable import JustAMap`
 
-## 移行の利点
+## Migration Benefits
 
-1. **クロスプラットフォーム対応**: Linux、WSL、macOSで開発可能
-2. **CI/CD簡素化**: Xcodeなしでビルド・テスト可能
-3. **依存関係管理**: SwiftPMによる統一的な依存関係管理
-4. **開発環境の一貫性**: xtoolによる統一的なビルド設定
-5. **バージョン管理**: Gitベースの自動バージョン管理システム（詳細は[version-management-system.md](version-management-system.md)を参照）
+1. **Cross-platform support**: Development possible on Linux, WSL, macOS
+2. **Simplified CI/CD**: Build and test possible without Xcode
+3. **Dependency management**: Unified dependency management with SwiftPM
+4. **Development environment consistency**: Unified build settings with xtool
+5. **Version management**: Git-based automatic version management system (see [version-management-system.md](version-management-system.md) for details)
 
-## 既知の制限事項
+## Known Limitations
 
-1. **アセットカタログ**: xtoolはAssets.xcassetsをコンパイルできないため、macOSでの事前コンパイルが必要
-2. **アプリアイコン**: ビルド後にfix-assetsスクリプトの実行が必要
-3. **devモード**: `xtool dev`では自動的なアセット修正は行われない
+1. **Asset catalog**: xtool cannot compile Assets.xcassets, requiring pre-compilation on macOS
+2. **App icon**: fix-assets script execution required after build
+3. **dev mode**: Automatic asset fixing is not performed with `xtool dev`
 
-## 今後の作業
+## Future Work
 
-- CI/CD設定の完全な移行
-- Linux/WSL環境でのテスト
-- パフォーマンス最適化
-- xtoolのアセットカタログサポートの改善待ち
+- Complete CI/CD configuration migration
+- Testing in Linux/WSL environments
+- Performance optimization
+- Waiting for xtool asset catalog support improvements

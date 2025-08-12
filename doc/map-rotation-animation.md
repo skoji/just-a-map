@@ -1,21 +1,21 @@
-# 地図の回転アニメーション実装
+# Map Rotation Animation Implementation
 
-## 概要
+## Overview
 
-JustAMapアプリケーションでは、North Up（北が上）とHeading Up（進行方向が上）の2つの地図表示モードをサポートしています。このドキュメントでは、モード切り替え時の滑らかな回転アニメーションの実装について説明します。
+The JustAMap application supports two map display modes: North Up (north is up) and Heading Up (direction of travel is up). This document explains the implementation of smooth rotation animation when switching between modes.
 
-## 実装内容
+## Implementation Details
 
-### 1. 即座の回転アニメーション
+### 1. Immediate Rotation Animation
 
-従来の実装では、North Up/Heading Upの切り替えボタンを押しても、次の位置情報更新まで地図が回転しませんでした。新しい実装では、切り替えボタンを押すと即座に滑らかなアニメーションで地図が回転します。
+In the previous implementation, when the North Up/Heading Up toggle button was pressed, the map would not rotate until the next location update. The new implementation provides immediate smooth rotation animation when the toggle button is pressed.
 
-#### MapView.swift での実装
+#### Implementation in MapView.swift
 
 ```swift
 .onReceive(viewModel.mapControlsViewModel.$isNorthUp) { isNorthUp in
     viewModel.saveSettings()
-    // 地図の向きが切り替わったら即座にアニメーション付きで回転
+    // Immediately rotate with animation when map orientation is toggled
     if let location = viewModel.userLocation ?? currentMapCamera.map({ camera in
         CLLocation(latitude: camera.centerCoordinate.latitude, longitude: camera.centerCoordinate.longitude)
     }) {
@@ -26,7 +26,7 @@ JustAMapアプリケーションでは、North Up（北が上）とHeading Up（
             } else if let userLocation = viewModel.userLocation, userLocation.course >= 0 {
                 heading = userLocation.course // Heading Up with valid course
             } else {
-                heading = 0 // デフォルト
+                heading = 0 // Default
             }
             
             let camera = MapCamera(
@@ -41,16 +41,16 @@ JustAMapアプリケーションでは、North Up（北が上）とHeading Up（
 }
 ```
 
-この実装により、モード切り替え時に以下の動作を実現：
-- **North Upモード**: heading を 0 に設定（北が上）
-- **Heading Upモード**: GPS のコース情報を使用（進行方向が上）
-- **滑らかなアニメーション**: `interactiveSpring` を使用した自然な回転
+This implementation achieves the following behavior when switching modes:
+- **North Up mode**: Set heading to 0 (north is up)
+- **Heading Up mode**: Use GPS course information (direction of travel is up)
+- **Smooth animation**: Natural rotation using `interactiveSpring`
 
-### 2. North Upモードでのユーザー操作による回転の禁止
+### 2. Preventing User Rotation in North Up Mode
 
-North Upモードでは、地図は常に北が上を向くべきであり、ユーザーが手動で回転させることを防ぐ必要があります。
+In North Up mode, the map should always face north, and we need to prevent users from manually rotating it.
 
-#### MapView.swift での実装
+#### Implementation in MapView.swift
 
 ```swift
 Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isNorthUp ? [.pan, .zoom] : .all) {
@@ -58,62 +58,62 @@ Map(position: $mapPosition, interactionModes: viewModel.mapControlsViewModel.isN
 }
 ```
 
-`interactionModes` パラメータを使用して、North Upモード時は回転を除いたインタラクション（パンとズームのみ）を許可しています。
+Using the `interactionModes` parameter, we allow only interactions excluding rotation (pan and zoom only) when in North Up mode.
 
-### 3. 位置情報に基づく地図の方向計算
+### 3. Map Direction Calculation Based on Location Information
 
-MapViewModelに、現在のモードと位置情報に基づいて適切な地図の方向を計算するメソッドを追加しました。
+A method was added to MapViewModel to calculate the appropriate map direction based on the current mode and location information.
 
-#### MapViewModel.swift での実装
+#### Implementation in MapViewModel.swift
 
 ```swift
-/// 位置情報に基づいて地図の方向を計算
+/// Calculate map heading based on location information
 func calculateMapHeading(for location: CLLocation) -> Double {
     if mapControlsViewModel.isNorthUp {
-        return 0 // North Up: 常に北が上
+        return 0 // North Up: always north is up
     } else {
-        // Heading Up: コース情報が有効な場合は使用、無効な場合は0
+        // Heading Up: use course information if valid, otherwise 0
         return location.course >= 0 ? location.course : 0
     }
 }
 ```
 
-### 4. アニメーションの詳細
+### 4. Animation Details
 
-使用しているアニメーションパラメータ：
-- **タイプ**: `interactiveSpring` - ユーザーインタラクションに適した自然なバネアニメーション
-- **response**: 0.3秒 - 素早い反応時間
-- **dampingFraction**: 0.8 - 高いダンピングで滑らかな減速
-- **blendDuration**: 0.1秒 - 短いブレンド時間で即座の反応
+Animation parameters used:
+- **Type**: `interactiveSpring` - Natural spring animation suitable for user interaction
+- **response**: 0.3 seconds - Quick response time
+- **dampingFraction**: 0.8 - High damping for smooth deceleration
+- **blendDuration**: 0.1 seconds - Short blend time for immediate response
 
-## テスト
+## Testing
 
-実装に対して以下のテストケースを作成：
+Created the following test cases for the implementation:
 
-1. **トグルテスト**: North Up/Heading Upの切り替えが正しく動作することを確認
-2. **回転角度計算テスト**: 各方位に対して正しい回転角度が計算されることを確認
-3. **無効なコース処理テスト**: GPSコースが無効な場合のフォールバック動作を確認
-4. **ユーザー操作制限テスト**: North Upモードで回転が無効になることを確認
+1. **Toggle Test**: Verify that North Up/Heading Up switching works correctly
+2. **Rotation Angle Calculation Test**: Verify correct rotation angles are calculated for each direction
+3. **Invalid Course Handling Test**: Verify fallback behavior when GPS course is invalid
+4. **User Operation Restriction Test**: Verify rotation is disabled in North Up mode
 
-## パフォーマンスへの影響
+## Performance Impact
 
-- **バッテリー消費**: 既存の位置情報更新頻度を変更していないため、追加の消費なし
-- **CPU使用率**: アニメーションはSwiftUIの最適化されたレンダリングを使用
-- **メモリ使用量**: 追加のメモリ使用なし
+- **Battery Consumption**: No additional consumption as existing location update frequency is unchanged
+- **CPU Usage**: Animation uses SwiftUI's optimized rendering
+- **Memory Usage**: No additional memory usage
 
-## 今後の改善案
+## Future Improvement Ideas
 
-1. **コンパス表示**: 現在の方位を視覚的に示すコンパスオーバーレイの追加
-2. **回転ジェスチャー**: Heading Upモード時の2本指回転ジェスチャーのサポート
-3. **方位の平滑化**: GPSコースの揺れを軽減するための移動平均フィルタ
+1. **Compass Display**: Add compass overlay to visually show current direction
+2. **Rotation Gesture**: Support two-finger rotation gesture in Heading Up mode
+3. **Direction Smoothing**: Moving average filter to reduce GPS course fluctuation
 
-## 関連ファイル
+## Related Files
 
-- `/JustAMap/MapView.swift` - 地図表示とアニメーション処理
-- `/JustAMap/Models/MapViewModel.swift` - 地図の方向計算ロジック
-- `/JustAMap/Models/MapControlsViewModel.swift` - 地図コントロールの状態管理
-- `/JustAMapTests/MapRotationAnimationTests.swift` - 回転機能のテスト
+- `/JustAMap/MapView.swift` - Map display and animation processing
+- `/JustAMap/Models/MapViewModel.swift` - Map direction calculation logic
+- `/JustAMap/Models/MapControlsViewModel.swift` - Map control state management
+- `/JustAMapTests/MapRotationAnimationTests.swift` - Rotation feature tests
 
 ## Issue
 
-- [#1 機能追加: North Up / Heading Up 切り替え時の地図回転アニメーション](https://github.com/skoji/just-a-map/issues/1)
+- [#1 Feature Addition: Map Rotation Animation for North Up / Heading Up Switching](https://github.com/skoji/just-a-map/issues/1)

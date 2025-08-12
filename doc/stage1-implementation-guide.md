@@ -1,33 +1,33 @@
-# 段階1実装ガイド：基本的な地図表示
+# Stage 1 Implementation Guide: Basic Map Display
 
-このドキュメントでは、iOS開発に馴染みのないプログラマー向けに、段階1で実装した内容を詳しく解説します。
+This document provides a detailed explanation of the content implemented in Stage 1, aimed at programmers unfamiliar with iOS development.
 
-## 目次
+## Table of Contents
 
-1. [プロジェクト構造](#プロジェクト構造)
-2. [主要コンポーネントの解説](#主要コンポーネントの解説)
-3. [位置情報の取得フロー](#位置情報の取得フロー)
-4. [SwiftUIとMapKitの連携](#swiftuiとmapkitの連携)
-5. [エラーハンドリング](#エラーハンドリング)
-6. [テスト戦略](#テスト戦略)
+1. [Project Structure](#project-structure)
+2. [Explanation of Major Components](#explanation-of-major-components)
+3. [Location Information Acquisition Flow](#location-information-acquisition-flow)
+4. [SwiftUI and MapKit Integration](#swiftui-and-mapkit-integration)
+5. [Error Handling](#error-handling)
+6. [Test Strategy](#test-strategy)
 
-## プロジェクト構造
+## Project Structure
 
 ```
 JustAMap/
-├── JustAMapApp.swift      # アプリのエントリーポイント
-├── ContentView.swift      # メインのビュー（MapViewを表示）
-├── MapView.swift          # 地図表示のUI
+├── JustAMapApp.swift      # App entry point
+├── ContentView.swift      # Main view (displays MapView)
+├── MapView.swift          # Map display UI
 ├── Models/
-│   ├── LocationManagerProtocol.swift  # 位置情報管理の抽象化
-│   ├── LocationManager.swift          # 実際の位置情報管理
-│   └── MapViewModel.swift             # ビジネスロジック
-└── Assets.xcassets/       # アイコンや色などのリソース
+│   ├── LocationManagerProtocol.swift  # Location management abstraction
+│   ├── LocationManager.swift          # Actual location management
+│   └── MapViewModel.swift             # Business logic
+└── Assets.xcassets/       # Resources like icons and colors
 ```
 
-## 主要コンポーネントの解説
+## Explanation of Major Components
 
-### 1. JustAMapApp.swift - アプリのエントリーポイント
+### 1. JustAMapApp.swift - App Entry Point
 
 ```swift
 @main
@@ -40,12 +40,12 @@ struct JustAMapApp: App {
 }
 ```
 
-**解説：**
-- `@main`：このstructがアプリケーションのエントリーポイントであることを示す
-- `App`プロトコル：SwiftUIアプリケーションの基本構造を定義
-- `WindowGroup`：アプリのウィンドウを管理（iOSでは通常1つ）
+**Explanation:**
+- `@main`: Indicates this struct is the application entry point
+- `App` protocol: Defines the basic structure of SwiftUI applications
+- `WindowGroup`: Manages app windows (usually one on iOS)
 
-### 2. LocationManagerProtocol.swift - 抽象化層
+### 2. LocationManagerProtocol.swift - Abstraction Layer
 
 ```swift
 protocol LocationManagerProtocol: AnyObject {
@@ -58,12 +58,12 @@ protocol LocationManagerProtocol: AnyObject {
 }
 ```
 
-**なぜプロトコルを使うのか？**
-- **テスタビリティ**: 実際のGPSがなくてもテストできる
-- **依存性の逆転**: 上位レイヤーが下位レイヤーの具体的な実装に依存しない
-- **モック化**: テスト時に偽の位置情報を簡単に注入できる
+**Why Use Protocols?**
+- **Testability**: Can test without actual GPS
+- **Dependency Inversion**: Higher layers don't depend on specific implementations of lower layers
+- **Mocking**: Easy injection of fake location information during testing
 
-### 3. LocationManager.swift - 実装
+### 3. LocationManager.swift - Implementation
 
 ```swift
 class LocationManager: NSObject, LocationManagerProtocol {
@@ -77,18 +77,18 @@ class LocationManager: NSObject, LocationManagerProtocol {
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 10.0  // 10m移動したら更新
+        locationManager.distanceFilter = 10.0  // Update every 10m movement
         locationManager.activityType = .automotiveNavigation
     }
 }
 ```
 
-**重要な設定：**
-- `desiredAccuracy`：GPS精度（最高精度を指定）
-- `distanceFilter`：更新頻度（10m移動ごと）
-- `activityType`：使用シナリオ（車両ナビゲーション用に最適化）
+**Important Settings:**
+- `desiredAccuracy`: GPS accuracy (specifies highest accuracy)
+- `distanceFilter`: Update frequency (every 10m movement)
+- `activityType`: Usage scenario (optimized for vehicle navigation)
 
-### 4. MapViewModel.swift - ビジネスロジック
+### 4. MapViewModel.swift - Business Logic
 
 ```swift
 @MainActor
@@ -101,80 +101,80 @@ class MapViewModel: ObservableObject {
 }
 ```
 
-**SwiftUIの重要概念：**
-- `@MainActor`：UIの更新は必ずメインスレッドで行う
-- `@Published`：値が変更されたらUIを自動更新
-- `ObservableObject`：SwiftUIがこのオブジェクトを監視可能に
+**Important SwiftUI Concepts:**
+- `@MainActor`: UI updates must always be performed on the main thread
+- `@Published`: Automatically updates UI when value changes
+- `ObservableObject`: Makes this object observable by SwiftUI
 
-## 位置情報の取得フロー
+## Location Information Acquisition Flow
 
 ```
-1. アプリ起動
+1. App Launch
    ↓
-2. MapView.onAppear()でrequestLocationPermission()を呼ぶ
+2. MapView.onAppear() calls requestLocationPermission()
    ↓
-3. システムが権限ダイアログを表示
+3. System displays permission dialog
    ↓
-4. ユーザーが許可
+4. User grants permission
    ↓
-5. locationManagerDidChangeAuthorization()が呼ばれる
+5. locationManagerDidChangeAuthorization() is called
    ↓
-6. startLocationUpdates()で位置情報取得開始
+6. startLocationUpdates() begins location acquisition
    ↓
-7. locationManager(_:didUpdateLocations:)で位置を受信
+7. locationManager(_:didUpdateLocations:) receives location
    ↓
-8. MapViewModelが地図を更新
+8. MapViewModel updates the map
 ```
 
-## SwiftUIとMapKitの連携
+## SwiftUI and MapKit Integration
 
-### iOS 17の新しいMap API
+### iOS 17's New Map API
 
 ```swift
 Map(position: $mapPosition) {
-    UserAnnotation()  // 現在位置のマーカー
+    UserAnnotation()  // Current location marker
 }
 .mapControls {
-    MapCompass()      // 方位磁針
-    MapScaleView()    // 縮尺表示
+    MapCompass()      # Compass
+    MapScaleView()    # Scale display
 }
 ```
 
-**旧APIとの違い：**
-- 旧：`Map(coordinateRegion: $region)`
-- 新：`Map(position: .constant(.region(region)))`
-- より宣言的で、MapKitの他の機能と統合しやすい
+**Differences from Old API:**
+- Old: `Map(coordinateRegion: $region)`
+- New: `Map(position: .constant(.region(region)))`
+- More declarative and easier to integrate with other MapKit features
 
-### 地図の追従モード
+### Map Follow Mode
 
 ```swift
 .onMapCameraChange { context in
     if viewModel.isFollowingUser {
-        // ユーザーが地図を動かしたら追従を解除
-        if distance > 100 { // 100m以上離れたら
+        // Disable follow if user moves the map
+        if distance > 100 { // If more than 100m away
             viewModel.isFollowingUser = false
         }
     }
 }
 ```
 
-## エラーハンドリング
+## Error Handling
 
-### 位置情報エラーの種類
+### Types of Location Information Errors
 
-1. **権限拒否** (`CLAuthorizationStatus.denied`)
-   - ユーザーが位置情報の使用を拒否
-   - 設定アプリへの誘導が必要
+1. **Permission Denied** (`CLAuthorizationStatus.denied`)
+   - User denied location information usage
+   - Need to guide to Settings app
 
-2. **一時的なエラー** (`kCLErrorDomain Code=0`)
-   - シミュレータでよく発生
-   - 無視して問題ない
+2. **Temporary Error** (`kCLErrorDomain Code=0`)
+   - Commonly occurs in simulator
+   - Safe to ignore
 
-3. **位置情報サービス無効**
-   - デバイス全体で位置情報がオフ
-   - システム設定の変更が必要
+3. **Location Services Disabled**
+   - Location information is off device-wide
+   - System settings change required
 
-### エラー表示UI
+### Error Display UI
 
 ```swift
 struct ErrorBanner: View {
@@ -186,8 +186,8 @@ struct ErrorBanner: View {
             Text(error.localizedDescription)
             
             if error == .authorizationDenied {
-                Button("設定") {
-                    // 設定アプリを開く
+                Button("Settings") {
+                    // Open Settings app
                     UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
                 }
             }
@@ -196,9 +196,9 @@ struct ErrorBanner: View {
 }
 ```
 
-## テスト戦略
+## Test Strategy
 
-### プロトコルを使ったモック
+### Mocking with Protocols
 
 ```swift
 class MockLocationManager: LocationManagerProtocol {
@@ -208,7 +208,7 @@ class MockLocationManager: LocationManagerProtocol {
 }
 ```
 
-**テストの例：**
+**Test Example:**
 ```swift
 func testLocationUpdate() {
     // Given
@@ -223,32 +223,32 @@ func testLocationUpdate() {
 }
 ```
 
-## iOS特有の注意点
+## iOS-Specific Considerations
 
-### 1. Info.plistの設定
-位置情報を使用するには、必ず使用理由を明記する必要があります：
+### 1. Info.plist Configuration
+To use location information, you must specify the reason for use:
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>現在地を地図の中心に表示するために位置情報を使用します</string>
+<string>Uses location information to display current location at map center</string>
 ```
 
-### 2. メインスレッドとバックグラウンドスレッド
-- UI更新は必ずメインスレッド（`@MainActor`）
-- 位置情報の取得はバックグラウンドスレッド
-- `Task { @MainActor in ... }`で切り替え
+### 2. Main Thread and Background Thread
+- UI updates must be on main thread (`@MainActor`)
+- Location information acquisition is on background thread
+- Switch with `Task { @MainActor in ... }`
 
-### 3. メモリ管理
-- `weak var delegate`：循環参照を防ぐ
-- `@StateObject`：ビューが再描画されても同じインスタンスを保持
-- `@ObservedObject`：親から渡されたオブジェクトを監視
+### 3. Memory Management
+- `weak var delegate`: Prevents retain cycles
+- `@StateObject`: Maintains same instance even when view redraws
+- `@ObservedObject`: Observes objects passed from parent
 
-## まとめ
+## Summary
 
-段階1では、以下の基本機能を実装しました：
+In Stage 1, we implemented the following basic functionality:
 
-1. **位置情報の取得と権限管理**
-2. **地図の表示と現在位置への追従**
-3. **エラーハンドリングとユーザーフィードバック**
-4. **テスト可能な設計**
+1. **Location information acquisition and permission management**
+2. **Map display and current location following**
+3. **Error handling and user feedback**
+4. **Testable design**
 
-これらの実装により、バイクのハンドルマウントで使用できる基本的な地図アプリケーションの土台が完成しました。
+These implementations completed the foundation for a basic map application that can be used on motorcycle handle mounts.

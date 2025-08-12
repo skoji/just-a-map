@@ -1,57 +1,57 @@
-# トラブルシューティングガイド
+# Troubleshooting Guide
 
-段階1の実装で実際に遭遇した問題と、その解決方法をまとめます。
+This document compiles problems encountered during Stage 1 implementation and their solutions.
 
-## 目次
+## Table of Contents
 
-1. [ビルドエラー](#ビルドエラー)
-2. [実行時エラー](#実行時エラー)
-3. [位置情報関連](#位置情報関連)
-4. [UI関連](#ui関連)
-5. [テスト関連](#テスト関連)
+1. [Build Errors](#build-errors)
+2. [Runtime Errors](#runtime-errors)
+3. [Location Information Related](#location-information-related)
+4. [UI Related](#ui-related)
+5. [Test Related](#test-related)
 
-## ビルドエラー
+## Build Errors
 
-### 1. Info.plistの重複エラー
+### 1. Info.plist Duplication Error
 
-**エラーメッセージ：**
+**Error Message:**
 ```
 Multiple commands produce '.../JustAMap.app/Info.plist'
 ```
 
-**原因：**
-- カスタムInfo.plistファイルと自動生成の設定が競合
+**Cause:**
+- Conflict between custom Info.plist file and auto-generation settings
 
-**解決方法：**
-1. カスタムInfo.plistを削除
-2. Build Settingsで`GENERATE_INFOPLIST_FILE = YES`を確認
-3. Info.plistの設定は`INFOPLIST_KEY_*`で指定
+**Solution:**
+1. Delete custom Info.plist
+2. Verify `GENERATE_INFOPLIST_FILE = YES` in Build Settings
+3. Specify Info.plist settings with `INFOPLIST_KEY_*`
 
 ```
-// Build Settingsに追加
-INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "現在地を地図の中心に表示するために位置情報を使用します"
+// Add to Build Settings
+INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Uses location information to display current location at map center"
 ```
 
-### 2. MapKit APIの非推奨警告
+### 2. MapKit API Deprecation Warning
 
-**警告メッセージ：**
+**Warning Message:**
 ```
 'init(coordinateRegion:interactionModes:showsUserLocation:userTrackingMode:)' was deprecated in iOS 17.0
 ```
 
-**原因：**
-- iOS 17で新しいMap APIが導入された
+**Cause:**
+- New Map API was introduced in iOS 17
 
-**解決方法：**
+**Solution:**
 
-旧API：
+Old API:
 ```swift
 Map(coordinateRegion: $viewModel.region,
     showsUserLocation: true,
     userTrackingMode: .constant(.follow))
 ```
 
-新API：
+New API:
 ```swift
 Map(position: $mapPosition) {
     UserAnnotation()
@@ -62,103 +62,103 @@ Map(position: $mapPosition) {
 }
 ```
 
-### 3. MKCoordinateRegionがEquatableに準拠していない
+### 3. MKCoordinateRegion Not Conforming to Equatable
 
-**エラーメッセージ：**
+**Error Message:**
 ```
 Instance method 'onChange(of:perform:)' requires that 'MKCoordinateRegion' conform to 'Equatable'
 ```
 
-**解決方法：**
-`onChange`の代わりに`onReceive`を使用：
+**Solution:**
+Use `onReceive` instead of `onChange`:
 
 ```swift
-// エラーになる
+// This causes error
 .onChange(of: viewModel.region) { _ in }
 
-// 正しい方法
+// Correct method
 .onReceive(viewModel.$region) { newRegion in }
 
-// または新APIの場合
+// Or with new API
 .onMapCameraChange { context in }
 ```
 
-## 実行時エラー
+## Runtime Errors
 
 ### 1. CLLocationManager did fail with error: Error Domain=kCLErrorDomain Code=1
 
-**エラーの意味：**
-- Code=1: 位置情報サービスへのアクセスが拒否されている
+**Error Meaning:**
+- Code=1: Access to location services is denied
 
-**確認事項：**
-1. Info.plistに権限説明が設定されているか
-2. シミュレータの Settings > Privacy > Location Services がオンか
-3. アプリに位置情報の権限が付与されているか
+**Check Items:**
+1. Is permission description set in Info.plist
+2. Is Settings > Privacy > Location Services ON in simulator
+3. Has location permission been granted to the app
 
-**解決方法：**
-1. アプリを削除して再インストール
-2. シミュレータをリセット：Device > Erase All Content and Settings
+**Solution:**
+1. Delete and reinstall app
+2. Reset simulator: Device > Erase All Content and Settings
 
 ### 2. CLLocationManager did fail with error: Error Domain=kCLErrorDomain Code=0
 
-**エラーの意味：**
-- Code=0 (locationUnknown): 一時的に位置情報が取得できない
+**Error Meaning:**
+- Code=0 (locationUnknown): Temporarily unable to acquire location information
 
-**特徴：**
-- シミュレータで頻繁に発生
-- 実機ではほとんど発生しない
-- 位置情報は正常に更新される
+**Characteristics:**
+- Frequently occurs in simulator
+- Rarely occurs on actual devices
+- Location information updates normally
 
-**解決方法：**
-このエラーを無視する処理を追加：
+**Solution:**
+Add processing to ignore this error:
 
 ```swift
 func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     if let clError = error as? CLError {
         switch clError.code {
         case .locationUnknown:
-            // Code 0: 一時的なエラーなので無視
+            // Code 0: Temporary error so ignore
             print("Temporary location error - ignoring")
             return
         case .denied:
-            // 権限拒否は適切に処理
+            // Handle permission denial appropriately
             delegate?.locationManager(self, didFailWithError: LocationError.authorizationDenied)
         default:
-            // その他のエラー
+            // Other errors
             delegate?.locationManager(self, didFailWithError: LocationError.locationUpdateFailed(clError.localizedDescription))
         }
     }
 }
 ```
 
-## 位置情報関連
+## Location Information Related
 
-### 1. 位置情報が更新されない
+### 1. Location Information Not Updating
 
-**原因：**
-- シミュレータで位置情報が設定されていない
-- 権限が付与されていない
+**Causes:**
+- Location information not set in simulator
+- Permission not granted
 
-**解決方法：**
-1. シミュレータメニュー：Features > Location > Apple
-2. または Custom Location で緯度経度を指定
+**Solution:**
+1. Simulator menu: Features > Location > Apple
+2. Or specify latitude/longitude with Custom Location
 
-### 2. エラーメッセージが消えない
+### 2. Error Message Won't Disappear
 
-**問題：**
-「位置情報の取得に失敗しました」が表示され続ける
+**Problem:**
+"Failed to acquire location information" continues to display
 
-**原因：**
-- 位置情報が正常に取得できてもエラーがクリアされない
+**Cause:**
+- Error not cleared even when location information is acquired normally
 
-**解決方法：**
-位置情報取得成功時にエラーをクリア：
+**Solution:**
+Clear error when location acquisition succeeds:
 
 ```swift
 nonisolated func locationManager(_ manager: LocationManagerProtocol, didUpdateLocation location: CLLocation) {
     Task { @MainActor in
         self.userLocation = location
-        // エラーをクリア（権限拒否以外）
+        // Clear error (except permission denial)
         if self.locationError != nil && self.locationError != .authorizationDenied {
             self.locationError = nil
         }
@@ -166,16 +166,16 @@ nonisolated func locationManager(_ manager: LocationManagerProtocol, didUpdateLo
 }
 ```
 
-## UI関連
+## UI Related
 
-### 1. 地図が現在地に追従しない
+### 1. Map Doesn't Follow Current Location
 
-**原因：**
-- 新しいMapKit APIでの実装が必要
+**Cause:**
+- Implementation needed for new MapKit API
 
-**解決方法：**
+**Solution:**
 ```swift
-// 位置情報が更新されたら地図を更新
+// Update map when location information is updated
 .onReceive(viewModel.$userLocation) { newLocation in
     if viewModel.isFollowingUser, let location = newLocation {
         withAnimation {
@@ -188,73 +188,73 @@ nonisolated func locationManager(_ manager: LocationManagerProtocol, didUpdateLo
 }
 ```
 
-### 2. ボタンが小さすぎる
+### 2. Buttons Too Small
 
-**問題：**
-バイクのグローブを着用した状態でタップしづらい
+**Problem:**
+Difficult to tap when wearing motorcycle gloves
 
-**解決方法：**
-最小60x60ポイントのタップターゲット：
+**Solution:**
+Minimum 60x60 point tap targets:
 
 ```swift
 Button(action: { }) {
     Image(systemName: "location.fill")
         .font(.title2)
-        .frame(width: 60, height: 60)  // 最小サイズ
+        .frame(width: 60, height: 60)  // Minimum size
         .background(Color.blue)
         .clipShape(Circle())
 }
 ```
 
-## テスト関連
+## Test Related
 
-### 1. テストがコンパイルエラー
+### 1. Test Compilation Error
 
-**エラー：**
+**Error:**
 ```
 Cannot convert value of type 'CLLocationDegrees?' to expected argument type 'CLLocationDegrees'
 ```
 
-**原因：**
-オプショナル型の扱いが不適切
+**Cause:**
+Improper handling of optional types
 
-**解決方法：**
+**Solution:**
 ```swift
-// エラーになる
+// This causes error
 XCTAssertEqual(mockDelegate.lastReceivedLocation?.coordinate.latitude, expected, accuracy: 0.0001)
 
-// 正しい方法
+// Correct method
 XCTAssertNotNil(mockDelegate.lastReceivedLocation)
 XCTAssertEqual(mockDelegate.lastReceivedLocation!.coordinate.latitude, expected, accuracy: 0.0001)
 ```
 
-### 2. テスト実行時のデバイス指定エラー
+### 2. Device Specification Error During Test Execution
 
-**エラー：**
+**Error:**
 ```
 Unable to find a device matching the provided destination specifier
 ```
 
-**解決方法：**
-利用可能なデバイスを確認：
+**Solution:**
+Check available devices:
 ```bash
 xcodebuild -showdestinations -scheme JustAMap
 ```
 
-正しいデバイスを指定：
+Specify correct device:
 ```bash
 xcodebuild test -scheme JustAMap -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-## デバッグのコツ
+## Debugging Tips
 
-### 1. エラーの詳細を出力
+### 1. Output Error Details
 
 ```swift
 print("Location error: \(clError.code.rawValue) - \(clError.localizedDescription)")
 ```
 
-### 2. 状態の確認
+### 2. Check State
 
 ```swift
 print("Authorization status: \(locationManager.authorizationStatus.rawValue)")
@@ -262,81 +262,81 @@ print("Is updating location: \(isUpdatingLocation)")
 print("User location: \(userLocation?.coordinate ?? CLLocationCoordinate2D())")
 ```
 
-### 3. シミュレータのログ確認
+### 3. Check Simulator Logs
 
-Xcodeの下部のデバッグエリアで、アプリのログとシステムログを確認できます。
+You can check app logs and system logs in Xcode's bottom debug area.
 
-## 段階2関連の問題
+## Stage 2 Related Problems
 
-### 1. 住所が表示されない
+### 1. Address Not Displaying
 
-**原因：**
-- ネットワーク接続がない
-- 逆ジオコーディングのレート制限
-- 位置情報の精度が低い
+**Causes:**
+- No network connection
+- Reverse geocoding rate limits
+- Low location accuracy
 
-**解決方法：**
+**Solution:**
 ```swift
-// デバッグ用ログを追加
+// Add debug logs
 print("Geocoding location: \(location.coordinate)")
 print("Geocoding error: \(error)")
 ```
 
-**確認事項：**
-1. シミュレータのネットワーク接続
-2. コンソールでエラーメッセージを確認
-3. 実機でテスト（シミュレータは逆ジオコーディングが不安定な場合がある）
+**Check Items:**
+1. Simulator network connection
+2. Check error messages in console
+3. Test on actual device (simulator reverse geocoding can be unstable)
 
-### 2. スリープ防止が効かない
+### 2. Sleep Prevention Not Working
 
-**症状：**
-画面が自動的に消える
+**Symptoms:**
+Screen automatically turns off
 
-**原因：**
-- `isIdleTimerDisabled`の設定タイミング
-- バックグラウンド復帰時の設定漏れ
+**Causes:**
+- Timing of `isIdleTimerDisabled` setting
+- Missing setting when returning from background
 
-**解決方法：**
+**Solution:**
 ```swift
-// デバッグ確認
+// Debug check
 print("Idle timer disabled: \(UIApplication.shared.isIdleTimerDisabled)")
 ```
 
-### 3. async/awaitのエラー
+### 3. async/await Errors
 
-**エラー：**
+**Error:**
 ```
 'async' call in a function that does not support concurrency
 ```
 
-**解決方法：**
+**Solution:**
 ```swift
-// Task内で非同期処理を実行
+// Execute asynchronous processing within Task
 Task {
     do {
         let address = try await geocodeService.reverseGeocode(location: location)
-        // UI更新
+        // UI update
     } catch {
-        // エラー処理
+        // Error handling
     }
 }
 ```
 
-### 4. 住所取得が遅い
+### 4. Slow Address Acquisition
 
-**症状：**
-住所表示まで数秒かかる
+**Symptoms:**
+Takes several seconds to display address
 
-**原因：**
-- ネットワークの遅延
-- 連続したリクエスト
+**Causes:**
+- Network delays
+- Continuous requests
 
-**解決方法：**
+**Solution:**
 ```swift
-// 前のタスクをキャンセル
+// Cancel previous task
 geocodingTask?.cancel()
 
-// デバウンス処理を追加（オプション）
+// Add debounce processing (optional)
 private var geocodingTimer: Timer?
 
 func scheduleGeocoding(for location: CLLocation) {
@@ -347,17 +347,17 @@ func scheduleGeocoding(for location: CLLocation) {
 }
 ```
 
-### 5. テストのモック作成エラー
+### 5. Mock Creation Error for Tests
 
-**エラー：**
+**Error:**
 ```
 Cannot override with a stored property 'name'
 ```
 
-**原因：**
-CLPlacemarkのプロパティは`override`できない
+**Cause:**
+CLPlacemark properties cannot be `override`
 
-**解決方法：**
+**Solution:**
 ```swift
 class MockPlacemark: CLPlacemark {
     private let _name: String?
@@ -371,63 +371,63 @@ class MockPlacemark: CLPlacemark {
 }
 ```
 
-## SwiftUI Form関連
+## SwiftUI Form Related
 
-### 1. Form内のButtonが反応しない
+### 1. Button in Form Not Responding
 
-**症状：**
-設定画面のズームレベル調整ボタン（＋/−）が押せない
+**Symptoms:**
+Zoom level adjustment buttons (+/-) in settings screen cannot be pressed
 
-**原因：**
-SwiftUIのForm内でButtonに`.buttonStyle(.plain)`を適用すると、タップイベントが無効になる
+**Cause:**
+Applying `.buttonStyle(.plain)` to Button in SwiftUI Form disables tap events
 
-**解決方法：**
+**Solution:**
 ```swift
-// NG: Form内では動作しない
+// NG: Doesn't work in Form
 Button { /* action */ } label: { /* label */ }
     .buttonStyle(.plain)
 
-// OK: Form内でも動作する
+// OK: Works in Form
 Button { /* action */ } label: { /* label */ }
     .buttonStyle(.borderless)
 ```
 
-### 2. 現在位置ボタンで追従モードが解除される
+### 2. Current Location Button Disables Follow Mode
 
-**症状：**
-現在位置ボタンを押すと、一瞬十字線が表示されて追従モードが解除される
+**Symptoms:**
+Pressing current location button briefly shows crosshairs and disables follow mode
 
-**原因：**
-ズームレベル変更時に一時的に地図中心がずれ、onMapCameraChangeでの距離チェックで追従解除される
+**Cause:**
+Temporary map center shift during zoom level changes triggers distance check in onMapCameraChange, causing follow mode disable
 
-**解決方法：**
+**Solution:**
 ```swift
-// isZoomingByButtonフラグを使用
+// Use isZoomingByButton flag
 Button(action: {
     isZoomingByButton = true
     viewModel.centerOnUserLocation()
-    // カメラ更新処理
+    // Camera update processing
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
         isZoomingByButton = false
     }
-}) { /* ボタンUI */ }
+}) { /* Button UI */ }
 
-// onMapCameraChangeでフラグをチェック
+// Check flag in onMapCameraChange
 .onMapCameraChange { context in
     guard !isZoomingByButton else { return }
-    // 通常の処理
+    // Normal processing
 }
 ```
 
-## まとめ
+## Summary
 
-多くの問題は以下が原因です：
+Many problems are caused by:
 
-1. **権限設定の不備**
-2. **新旧APIの混在**
-3. **シミュレータ特有の挙動**
-4. **非同期処理の扱い**
-5. **ネットワーク関連のエラー**
-6. **SwiftUI特有の挙動**（Form、Button、State管理など）
+1. **Permission setting issues**
+2. **Mixing old and new APIs**
+3. **Simulator-specific behavior**
+4. **Asynchronous processing handling**
+5. **Network-related errors**
+6. **SwiftUI-specific behavior** (Form, Button, State management, etc.)
 
-これらを理解することで、トラブルシューティングが効率的に行えます。
+Understanding these enables efficient troubleshooting.

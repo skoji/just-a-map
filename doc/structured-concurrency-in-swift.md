@@ -1,20 +1,20 @@
-# Swift Structured Concurrencyの活用
+# Utilizing Swift Structured Concurrency
 
-## 概要
+## Overview
 
-just a mapプロジェクトでSwift Structured Concurrencyを活用した非同期処理の実装例を解説します。
+This document explains examples of implementing asynchronous processing using Swift Structured Concurrency in the just a map project.
 
-## Structured Concurrencyとは
+## What is Structured Concurrency
 
-Swift 5.5で導入された構造化された並行処理の仕組みで、以下の特徴があります：
+Structured concurrency is a mechanism for structured parallel processing introduced in Swift 5.5, with the following characteristics:
 
-- **構造化**: タスクの親子関係が明確
-- **自動キャンセル**: 親タスクがキャンセルされると子タスクも自動的にキャンセル
-- **型安全**: コンパイル時にデータ競合を検出
+- **Structured**: Clear parent-child relationships between tasks
+- **Automatic Cancellation**: Child tasks are automatically cancelled when parent tasks are cancelled
+- **Type Safety**: Data races are detected at compile time
 
-## 実装例
+## Implementation Examples
 
-### 1. 基本的な非同期処理
+### 1. Basic Asynchronous Processing
 
 ```swift
 // GeocodeService.swift
@@ -26,7 +26,7 @@ func reverseGeocode(location: CLLocation) async throws -> Address {
             throw GeocodeError.noResults
         }
         
-        // 住所を構築
+        // Build address
         let fullAddress = buildFullAddress(from: placemark)
         
         return Address(
@@ -43,11 +43,11 @@ func reverseGeocode(location: CLLocation) async throws -> Address {
 }
 ```
 
-**ポイント**：
-- `async/await`で非同期処理を同期的に記述
-- エラーハンドリングが自然な形で実装可能
+**Key Points:**
+- Describe asynchronous processing synchronously with `async/await`
+- Natural error handling implementation possible
 
-### 2. タスクのキャンセル処理
+### 2. Task Cancellation Processing
 
 ```swift
 // MapViewModel.swift
@@ -58,29 +58,29 @@ func updateMapCenter(_ coordinate: CLLocationCoordinate2D) {
     
     guard !isFollowingUser else { return }
     
-    // 前のタスクをキャンセル
+    // Cancel previous task
     mapCenterGeocodingTask?.cancel()
     
-    // 新しいタスクを開始
+    // Start new task
     mapCenterGeocodingTask = Task {
-        // デバウンス
+        // Debounce
         try? await Task.sleep(nanoseconds: mapCenterDebounceDelay)
         
-        // キャンセルチェック
+        // Cancellation check
         guard !Task.isCancelled else { return }
         
-        // 住所を取得
+        // Acquire address
         await fetchAddressForMapCenter()
     }
 }
 ```
 
-**キャンセル処理のポイント**：
-1. タスクの参照を保持
-2. 新しいタスクを開始する前に前のタスクをキャンセル
-3. 処理の要所で`Task.isCancelled`をチェック
+**Key Points for Cancellation Processing:**
+1. Hold task references
+2. Cancel previous tasks before starting new tasks
+3. Check `Task.isCancelled` at key points in processing
 
-### 3. @MainActorの活用
+### 3. Utilizing @MainActor
 
 ```swift
 @MainActor
@@ -102,38 +102,38 @@ extension MapViewModel: LocationManagerDelegate {
 }
 ```
 
-**@MainActorの利点**：
-- UIの更新が自動的にメインスレッドで実行
-- データ競合を防ぐ
-- `nonisolated`でデリゲートメソッドを分離
+**Benefits of @MainActor:**
+- UI updates automatically execute on main thread
+- Prevents data races
+- Separate delegate methods with `nonisolated`
 
-### 4. デバウンス処理の実装
+### 4. Debounce Processing Implementation
 
 ```swift
 private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
 
 mapCenterGeocodingTask = Task {
-    // デバウンス
+    // Debounce
     try? await Task.sleep(nanoseconds: mapCenterDebounceDelay)
     
     guard !Task.isCancelled else { return }
     
-    // 実際の処理
+    // Actual processing
     await fetchAddressForMapCenter()
 }
 ```
 
-**デバウンスの仕組み**：
-1. `Task.sleep`で遅延を実現
-2. その間に新しいリクエストが来たらキャンセル
-3. 最後のリクエストのみが実行される
+**Debounce Mechanism:**
+1. Achieve delay with `Task.sleep`
+2. Cancel if new requests arrive during that time
+3. Only the last request is executed
 
-### 5. 複数の非同期処理の管理
+### 5. Managing Multiple Asynchronous Processes
 
 ```swift
 // MapViewModel.swift
-private var geocodingTask: Task<Void, Never>?        // 現在位置の住所取得
-private var mapCenterGeocodingTask: Task<Void, Never>?  // 地図中心の住所取得
+private var geocodingTask: Task<Void, Never>?        // Current location address acquisition
+private var mapCenterGeocodingTask: Task<Void, Never>?  // Map center address acquisition
 
 func stopLocationTracking() {
     locationManager.stopLocationUpdates()
@@ -142,14 +142,14 @@ func stopLocationTracking() {
 }
 ```
 
-**複数タスクの管理**：
-- 異なる目的のタスクを別々に管理
-- 必要に応じて個別にキャンセル可能
-- アプリのライフサイクルに合わせて一括キャンセル
+**Multiple Task Management:**
+- Manage tasks for different purposes separately
+- Can cancel individually as needed
+- Batch cancellation according to app lifecycle
 
-## ベストプラクティス
+## Best Practices
 
-### 1. エラーハンドリング
+### 1. Error Handling
 
 ```swift
 private func fetchAddressForMapCenter() async {
@@ -176,11 +176,11 @@ private func fetchAddressForMapCenter() async {
 }
 ```
 
-**ポイント**：
-- エラー時もローディング状態をリセット
-- キャンセルされた場合はUIを更新しない
+**Key Points:**
+- Reset loading state even on error
+- Don't update UI if cancelled
 
-### 2. テストでの非同期処理
+### 2. Asynchronous Processing in Tests
 
 ```swift
 func testFetchAddressForMapCenterWithDebounce() async {
@@ -191,64 +191,64 @@ func testFetchAddressForMapCenterWithDebounce() async {
     // When
     sut.updateMapCenter(newCenter)
     
-    // Then - 即座には住所取得が開始されない
+    // Then - Address acquisition doesn't start immediately
     XCTAssertFalse(sut.isLoadingMapCenterAddress)
     
-    // デバウンス時間待つ
+    // Wait for debounce time
     try? await Task.sleep(nanoseconds: 500_000_000)
     
-    // Then - デバウンス後に住所が取得される
+    // Then - Address is acquired after debounce
     XCTAssertNotNil(sut.mapCenterAddress)
 }
 ```
 
-**テストのポイント**：
-- `async`テスト関数で非同期処理をテスト
-- `Task.sleep`でタイミングを制御
-- 実際の処理時間を考慮した待機時間
+**Testing Key Points:**
+- Test asynchronous processing with `async` test functions
+- Control timing with `Task.sleep`
+- Consider actual processing time for wait duration
 
-### 3. メモリ管理
+### 3. Memory Management
 
 ```swift
-// 弱参照を使用しない例（Taskは構造体なのでキャプチャリストは不要）
+// Example not using weak references (capture lists unnecessary for Tasks as they're structs)
 mapCenterGeocodingTask = Task {
     try? await Task.sleep(nanoseconds: mapCenterDebounceDelay)
     
     guard !Task.isCancelled else { return }
     
-    // selfの強参照は問題ない（Taskがキャンセルされれば解放される）
+    // Strong reference to self is fine (released when Task is cancelled)
     await fetchAddressForMapCenter()
 }
 ```
 
-## パフォーマンスへの影響
+## Performance Impact
 
-### 1. レスポンシブなUI
-- 非同期処理により、UIがブロックされない
-- デバウンスで無駄な処理を削減
+### 1. Responsive UI
+- UI doesn't block due to asynchronous processing
+- Reduce wasteful processing with debounce
 
-### 2. 効率的なリソース利用
-- 不要になったタスクは即座にキャンセル
-- システムリソースの無駄遣いを防ぐ
+### 2. Efficient Resource Utilization
+- Immediately cancel unnecessary tasks
+- Prevent waste of system resources
 
-### 3. バッテリー消費の最適化
-- 過度なAPI呼び出しを防止
-- 必要最小限の処理のみ実行
+### 3. Battery Consumption Optimization
+- Prevent excessive API calls
+- Execute only minimum necessary processing
 
-## トラブルシューティング
+## Troubleshooting
 
-### 1. タスクがキャンセルされない
+### 1. Tasks Don't Cancel
 
 ```swift
-// 悪い例
+// Bad example
 Task {
     while true {
-        // Task.isCancelledをチェックしない無限ループ
+        // Infinite loop without checking Task.isCancelled
         await someWork()
     }
 }
 
-// 良い例
+// Good example
 Task {
     while !Task.isCancelled {
         await someWork()
@@ -256,37 +256,37 @@ Task {
 }
 ```
 
-### 2. メインスレッドでの重い処理
+### 2. Heavy Processing on Main Thread
 
 ```swift
-// 悪い例
+// Bad example
 @MainActor
 func processHeavyData() async {
-    // 重い処理をメインスレッドで実行
+    // Execute heavy processing on main thread
     let result = heavyComputation()
 }
 
-// 良い例
+// Good example
 func processHeavyData() async {
-    // バックグラウンドで実行
+    // Execute in background
     let result = await Task.detached {
         return heavyComputation()
     }.value
     
-    // 結果のみメインスレッドで更新
+    // Update only result on main thread
     await MainActor.run {
         self.result = result
     }
 }
 ```
 
-## まとめ
+## Summary
 
-Structured Concurrencyを活用することで：
+By utilizing Structured Concurrency:
 
-1. **安全な非同期処理**: データ競合やデッドロックを防ぐ
-2. **読みやすいコード**: 非同期処理が同期的に記述できる
-3. **効率的なリソース管理**: 自動的なキャンセル処理
-4. **優れたパフォーマンス**: レスポンシブなUIとバッテリー効率
+1. **Safe Asynchronous Processing**: Prevent data races and deadlocks
+2. **Readable Code**: Asynchronous processing can be described synchronously
+3. **Efficient Resource Management**: Automatic cancellation processing
+4. **Excellent Performance**: Responsive UI and battery efficiency
 
-just a mapプロジェクトでは、これらの特徴を活かして、ユーザーに快適な地図体験を提供しています。
+The just a map project leverages these characteristics to provide users with a comfortable map experience.
