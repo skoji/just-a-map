@@ -10,6 +10,7 @@ class MockLocationManager: LocationManagerProtocol {
     private(set) var didRequestAuthorization = false
     private(set) var isUpdatingLocation = false
     private(set) var distanceFilter: Double = 10.0
+    private(set) var pausesLocationUpdatesAutomatically: Bool = true
     
     /// テスト用: 現在位置を設定できるプロパティ
     var currentLocation: CLLocation?
@@ -71,5 +72,10 @@ class MockLocationManager: LocationManagerProtocol {
     /// テスト用: 位置情報更新の再開をシミュレート
     func simulateLocationUpdatesResumed() {
         delegate?.locationManagerDidResumeLocationUpdates(self)
+    }
+    
+    /// テスト用: 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを更新
+    func updatePausesLocationUpdatesAutomatically(for settings: MapSettingsStorageProtocol) {
+        pausesLocationUpdatesAutomatically = !settings.isSpeedDisplayEnabled
     }
 }

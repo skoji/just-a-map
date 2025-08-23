@@ -428,4 +428,24 @@ final class MapViewModelTests: XCTestCase {
         XCTAssertEqual(sut.currentSpeed, 15.0, "位置情報更新が再開した場合、速度が更新されるべき")
     }
     
+    func testUpdateSpeedDisplaySetting() async throws {
+        // Given - 速度表示設定がOFFの状態
+        mockSettingsStorage.isSpeedDisplayEnabled = false
+        
+        // When - 速度表示設定の更新を呼び出す
+        sut.updateSpeedDisplaySetting()
+        
+        // Then - LocationManagerのupdatePausesLocationUpdatesAutomaticallyが呼ばれるべき
+        XCTAssertTrue(mockLocationManager.pausesLocationUpdatesAutomatically, "速度表示OFFの場合、pausesLocationUpdatesAutomaticallyはtrueであるべき")
+        
+        // Given - 速度表示設定をONに変更
+        mockSettingsStorage.isSpeedDisplayEnabled = true
+        
+        // When - 速度表示設定の更新を呼び出す
+        sut.updateSpeedDisplaySetting()
+        
+        // Then - LocationManagerのpausesLocationUpdatesAutomaticallyがfalseになるべき
+        XCTAssertFalse(mockLocationManager.pausesLocationUpdatesAutomatically, "速度表示ONの場合、pausesLocationUpdatesAutomaticallyはfalseであるべき")
+    }
+    
 }

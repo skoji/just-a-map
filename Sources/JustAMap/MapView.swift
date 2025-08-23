@@ -308,6 +308,8 @@ struct MapView: View {
                 .onDisappear {
                     // 設定画面が閉じられたときに住所フォーマットを更新
                     viewModel.refreshAddressFormat()
+                    // 速度表示設定が変更された可能性があるので更新
+                    viewModel.updateSpeedDisplaySetting()
                 }
         }
     }

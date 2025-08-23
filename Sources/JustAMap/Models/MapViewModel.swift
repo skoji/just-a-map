@@ -63,6 +63,9 @@ class MapViewModel: ObservableObject {
         
         // 保存された設定を読み込む
         loadSettings()
+        
+        // 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを設定
+        locationManager.updatePausesLocationUpdatesAutomatically(for: settingsStorage)
     }
     
     private func loadSettings() {
@@ -129,6 +132,12 @@ class MapViewModel: ObservableObject {
             lastGeocodedLocation = nil
             fetchAddress(for: location)
         }
+    }
+    
+    /// 速度表示設定が変更されたときに呼び出される
+    func updateSpeedDisplaySetting() {
+        // 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを更新
+        locationManager.updatePausesLocationUpdatesAutomatically(for: settingsStorage)
     }
     
     func requestLocationPermission() {
