@@ -21,7 +21,8 @@ class LocationManager: NSObject, LocationManagerProtocol {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = 10.0 // 10メートル移動したら更新
         locationManager.allowsBackgroundLocationUpdates = false
-        locationManager.pausesLocationUpdatesAutomatically = true
+        // Note: pausesLocationUpdatesAutomatically will be set dynamically based on speed display setting
+        locationManager.pausesLocationUpdatesAutomatically = true // デフォルトはtrue（バッテリー効率優先）
         locationManager.activityType = .automotiveNavigation // バイク走行を想定
     }
     
@@ -85,6 +86,14 @@ class LocationManager: NSObject, LocationManagerProtocol {
         if abs(locationManager.distanceFilter - newDistanceFilter) > 2.0 {
             locationManager.distanceFilter = newDistanceFilter
         }
+    }
+    
+    func updatePausesLocationUpdatesAutomatically(for settings: MapSettingsStorageProtocol) {
+        // 速度表示がONの場合は、pausesLocationUpdatesAutomaticallyをfalseに設定
+        // これにより、停止時でも位置情報更新が継続され、速度が正しく0になる
+        // 速度表示がOFFの場合は、pausesLocationUpdatesAutomaticallyをtrueに設定
+        // これにより、バッテリー効率を優先する
+        locationManager.pausesLocationUpdatesAutomatically = !settings.isSpeedDisplayEnabled
     }
 }
 
