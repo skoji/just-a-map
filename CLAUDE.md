@@ -304,7 +304,7 @@ let testScenarios = [
 - ロケール対応郵便番号表示（日本：〒付き、海外：プレーン）
 - (実装日: 2025-01-09, PR: #未定, [Issue #2](https://github.com/skoji/just-a-map/issues/2))
 
-### 速度表示機能
+### 速度表示機能（2025-09-08 削除済み）
 - GPS速度情報を使用したリアルタイム速度表示
 - km/hとmphの単位選択機能
 - 設定画面での速度表示ON/OFF切り替え
@@ -313,6 +313,7 @@ let testScenarios = [
 - TDDアプローチによる包括的テストカバレッジ
 - 英語・日本語の国際化対応
 - (実装日: 2025-07-10, PR: #未定, [Issue #57](https://github.com/skoji/just-a-map/issues/57))
+- (削除日: 2025-09-08, PR: [#85](https://github.com/skoji/just-a-map/pull/85))
 
 ## 参考リソース
 - [Apple MapKit Documentation](https://developer.apple.com/documentation/mapkit/)
