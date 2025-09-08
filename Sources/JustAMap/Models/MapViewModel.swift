@@ -38,6 +38,14 @@ class MapViewModel: ObservableObject {
     
     private var mapCenterGeocodingTask: Task<Void, Never>?
     private let mapCenterDebounceDelay: UInt64 = 300_000_000 // 300ms
+
+    // Speed handling state
+    private var consecutiveInvalidSpeedCount: Int = 0
+    private var lastValidSpeed: Double?
+    private var lastValidSpeedTimestamp: Date?
+    private var lastValidLocationForSpeed: CLLocation?
+    private let invalidSpeedResetConsecutiveCount: Int = 3
+    private let stopSpeedThreshold: Double = 0.5 // m/s considered as stopped
     
     
     // 地図の向き切り替え時のコールバック（テスト用）
@@ -295,15 +303,45 @@ extension MapViewModel: LocationManagerDelegate {
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
             
-            // 速度更新ロジック
-            //  - 速度が有効な場合はそのまま反映
-            //  - 無効値（-1）の場合:
-            //    * 速度表示ON時は停止とみなし0にリセット
-            //    * 速度表示OFF時は従来通り前回の値を保持
+            // Speed update logic
+            //  - Valid speed: apply and reset counters
+            //  - Invalid speed (-1):
+            //    * When speed display is ON, only reset to 0 if likely stopped
+            //      (consecutive invalids and/or last valid speed near zero, or low displacement)
+            //    * When speed display is OFF, keep previous behavior (ignore invalid)
             if location.speed >= 0 {
                 self.currentSpeed = location.speed
+                self.consecutiveInvalidSpeedCount = 0
+                self.lastValidSpeed = location.speed
+                self.lastValidSpeedTimestamp = location.timestamp
+                self.lastValidLocationForSpeed = location
             } else if self.isSpeedDisplayEnabled {
-                self.currentSpeed = 0.0
+                var shouldResetToZero = false
+                // If the last valid speed was already near zero, treat as stopped
+                if let lastValid = lastValidSpeed, lastValid <= stopSpeedThreshold {
+                    shouldResetToZero = true
+                } else {
+                    let nextInvalidCount = consecutiveInvalidSpeedCount + 1
+                    if nextInvalidCount >= invalidSpeedResetConsecutiveCount {
+                        if let lvLoc = lastValidLocationForSpeed, let lvTime = lastValidSpeedTimestamp {
+                            let dt = location.timestamp.timeIntervalSince(lvTime)
+                            let distance = location.distance(from: lvLoc)
+                            if dt > 0 {
+                                let approxSpeed = distance / dt
+                                if approxSpeed <= stopSpeedThreshold {
+                                    shouldResetToZero = true
+                                }
+                            }
+                        } else {
+                            // No prior reference; assume stopped after enough invalids
+                            shouldResetToZero = true
+                        }
+                    }
+                }
+                if shouldResetToZero {
+                    self.currentSpeed = 0.0
+                }
+                self.consecutiveInvalidSpeedCount += 1
             }
             
             self.updateRegionIfFollowing(location: location)
