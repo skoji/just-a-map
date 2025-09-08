@@ -60,7 +60,7 @@ jobs:
             const prNumber = context.issue.number;
             const workflowRun = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             
-            const comment = `@claude The CI has failed on this PR. Please check the [workflow run](${workflowRun}) and help fix the issues.
+            const comment = `The CI has failed on this PR. Please check the [workflow run](${workflowRun}) and help fix the issues.
             
             <details>
             <summary>Failed Workflow Details</summary>
