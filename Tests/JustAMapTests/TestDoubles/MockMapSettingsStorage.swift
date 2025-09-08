@@ -92,5 +92,4 @@ class MockMapSettingsStorage: MapSettingsStorageProtocol {
         return altitudeUnit
     }
     
-    // Speed Display methods removed
 }

@@ -21,7 +21,6 @@ class LocationManager: NSObject, LocationManagerProtocol {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = 10.0 // 10メートル移動したら更新
         locationManager.allowsBackgroundLocationUpdates = false
-        // Note: pausesLocationUpdatesAutomatically will be set dynamically based on speed display setting
         locationManager.pausesLocationUpdatesAutomatically = true // デフォルトはtrue（バッテリー効率優先）
         locationManager.activityType = .automotiveNavigation // バイク走行を想定
     }
