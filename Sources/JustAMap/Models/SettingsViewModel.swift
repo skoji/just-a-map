@@ -51,18 +51,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
-    @Published var isSpeedDisplayEnabled: Bool {
-        didSet {
-            settingsStorage.isSpeedDisplayEnabled = isSpeedDisplayEnabled
-        }
-    }
-    
-    @Published var speedUnit: SpeedUnit {
-        didSet {
-            settingsStorage.speedUnit = speedUnit
-        }
-    }
-    
     init(settingsStorage: MapSettingsStorageProtocol = MapSettingsStorage(), bundle: BundleProtocol = Bundle.main) {
         self.settingsStorage = settingsStorage
         self.bundle = bundle
@@ -72,8 +60,7 @@ class SettingsViewModel: ObservableObject {
         self.addressFormat = settingsStorage.addressFormat
         self.isAltitudeDisplayEnabled = settingsStorage.isAltitudeDisplayEnabled
         self.altitudeUnit = settingsStorage.altitudeUnit
-        self.isSpeedDisplayEnabled = settingsStorage.isSpeedDisplayEnabled
-        self.speedUnit = settingsStorage.speedUnit
+        
         
         // Load version info from VersionInfo.plist if available
         if let versionInfoURL = bundle.url(forResource: "VersionInfo", withExtension: "plist"),

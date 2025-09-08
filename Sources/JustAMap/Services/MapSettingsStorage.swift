@@ -31,9 +31,7 @@ protocol MapSettingsStorageProtocol {
     var isAltitudeDisplayEnabled: Bool { get set }
     var altitudeUnit: AltitudeUnit { get set }
     
-    // 速度表示設定
-    var isSpeedDisplayEnabled: Bool { get set }
-    var speedUnit: SpeedUnit { get set }
+    
     
     // 従来のメソッド（互換性のため維持）
     func saveMapStyle(_ style: MapStyle)
@@ -51,11 +49,7 @@ protocol MapSettingsStorageProtocol {
     func saveAltitudeUnit(_ unit: AltitudeUnit)
     func loadAltitudeUnit() -> AltitudeUnit
     
-    // 速度表示設定
-    func saveSpeedDisplayEnabled(_ enabled: Bool)
-    func loadSpeedDisplayEnabled() -> Bool
-    func saveSpeedUnit(_ unit: SpeedUnit)
-    func loadSpeedUnit() -> SpeedUnit
+    
     
     // 初回起動チェック
     func isFirstLaunch() -> Bool
@@ -78,8 +72,7 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         static let addressFormat = "addressFormat"
         static let isAltitudeDisplayEnabled = "isAltitudeDisplayEnabled"
         static let altitudeUnit = "altitudeUnit"
-        static let isSpeedDisplayEnabled = "isSpeedDisplayEnabled"
-        static let speedUnit = "speedUnit"
+        
     }
     
     init(userDefaults: UserDefaultsProtocol = UserDefaults.standard) {
@@ -163,15 +156,6 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         set { saveAltitudeUnit(newValue) }
     }
     
-    var isSpeedDisplayEnabled: Bool {
-        get { loadSpeedDisplayEnabled() }
-        set { saveSpeedDisplayEnabled(newValue) }
-    }
-    
-    var speedUnit: SpeedUnit {
-        get { loadSpeedUnit() }
-        set { saveSpeedUnit(newValue) }
-    }
     
     // MARK: - Map Style
     
@@ -262,30 +246,7 @@ class MapSettingsStorage: MapSettingsStorageProtocol {
         return unit
     }
     
-    // MARK: - Speed Display
     
-    func saveSpeedDisplayEnabled(_ enabled: Bool) {
-        userDefaults.set(enabled, forKey: Keys.isSpeedDisplayEnabled)
-    }
-    
-    func loadSpeedDisplayEnabled() -> Bool {
-        if userDefaults.object(forKey: Keys.isSpeedDisplayEnabled) != nil {
-            return userDefaults.bool(forKey: Keys.isSpeedDisplayEnabled)
-        }
-        return false // デフォルトはOFF
-    }
-    
-    func saveSpeedUnit(_ unit: SpeedUnit) {
-        userDefaults.set(unit.rawValue, forKey: Keys.speedUnit)
-    }
-    
-    func loadSpeedUnit() -> SpeedUnit {
-        guard let rawValue = userDefaults.string(forKey: Keys.speedUnit),
-              let unit = SpeedUnit(rawValue: rawValue) else {
-            return .kmh // デフォルトはkm/h
-        }
-        return unit
-    }
     
     // MARK: - First Launch Check
     

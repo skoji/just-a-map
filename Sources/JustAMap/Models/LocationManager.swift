@@ -89,11 +89,8 @@ class LocationManager: NSObject, LocationManagerProtocol {
     }
     
     func updatePausesLocationUpdatesAutomatically(for settings: MapSettingsStorageProtocol) {
-        // 速度表示がONの場合は、pausesLocationUpdatesAutomaticallyをfalseに設定
-        // これにより、停止時でも位置情報更新が継続され、速度が正しく0になる
-        // 速度表示がOFFの場合は、pausesLocationUpdatesAutomaticallyをtrueに設定
-        // これにより、バッテリー効率を優先する
-        locationManager.pausesLocationUpdatesAutomatically = !settings.isSpeedDisplayEnabled
+        // 省電力のため常に一時停止を有効化
+        locationManager.pausesLocationUpdatesAutomatically = true
     }
 }
 

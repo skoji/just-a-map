@@ -45,7 +45,7 @@
 - **iOS**: 17.0以上
 - **フレームワーク**: SwiftUI, MapKit, CoreLocation
 - **位置情報精度**: 最高精度（kCLLocationAccuracyBest）
-- **更新頻度**: 速度とズームに応じて変化
+- **更新頻度**: ズームに応じて変化
 - **住所取得**: CLGeocoder（逆ジオコーディング）
 - **スリープ防止**: UIApplication.shared.isIdleTimerDisabled
 - **ズーム実装**: MKMapCamera.distance（高度）ベース

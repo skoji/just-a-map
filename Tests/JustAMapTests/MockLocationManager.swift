@@ -74,8 +74,8 @@ class MockLocationManager: LocationManagerProtocol {
         delegate?.locationManagerDidResumeLocationUpdates(self)
     }
     
-    /// テスト用: 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを更新
+    /// テスト用: 常に一時停止を有効化
     func updatePausesLocationUpdatesAutomatically(for settings: MapSettingsStorageProtocol) {
-        pausesLocationUpdatesAutomatically = !settings.isSpeedDisplayEnabled
+        pausesLocationUpdatesAutomatically = true
     }
 }
