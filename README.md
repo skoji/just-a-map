@@ -44,7 +44,7 @@ A simple and practical map application designed for motorcycle handlebar mountin
 - **iOS**: 17.0 or later
 - **Frameworks**: SwiftUI, MapKit, CoreLocation
 - **Location Accuracy**: Best (kCLLocationAccuracyBest)
-- **Update Frequency**: Varies according to speed and zoom
+- **Update Frequency**: Varies according to zoom
 - **Address Retrieval**: CLGeocoder (reverse geocoding)
 - **Sleep Prevention**: UIApplication.shared.isIdleTimerDisabled
 - **Zoom Implementation**: MKMapCamera.distance (altitude) based

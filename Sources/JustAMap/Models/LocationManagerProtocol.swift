@@ -23,8 +23,8 @@ protocol LocationManagerProtocol: AnyObject {
     /// - Parameter altitude: 地図カメラの高度（メートル）
     func adjustUpdateFrequency(forAltitude altitude: Double)
     
-    /// 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを更新
-    /// - Parameter settings: 地図設定ストレージ
+    /// pausesLocationUpdatesAutomaticallyのポリシーを更新（本実装では常にtrue）
+    /// - Parameter settings: 地図設定ストレージ（互換性のため引数は維持）
     func updatePausesLocationUpdatesAutomatically(for settings: MapSettingsStorageProtocol)
 }
 

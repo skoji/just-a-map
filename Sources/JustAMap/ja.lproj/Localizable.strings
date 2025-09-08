@@ -17,10 +17,6 @@
 "settings.altitude_unit" = "高度の単位";
 "settings.altitude_unit_meters" = "メートル (m)";
 "settings.altitude_unit_feet" = "フィート (ft)";
-"settings.speed_display" = "速度表示";
-"settings.speed_unit" = "速度の単位";
-"settings.speed_unit_kmh" = "キロメートル毎時 (km/h)";
-"settings.speed_unit_mph" = "マイル毎時 (mph)";
 "settings.app_info" = "アプリ情報";
 "settings.app_version" = "バージョン";
 "settings.build_number" = "ビルド番号";

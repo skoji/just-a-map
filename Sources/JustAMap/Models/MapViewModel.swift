@@ -23,7 +23,7 @@ class MapViewModel: ObservableObject {
     @Published var isLoadingMapCenterAddress = false
     @Published var currentAltitude: Double?
     @Published var currentVerticalAccuracy: Double?
-    @Published var currentSpeed: Double?
+    
     
     private let locationManager: LocationManagerProtocol
     private let geocodeService: GeocodeServiceProtocol
@@ -64,7 +64,7 @@ class MapViewModel: ObservableObject {
         // 保存された設定を読み込む
         loadSettings()
         
-        // 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを設定
+        // 位置情報の自動一時停止は常に有効（省電力）
         locationManager.updatePausesLocationUpdatesAutomatically(for: settingsStorage)
     }
     
@@ -101,15 +101,7 @@ class MapViewModel: ObservableObject {
         return settingsStorage.altitudeUnit
     }
     
-    /// 速度表示が有効かどうか
-    var isSpeedDisplayEnabled: Bool {
-        return settingsStorage.isSpeedDisplayEnabled
-    }
     
-    /// 速度の単位
-    var speedUnit: SpeedUnit {
-        return settingsStorage.speedUnit
-    }
     
     /// 高度の表示文字列を取得
     /// - Parameters:
@@ -134,11 +126,7 @@ class MapViewModel: ObservableObject {
         }
     }
     
-    /// 速度表示設定が変更されたときに呼び出される
-    func updateSpeedDisplaySetting() {
-        // 速度表示設定に基づいてpausesLocationUpdatesAutomaticallyを更新
-        locationManager.updatePausesLocationUpdatesAutomatically(for: settingsStorage)
-    }
+    
     
     func requestLocationPermission() {
         locationManager.requestLocationPermission()
@@ -295,11 +283,6 @@ extension MapViewModel: LocationManagerDelegate {
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
             
-            // 速度が有効な場合のみ更新（無効値-1の場合は前の値を保持）
-            if location.speed >= 0 {
-                self.currentSpeed = location.speed
-            }
-            
             self.updateRegionIfFollowing(location: location)
             // 位置情報が正常に取得できたらエラーをクリア
             if self.locationError != nil && self.locationError != .authorizationDenied {
@@ -357,16 +340,7 @@ extension MapViewModel: LocationManagerDelegate {
         return !mapControlsViewModel.isNorthUp
     }
     
-    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {
-        Task { @MainActor in
-            // 位置情報更新が一時停止したら速度を0にリセット
-            self.currentSpeed = 0.0
-        }
-    }
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: LocationManagerProtocol) {}
     
-    nonisolated func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {
-        Task { @MainActor in
-            // 位置情報更新が再開されたので、次の更新を待つ
-        }
-    }
+    nonisolated func locationManagerDidResumeLocationUpdates(_ manager: LocationManagerProtocol) {}
 }

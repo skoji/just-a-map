@@ -17,10 +17,6 @@
 "settings.altitude_unit" = "Altitude Unit";
 "settings.altitude_unit_meters" = "Meters (m)";
 "settings.altitude_unit_feet" = "Feet (ft)";
-"settings.speed_display" = "Show Speed";
-"settings.speed_unit" = "Speed Unit";
-"settings.speed_unit_kmh" = "Kilometers per hour (km/h)";
-"settings.speed_unit_mph" = "Miles per hour (mph)";
 "settings.app_info" = "App Information";
 "settings.app_version" = "Version";
 "settings.build_number" = "Build Number";

@@ -23,8 +23,6 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(sut.defaultMapStyle, mockSettingsStorage.defaultMapStyle)
         XCTAssertEqual(sut.defaultIsNorthUp, mockSettingsStorage.defaultIsNorthUp)
         XCTAssertEqual(sut.addressFormat, mockSettingsStorage.addressFormat)
-        XCTAssertEqual(sut.isSpeedDisplayEnabled, mockSettingsStorage.isSpeedDisplayEnabled)
-        XCTAssertEqual(sut.speedUnit, mockSettingsStorage.speedUnit)
     }
     
     func testUpdateDefaultZoomIndex() {
@@ -161,18 +159,6 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertEqual(sutWithMockBundle.buildNumber, expectedUnknownString)
     }
     
-    func testUpdateSpeedDisplayEnabled() {
-        let newValue = true
-        sut.isSpeedDisplayEnabled = newValue
-        
-        XCTAssertEqual(mockSettingsStorage.isSpeedDisplayEnabled, newValue)
-    }
     
-    func testUpdateSpeedUnit() {
-        let newUnit = SpeedUnit.mph
-        sut.speedUnit = newUnit
-        
-        XCTAssertEqual(mockSettingsStorage.speedUnit, newUnit)
-    }
     
 }

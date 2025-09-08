@@ -164,28 +164,14 @@ final class LocationManagerTests: XCTestCase {
         XCTAssertTrue(mockDelegate.didResumeLocationUpdates)
     }
     
-    func testLocationManagerDisablesPausesWhenSpeedDisplayEnabled() {
+    func testLocationManagerAlwaysEnablesPauses() {
         // Given
         sut = MockLocationManager()
         let mockSettings = MockMapSettingsStorage()
-        mockSettings.isSpeedDisplayEnabled = true
-        
+
         // When
         (sut as! MockLocationManager).updatePausesLocationUpdatesAutomatically(for: mockSettings)
-        
-        // Then
-        XCTAssertFalse((sut as! MockLocationManager).pausesLocationUpdatesAutomatically)
-    }
-    
-    func testLocationManagerEnablesPausesWhenSpeedDisplayDisabled() {
-        // Given
-        sut = MockLocationManager()
-        let mockSettings = MockMapSettingsStorage()
-        mockSettings.isSpeedDisplayEnabled = false
-        
-        // When
-        (sut as! MockLocationManager).updatePausesLocationUpdatesAutomatically(for: mockSettings)
-        
+
         // Then
         XCTAssertTrue((sut as! MockLocationManager).pausesLocationUpdatesAutomatically)
     }

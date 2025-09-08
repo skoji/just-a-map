@@ -111,14 +111,6 @@ struct MapView: View {
                             )
                         }
                         
-                        // 速度表示（設定でONの場合のみ）
-                        if viewModel.isSpeedDisplayEnabled {
-                            SpeedView(
-                                speed: viewModel.currentSpeed,
-                                unit: viewModel.speedUnit,
-                                isLoading: viewModel.currentSpeed == nil
-                            )
-                        }
                     }
                     .padding(.leading, 20)
                     .padding(.top, 10)
@@ -308,8 +300,6 @@ struct MapView: View {
                 .onDisappear {
                     // 設定画面が閉じられたときに住所フォーマットを更新
                     viewModel.refreshAddressFormat()
-                    // 速度表示設定が変更された可能性があるので更新
-                    viewModel.updateSpeedDisplaySetting()
                 }
         }
     }
