@@ -15,7 +15,7 @@ final class SpeedStopBehaviorTests: XCTestCase {
         mockGeocodeService = MockGeocodeService()
         mockIdleTimerManager = MockIdleTimerManager()
         mockSettingsStorage = MockMapSettingsStorage()
-        // 速度表示をONにして起動
+        // Enable speed display on startup
         mockSettingsStorage.isSpeedDisplayEnabled = true
 
         sut = MapViewModel(
