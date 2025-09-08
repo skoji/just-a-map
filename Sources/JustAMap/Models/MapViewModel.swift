@@ -295,9 +295,15 @@ extension MapViewModel: LocationManagerDelegate {
             self.currentAltitude = location.altitude
             self.currentVerticalAccuracy = location.verticalAccuracy
             
-            // 速度が有効な場合のみ更新（無効値-1の場合は前の値を保持）
+            // 速度更新ロジック
+            //  - 速度が有効な場合はそのまま反映
+            //  - 無効値（-1）の場合:
+            //    * 速度表示ON時は停止とみなし0にリセット
+            //    * 速度表示OFF時は従来通り前回の値を保持
             if location.speed >= 0 {
                 self.currentSpeed = location.speed
+            } else if self.isSpeedDisplayEnabled {
+                self.currentSpeed = 0.0
             }
             
             self.updateRegionIfFollowing(location: location)
